@@ -47,9 +47,12 @@ def run_experiment(
     eval_every: int = 20,
     seed: int = 0,
     verbose: bool = False,
+    cache_dir: Optional[str] = None,
 ) -> ExperimentResult:
     """Run one configuration end-to-end and return its history."""
-    X, y, spec = load_dataset(dataset, data_dir=data_dir, seed=seed)
+    X, y, spec = load_dataset(
+        dataset, data_dir=data_dir, seed=seed, cache_dir=cache_dir
+    )
     cfg = FedConfig(rounds=rounds, gamma=gamma, n_rare=n_rare, seed=seed)
     split = partition_non_iid(
         X, y, spec, n_rare=n_rare, val_fraction=cfg.val_fraction, seed=seed
@@ -74,6 +77,7 @@ def run_gamma_sweep(
     eval_every: int = 20,
     seed: int = 0,
     verbose: bool = False,
+    cache_dir: Optional[str] = None,
 ) -> Dict[str, ExperimentResult]:
     """Reproduce Figure 1: the three methods for each gamma."""
     results: Dict[str, ExperimentResult] = {}
@@ -81,15 +85,18 @@ def run_gamma_sweep(
     results["fedavg"] = run_experiment(
         dataset, "fedavg", gamma=0.0, n_rare=n_rare, rounds=rounds,
         data_dir=data_dir, eval_every=eval_every, seed=seed, verbose=verbose,
+        cache_dir=cache_dir,
     )
     results["static"] = run_experiment(
         dataset, "static", gamma=0.0, n_rare=n_rare, rounds=rounds,
         data_dir=data_dir, eval_every=eval_every, seed=seed, verbose=verbose,
+        cache_dir=cache_dir,
     )
     for g in gammas:
         results[f"fedgraa_g{g}"] = run_experiment(
             dataset, "fedgraa", gamma=g, n_rare=n_rare, rounds=rounds,
             data_dir=data_dir, eval_every=eval_every, seed=seed, verbose=verbose,
+            cache_dir=cache_dir,
         )
     return results
 
@@ -103,6 +110,7 @@ def run_n_sweep(
     eval_every: int = 20,
     seed: int = 0,
     verbose: bool = False,
+    cache_dir: Optional[str] = None,
 ) -> Dict[int, Dict[str, ExperimentResult]]:
     """Reproduce Figures 2-3: FedGRAA vs baselines as ``n`` grows."""
     out: Dict[int, Dict[str, ExperimentResult]] = {}
@@ -111,14 +119,17 @@ def run_n_sweep(
             "fedavg": run_experiment(
                 dataset, "fedavg", gamma=0.0, n_rare=n, rounds=rounds,
                 data_dir=data_dir, eval_every=eval_every, seed=seed, verbose=verbose,
+                cache_dir=cache_dir,
             ),
             "static": run_experiment(
                 dataset, "static", gamma=0.0, n_rare=n, rounds=rounds,
                 data_dir=data_dir, eval_every=eval_every, seed=seed, verbose=verbose,
+                cache_dir=cache_dir,
             ),
             "fedgraa": run_experiment(
                 dataset, "fedgraa", gamma=gamma, n_rare=n, rounds=rounds,
                 data_dir=data_dir, eval_every=eval_every, seed=seed, verbose=verbose,
+                cache_dir=cache_dir,
             ),
         }
     return out

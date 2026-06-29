@@ -14,6 +14,7 @@ The only line that differs between methods is how ``w^t`` is produced; the local
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -135,6 +136,13 @@ class FederatedTrainer:
             n_rare=cfg.n_rare,
         )
 
+        label = (
+            f"{self.method}"
+            + (f" γ={cfg.gamma}" if self.method == "fedgraa" else "")
+            + f" n={cfg.n_rare}"
+        )
+        t_start = time.time()
+
         for rnd in range(1, cfg.rounds + 1):
             # --- clients train locally (in parallel conceptually) ---------- #
             client_params: List[Params] = [
@@ -155,11 +163,14 @@ class FederatedTrainer:
                     self.rare_class_ids,
                 )
                 history.record(rnd, all_a, last_a, w)
-                if verbose:
-                    print(
-                        f"[{self.method:>7} g={history.gamma} n={cfg.n_rare}] "
-                        f"round {rnd:3d}  all={all_a:.3f}  last-n={last_a:.3f}"
-                    )
+                elapsed = time.time() - t_start
+                eta = elapsed / rnd * (cfg.rounds - rnd)
+                print(
+                    f"  [{label}] round {rnd:3d}/{cfg.rounds}"
+                    f"  all={all_a:.3f}  last-n={last_a:.3f}"
+                    f"  elapsed={elapsed:.0f}s  ETA={eta:.0f}s",
+                    flush=True,
+                )
 
         self.final_params = global_params
         return history

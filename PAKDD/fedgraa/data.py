@@ -74,14 +74,21 @@ def load_dataset(
     data_dir: Optional[str] = None,
     label_column: Optional[str] = None,
     seed: int = 0,
+    cache_dir: Optional[str] = None,
 ) -> Tuple[np.ndarray, np.ndarray, DatasetSpec]:
     """Load a dataset by name.
 
     If ``data_dir`` is given and contains CSV files, the real data is loaded and
     preprocessed. Otherwise a synthetic dataset matching the paper's counts is
     returned (with a clear runtime notice handled by the caller).
+
+    Pass ``cache_dir`` to save / reload the preprocessed ``(X, y)`` arrays as
+    ``.npy`` files. On a second run this skips the ~30 s CSV-loading phase
+    entirely. The cache key encodes the dataset name and seed so different
+    seeds don't collide.
     """
     spec = get_dataset_spec(name)
+
     if data_dir and os.path.isdir(data_dir):
         csvs = [
             os.path.join(data_dir, f)
@@ -89,7 +96,29 @@ def load_dataset(
             if f.lower().endswith(".csv")
         ]
         if csvs:
-            return _load_real_csvs(csvs, spec, label_column=label_column, seed=seed)
+            # --- NPY cache check ----------------------------------------- #
+            if cache_dir:
+                os.makedirs(cache_dir, exist_ok=True)
+                tag = f"{name.replace('-', '_').replace('/', '_')}_seed{seed}"
+                cx = os.path.join(cache_dir, f"{tag}_X.npy")
+                cy = os.path.join(cache_dir, f"{tag}_y.npy")
+                if os.path.exists(cx) and os.path.exists(cy):
+                    print(f"[{name}] Loading preprocessed cache from {cache_dir}",
+                          flush=True)
+                    X = np.load(cx)
+                    y = np.load(cy)
+                    return X, y, spec
+            # --- real CSV path -------------------------------------------- #
+            X, y, spec = _load_real_csvs(
+                csvs, spec, label_column=label_column, seed=seed
+            )
+            if cache_dir:
+                np.save(cx, X)
+                np.save(cy, y)
+                print(f"[{name}] Saved preprocessed cache to {cache_dir}",
+                      flush=True)
+            return X, y, spec
+
     return make_synthetic_dataset(spec, seed=seed)
 
 
@@ -99,9 +128,16 @@ def _load_real_csvs(
     label_column: Optional[str],
     seed: int,
 ) -> Tuple[np.ndarray, np.ndarray, DatasetSpec]:
-    frames = [pd.read_csv(p, skipinitialspace=True) for p in csv_paths]
+    print(f"  Loading {len(csv_paths)} CSV file(s)...", flush=True)
+    frames = []
+    for i, p in enumerate(csv_paths, 1):
+        frames.append(pd.read_csv(p, skipinitialspace=True))
+        print(f"    [{i}/{len(csv_paths)}] {os.path.basename(p)} "
+              f"({len(frames[-1]):,} rows)", flush=True)
     df = pd.concat(frames, ignore_index=True)
     df.columns = [c.strip() for c in df.columns]
+    print(f"  Total rows: {len(df):,}", flush=True)
+    del frames  # free memory before heavy processing
 
     if label_column is None:
         # CIC files use "Label"; UNSW exports often use "attack_cat"/"label".
@@ -125,20 +161,32 @@ def _load_real_csvs(
             drop_cols.add(extra)
     X_df = df.drop(columns=list(drop_cols))
 
-    # Keep numeric features only; clean inf / NaN (CIC-IDS contains both).
-    X_df = X_df.apply(pd.to_numeric, errors="coerce")
-    X_df = X_df.replace([np.inf, -np.inf], np.nan)
-    X_df = X_df.fillna(0.0)
-    X = X_df.to_numpy(dtype=np.float64)
-
-    # Map textual labels onto the spec's label ordering, tolerating the real
-    # datasets' spelling variants (e.g. CIC "Web Attack - Brute Force").
+    # Map labels first (fast: only normalises unique values) so we can drop
+    # unknown rows before the expensive numeric conversion.
+    print("  Mapping labels...", flush=True)
     y = _match_labels(y_raw, spec)
-    keep = y >= 0
-    X, y = X[keep], y[keep]
+    keep_mask = y >= 0
+    n_dropped = int((~keep_mask).sum())
+    if n_dropped:
+        print(f"  Dropped {n_dropped:,} rows with unrecognised labels.", flush=True)
+    y = y[keep_mask]
+    X_df = X_df[keep_mask]
 
+    # Keep numeric features only; clean inf / NaN (CIC-IDS contains both).
+    # Use select_dtypes to avoid the OOM-prone apply(to_numeric) path on large
+    # DataFrames: apply triggers a np.vstack of all columns that can allocate
+    # hundreds of MB of intermediates and crash on constrained machines.
+    print("  Converting features to float64...", flush=True)
+    X_df = X_df.select_dtypes(include=[np.number])
+    X = X_df.to_numpy(dtype=np.float64)
+    del X_df  # free the DataFrame before allocating the final capped array
+    np.place(X, ~np.isfinite(X), 0.0)  # replace inf / NaN in one pass
+
+    print("  Capping frequent classes and scaling...", flush=True)
     X, y = _cap_frequent_classes(X, y, spec, seed=seed)
     X = _standard_scale(X)
+    print(f"  Final dataset: {len(y):,} rows, {X.shape[1]} features, "
+          f"{len(np.unique(y))} classes.", flush=True)
     return X, y, spec
 
 
@@ -176,8 +224,14 @@ _LABEL_ALIASES = {
 }
 
 
-def _match_labels(y_raw, spec: DatasetSpec) -> np.ndarray:
-    """Map raw label strings onto ``spec`` class IDs, returning -1 for misses."""
+def _match_labels(y_raw: "pd.Series", spec: DatasetSpec) -> np.ndarray:
+    """Map raw label strings onto ``spec`` class IDs, returning -1 for misses.
+
+    Vectorised: normalises only the *unique* raw values (typically < 20) and
+    then uses pandas.Series.map for the full-length assignment.  This avoids
+    a Python-level loop over millions of rows that caused a ~14 s freeze when
+    loading the full 2.8 M-row CIC-IDS-2017 dataset.
+    """
     # Build a lookup keyed by normalized spec labels.
     norm_to_id = {}
     for i, lbl in enumerate(spec.labels):
@@ -190,11 +244,15 @@ def _match_labels(y_raw, spec: DatasetSpec) -> np.ndarray:
         if target in label_index:
             norm_to_id.setdefault(alias_norm, label_index[target])
 
-    ids = np.empty(len(y_raw), dtype=int)
-    for j, raw in enumerate(y_raw):
+    # Normalise only the unique values (typically < 20), then map the whole
+    # Series in one pandas vectorised call.
+    unique_raw = y_raw.unique()
+    raw_to_id: dict = {}
+    for raw in unique_raw:
         full, singular = _normalize_label(str(raw))
-        ids[j] = norm_to_id.get(full, norm_to_id.get(singular, -1))
-    return ids
+        raw_to_id[raw] = norm_to_id.get(full, norm_to_id.get(singular, -1))
+
+    return y_raw.map(raw_to_id).fillna(-1).astype(int).to_numpy()
 
 
 def _standard_scale(X: np.ndarray) -> np.ndarray:

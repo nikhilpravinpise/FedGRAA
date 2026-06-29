@@ -2,6 +2,9 @@
 data/
 *.csv
 
+# Preprocessed data cache (built locally by each collaborator)
+.cache/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -9,5 +12,15 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 
+# Editor / OS
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
 # Kaggle credentials (never commit)
 kaggle.json
+
+# Experiment outputs (large result files)
+results/
+*.npy

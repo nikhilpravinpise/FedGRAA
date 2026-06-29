@@ -40,6 +40,10 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--eval-every", type=int, default=20)
     common.add_argument("--seed", type=int, default=0)
     common.add_argument("--verbose", action="store_true")
+    common.add_argument(
+        "--cache-dir", default=None,
+        help="Directory to cache preprocessed .npy arrays (skips CSV re-processing)",
+    )
 
     run_p = sub.add_parser("run", parents=[common], help="single configuration")
     run_p.add_argument(
@@ -74,6 +78,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             eval_every=args.eval_every,
             seed=args.seed,
             verbose=args.verbose,
+            cache_dir=args.cache_dir,
         )
         print(
             f"\n[{res.dataset}] method={res.method} gamma={res.gamma} "
@@ -91,6 +96,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             eval_every=args.eval_every,
             seed=args.seed,
             verbose=args.verbose,
+            cache_dir=args.cache_dir,
         )
         print(f"\n=== Figure 1 reproduction — {args.dataset} (n={args.n_rare}) ===")
         print(summarize_gamma_sweep(results))
@@ -104,6 +110,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             eval_every=args.eval_every,
             seed=args.seed,
             verbose=args.verbose,
+            cache_dir=args.cache_dir,
         )
         print(f"\n=== Figures 2-3 reproduction — {args.dataset} (gamma={args.gamma}) ===")
         print("n | FedAvg(last-n) | Static(last-n) | FedGRAA(last-n)")
