@@ -5,10 +5,13 @@
   ``gamma in {0, 0.5, 1}`` at ``n = 3``.
 * :func:`run_n_sweep` reproduces Figures 2-3: FedGRAA robustness as the number of
   protected rare clients grows (``n in {3, 5, 7}``).
+* :func:`tabulate_history` produces the full per-round accuracy table (gap 3.2).
+* :func:`save_results` / :func:`load_results` persist results to JSON (gap 3.4).
 """
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Sequence
 
@@ -156,3 +159,89 @@ def summarize_gamma_sweep(results: Dict[str, ExperimentResult]) -> str:
                 f"{r.final_last_n_acc*100:6.2f}"
             )
     return "\n".join(lines)
+
+
+def tabulate_history(history: "TrainHistory") -> str:  # noqa: F821 (forward ref)
+    """Full per-round accuracy table matching the paper’s Figure 1 layout.
+
+    Gap 3.2 fix: ``summarize_gamma_sweep`` only shows the final round; this
+    function reproduces every evaluation checkpoint (rounds 0, 20, 40, …, 200
+    at the default ``eval_every=20``) so the numbers can be compared directly
+    against the paper’s tables.
+    """
+    lines = [
+        f"{'Round':>5s} | {'All-acc':>7s} | {'Last-n acc':>10s} | {'Composite L\'':>12s}",
+        "-" * 47,
+    ]
+    for rnd, all_a, last_a, comp in zip(
+        history.rounds,
+        history.all_acc,
+        history.last_n_acc,
+        history.composite_loss,
+    ):
+        comp_s = f"{comp:12.6f}" if np.isfinite(comp) else f"{'N/A':>12s}"
+        lines.append(
+            f"{rnd:5d} | {all_a:7.5f} | {last_a:10.8f} | {comp_s}"
+        )
+    return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------- #
+# Result persistence  (gap 3.4 fix)
+# --------------------------------------------------------------------------- #
+
+def save_results(results: Dict[str, ExperimentResult], path: str) -> None:
+    """Persist a results dict (keyed by method string) to a JSON file.
+
+    The file can be reloaded with :func:`load_results` without re-running the
+    full 200-round experiment.
+    """
+    out: Dict = {}
+    for key, r in results.items():
+        h = r.history
+        out[key] = {
+            "dataset": r.dataset,
+            "method": r.method,
+            "gamma": r.gamma,
+            "n_rare": r.n_rare,
+            "rounds": h.rounds,
+            "all_acc": h.all_acc,
+            "last_n_acc": h.last_n_acc,
+            "composite_loss": [
+                v if np.isfinite(v) else None for v in h.composite_loss
+            ],
+        }
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(out, f, indent=2)
+    print(f"Results saved to {path}", flush=True)
+
+
+def load_results(path: str) -> Dict[str, ExperimentResult]:
+    """Reload results previously saved with :func:`save_results`."""
+    from .trainer import TrainHistory
+
+    with open(path, encoding="utf-8") as f:
+        raw = json.load(f)
+
+    results: Dict[str, ExperimentResult] = {}
+    for key, d in raw.items():
+        h = TrainHistory(
+            method=d["method"],
+            gamma=d.get("gamma"),
+            n_rare=d["n_rare"],
+        )
+        h.rounds = d["rounds"]
+        h.all_acc = d["all_acc"]
+        h.last_n_acc = d["last_n_acc"]
+        raw_comp = d.get("composite_loss", [])
+        h.composite_loss = [
+            float(v) if v is not None else float("nan") for v in raw_comp
+        ] or [float("nan")] * len(h.rounds)
+        results[key] = ExperimentResult(
+            dataset=d["dataset"],
+            method=d["method"],
+            gamma=d.get("gamma"),
+            n_rare=d["n_rare"],
+            history=h,
+        )
+    return results

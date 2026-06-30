@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import List, Sequence, Tuple
 
 import numpy as np
@@ -55,6 +56,26 @@ def _loss_and_grad_P(
     return MLP.loss_and_grad(params, X, y)
 
 
+def _project_simplex(w: np.ndarray) -> np.ndarray:
+    """Euclidean projection of ``w`` onto the probability simplex.
+
+    Returns the closest point to ``w`` (in L2) that satisfies
+    ``w_k >= 0`` and ``sum(w_k) == 1`` (gap 1.1 fix).
+
+    Algorithm: Duchi et al. (2008), O(K log K).
+    """
+    n = len(w)
+    u = np.sort(w)[::-1]
+    cssv = np.cumsum(u)
+    rho_candidates = np.flatnonzero(u * np.arange(1, n + 1) > (cssv - 1.0))
+    if len(rho_candidates) == 0:
+        # w is already valid (all zeros, degenerate case): uniform
+        return np.full(n, 1.0 / n)
+    rho = rho_candidates[-1]
+    theta = (cssv[rho] - 1.0) / (rho + 1.0)
+    return np.maximum(w - theta, 0.0)
+
+
 def _grad_wrt_weights(
     grad_P: Sequence[np.ndarray], client_params: Sequence[Params]
 ) -> np.ndarray:
@@ -90,7 +111,15 @@ class FedGRAA:
         L_m, _ = _loss_and_grad_P(params, val.X_m, val.y_m)
         L_u, _ = _loss_and_grad_P(params, val.X_n, val.y_n)
         L_a = min(L_h, L_m)
+        # Gap 3.8: both D_V^h and D_V^m empty — warn and fall back to L_u only.
         if not np.isfinite(L_a):
+            if np.isfinite(L_u):
+                warnings.warn(
+                    "D_V^h and D_V^m are both empty; L_a falls back to 0. "
+                    "The (1-gamma)*L_a term is zeroed regardless of gamma.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
             L_a = 0.0
         if not np.isfinite(L_u):
             L_u = 0.0
@@ -109,7 +138,14 @@ class FedGRAA:
             L_a, g_a = L_h, g_h
         else:
             L_a, g_a = L_m, g_m
+        # Gap 3.8: both empty — warn and zero out (same as composite_loss).
         if not np.isfinite(L_a):
+            if np.isfinite(L_u):
+                warnings.warn(
+                    "D_V^h and D_V^m are both empty; gradient of L_a zeroed.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
             L_a, g_a = 0.0, [np.zeros_like(p) for p in params]
         if not np.isfinite(L_u):
             L_u, g_u = 0.0, [np.zeros_like(p) for p in params]
@@ -127,12 +163,22 @@ class FedGRAA:
     ) -> np.ndarray:
         """Refine the aggregation weights for ``E'`` epochs (Algorithm 2).
 
+        Gap 2.1 fix: Adam state is reset at the start of every round so that
+        each call is an independent E'-epoch sub-problem (consistent with the
+        natural reading of Algorithm 2 and with the paper's per-round framing).
+
+        Gap 1.1 fix: weights are projected onto the probability simplex after
+        the update to guarantee w_k >= 0 and sum(w_k) == 1, as required by the
+        convex-combination aggregation and the convergence proof.
+
         Returns the updated weight vector ``w^t``.
         """
+        self.optimizer.reset()  # fresh Adam state each round (gap 2.1)
         w = np.array(weights_prev, dtype=float).copy()
         for _ in range(self.weight_epochs):
             P = aggregate(client_params, w)              # theta'_g = sum_k w_k theta_k
             _, grad_P = self._composite_grad_P(P, val)   # dL'/dP
             grad_w = _grad_wrt_weights(grad_P, client_params)  # dL'/dw
             self.optimizer.step([w], [grad_w])           # Adam step on w (eq. 10)
+        w = _project_simplex(w)                          # enforce simplex (gap 1.1)
         return w

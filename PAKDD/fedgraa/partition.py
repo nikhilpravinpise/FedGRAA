@@ -89,27 +89,53 @@ def partition_non_iid(
 ) -> FederatedSplit:
     """Build the one-attack-per-client federated split.
 
-    For every attack class the client receives all of that class's samples plus
+    For every attack class the client receives all of that class’s samples plus
     an equal number of benign samples drawn from the shared benign pool. Each
     client is then split 90/10 into train/validation.
+
+    Gap 2.3 fix: benign samples are allocated sequentially from a single
+    pre-shuffled pool (circular indexing) rather than by independent random
+    draws. This minimises cross-client overlap and makes allocation deterministic.
     """
     rng = np.random.default_rng(seed)
+
+    # Pre-compute attack-class index arrays once.
+    attack_idx_map: dict = {
+        aid: np.flatnonzero(y == aid) for aid in spec.attack_ids
+    }
+
+    # --- Disjoint benign allocation (gap 2.3 fix) ------------------------ #
     benign_idx_all = np.flatnonzero(y == spec.benign_id)
+    benign_pool = rng.permutation(benign_idx_all)
+    pool_size = len(benign_pool)
+
+    benign_alloc: dict = {}
+    cursor = 0
+    for aid in spec.attack_ids:
+        demand = len(attack_idx_map[aid])
+        if demand == 0 or pool_size == 0:
+            benign_alloc[aid] = np.empty(0, dtype=int)
+        else:
+            # Circular indexing: wrap around the pool rather than drawing
+            # independently, so each additional sample is unique until the
+            # pool is exhausted, then samples repeat in a deterministic order.
+            indices = np.arange(cursor, cursor + demand) % pool_size
+            benign_alloc[aid] = benign_pool[indices]
+        cursor += demand
+    # --------------------------------------------------------------------- #
 
     clients: List[ClientShard] = []
     val_X_parts: List[np.ndarray] = []
     val_y_parts: List[np.ndarray] = []
 
     for client_id, attack_id in enumerate(spec.attack_ids):
-        attack_idx = np.flatnonzero(y == attack_id)
+        attack_idx = attack_idx_map[attack_id]
         n_attack = len(attack_idx)
         if n_attack == 0:
             continue
 
         # Equal number of benign samples (Section 5, Data Settings).
-        n_benign = min(n_attack, len(benign_idx_all))
-        replace = n_benign > len(benign_idx_all)
-        benign_pick = rng.choice(benign_idx_all, size=n_benign, replace=replace)
+        benign_pick = benign_alloc[attack_id]
 
         idx = np.concatenate([attack_idx, benign_pick])
         rng.shuffle(idx)
@@ -173,6 +199,15 @@ def median_frequency_split(
     freq_by_class = dict(zip(classes.tolist(), counts.tolist()))
 
     high_classes = {c for c, f in freq_by_class.items() if f > median_freq}
+
+    # Gap 2.6 fix: if no class strictly exceeds the median (e.g. all classes
+    # have the same count and all land at exactly the median), designate the
+    # upper half (by count) as "high frequency" so D_V^h is never empty when
+    # there are at least two non-rare classes.
+    if not high_classes and len(classes) > 1:
+        sorted_asc = classes[np.argsort(counts)]
+        split_idx = len(sorted_asc) // 2          # upper half = high
+        high_classes = set(sorted_asc[split_idx:].tolist())
 
     is_high = np.isin(y_rest, list(high_classes)) if high_classes else np.zeros(
         len(y_rest), dtype=bool

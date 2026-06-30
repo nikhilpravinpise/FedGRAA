@@ -6,6 +6,7 @@ import pytest
 from fedgraa.aggregation import (
     FedGRAA,
     _grad_wrt_weights,
+    _project_simplex,
     fedavg_weights,
     static_reparam_weights,
 )
@@ -97,3 +98,64 @@ def test_fedgraa_update_runs_and_changes_weights(rng):
     w1 = fg.update(client_params, w0, val)
     assert w1.shape == w0.shape
     assert not np.allclose(w0, w1)  # weights actually move
+
+
+# --------------------------------------------------------------------------- #
+# Gap 1.1: simplex projection
+# --------------------------------------------------------------------------- #
+
+def test_project_simplex_on_valid_input():
+    """A already-valid distribution should be returned unchanged."""
+    w = np.array([0.2, 0.5, 0.3])
+    p = _project_simplex(w)
+    np.testing.assert_allclose(p.sum(), 1.0, atol=1e-12)
+    assert np.all(p >= 0)
+    np.testing.assert_allclose(p, w, atol=1e-10)
+
+
+def test_project_simplex_clips_negatives():
+    """Negative weights must be zeroed and remainder redistributed."""
+    w = np.array([-0.5, 1.2, 0.3])
+    p = _project_simplex(w)
+    np.testing.assert_allclose(p.sum(), 1.0, atol=1e-12)
+    assert np.all(p >= 0)
+
+
+def test_project_simplex_uniform_when_all_equal():
+    w = np.array([0.0, 0.0, 0.0])
+    p = _project_simplex(w)
+    np.testing.assert_allclose(p.sum(), 1.0, atol=1e-12)
+    assert np.all(p >= -1e-12)
+
+
+def test_fedgraa_update_respects_simplex(rng):
+    """Gap 1.1: updated weights must be non-negative and sum to 1."""
+    layer_sizes = (6, 7, 5, 4)
+    client_params = [init_params(layer_sizes, seed=s) for s in range(3)]
+    val = _make_val_split(rng, n_features=6, n_classes=4)
+    # Use a large learning rate to stress-test the projection.
+    fg = FedGRAA(gamma=1.0, eta_prime=2.0, weight_epochs=20)
+    w0 = static_reparam_weights([100, 50, 10])
+    w1 = fg.update(client_params, w0, val)
+    assert np.all(w1 >= -1e-12), f"Weights contain negatives: {w1}"
+    np.testing.assert_allclose(w1.sum(), 1.0, atol=1e-9)
+
+
+# --------------------------------------------------------------------------- #
+# Gap 2.1: Adam reset each round
+# --------------------------------------------------------------------------- #
+
+def test_fedgraa_update_is_deterministic_across_calls(rng):
+    """Gap 2.1: two calls with the same inputs must return the same weights."""
+    layer_sizes = (6, 7, 5, 4)
+    client_params = [init_params(layer_sizes, seed=s) for s in range(3)]
+    val = _make_val_split(rng, n_features=6, n_classes=4)
+    fg = FedGRAA(gamma=0.5, eta_prime=0.1, weight_epochs=3)
+    w0 = static_reparam_weights([100, 50, 10])
+
+    w_first  = fg.update(client_params, w0.copy(), val)
+    w_second = fg.update(client_params, w0.copy(), val)  # same starting weights
+    np.testing.assert_allclose(
+        w_first, w_second, atol=1e-12,
+        err_msg="FedGRAA.update() is not deterministic — Adam state not reset",
+    )

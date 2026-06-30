@@ -99,10 +99,11 @@ class MLP:
             if layer < n_layers - 1:
                 a = np.tanh(z)            # hidden: tanh
             else:
+                final_logits = z          # pre-softmax logits cached for stable CE
                 probs = softmax(z)        # output: softmax
                 a = probs
             activations.append(a)
-        cache = {"activations": activations, "n_layers": n_layers}
+        cache = {"activations": activations, "n_layers": n_layers, "final_logits": final_logits}
         return activations[-1], cache
 
     @staticmethod
@@ -139,7 +140,10 @@ class MLP:
         y = np.asarray(y, dtype=int)
         N = len(y)
 
-        loss = float(-np.log(probs[np.arange(N), y] + 1e-12).mean())
+        # Numerically stable CE via log-softmax on pre-softmax logits.
+        # Matches MLP.loss() exactly — resolves the inconsistency in gap 1.3.
+        logp = _log_softmax(cache["final_logits"])
+        loss = float(-logp[np.arange(N), y].mean())
 
         grads: Params = [np.zeros_like(p) for p in params]
 

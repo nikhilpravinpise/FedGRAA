@@ -67,3 +67,64 @@ def test_unknown_method_raises():
     cfg = FedConfig(rounds=2, seed=0)
     with pytest.raises(ValueError):
         FederatedTrainer(split, cfg, method="nope")
+
+
+# --------------------------------------------------------------------------- #
+# Gap 2.5: round 0 recorded
+# --------------------------------------------------------------------------- #
+
+def test_round_0_recorded_in_history():
+    """Gap 2.5: history must start with round=0 matching the paper's Figure 1."""
+    split = _make_split()
+    cfg = FedConfig(rounds=20, gamma=1.0, n_rare=1, seed=0)
+    hist = FederatedTrainer(split, cfg, method="fedgraa").train(eval_every=10)
+    assert hist.rounds[0] == 0, f"Expected history to start at round 0, got {hist.rounds[0]}"
+    # rounds 0, 10, 20
+    assert len(hist.rounds) == 3
+
+
+# --------------------------------------------------------------------------- #
+# Gap 3.7: composite loss tracked for FedGRAA
+# --------------------------------------------------------------------------- #
+
+def test_composite_loss_tracked_for_fedgraa():
+    """Gap 3.7: composite_loss list must be populated for FedGRAA runs."""
+    split = _make_split()
+    cfg = FedConfig(rounds=20, gamma=1.0, n_rare=1, seed=0)
+    hist = FederatedTrainer(split, cfg, method="fedgraa").train(eval_every=10)
+    assert len(hist.composite_loss) == len(hist.rounds)
+    finite_vals = [v for v in hist.composite_loss if np.isfinite(v)]
+    assert len(finite_vals) > 0, "No finite composite-loss values recorded"
+
+
+def test_composite_loss_nan_for_non_fedgraa():
+    """Gap 3.7: non-FedGRAA methods produce NaN composite loss."""
+    split = _make_split()
+    cfg = FedConfig(rounds=10, n_rare=1, seed=0)
+    for method in ("fedavg", "static"):
+        hist = FederatedTrainer(split, cfg, method=method).train(eval_every=5)
+        assert all(not np.isfinite(v) for v in hist.composite_loss), (
+            f"Expected NaN composite_loss for {method}"
+        )
+
+
+# --------------------------------------------------------------------------- #
+# Gap 2.2: per-client optimizer persistence
+# --------------------------------------------------------------------------- #
+
+def test_client_optimizer_objects_created_and_used():
+    """Gap 2.2: FederatedTrainer must maintain per-client Adam instances."""
+    split = _make_split()
+    cfg = FedConfig(rounds=10, gamma=1.0, n_rare=1, seed=0)
+    trainer = FederatedTrainer(split, cfg, method="fedgraa")
+
+    assert len(trainer._client_optimizers) == split.n_clients, (
+        "Expected one Adam optimizer per client"
+    )
+    trainer.train(eval_every=5)
+
+    # After training, every optimizer's step counter must be > 0.
+    for client_id, opt in trainer._client_optimizers.items():
+        assert opt._t > 0, (
+            f"Client {client_id} optimizer step count is 0 — was it used?"
+        )

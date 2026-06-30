@@ -14,6 +14,7 @@ The package implements, with no deviations from the paper's stated design:
 from .config import (
     CIC_IDS_2017,
     UNSW_NB15,
+    DATASETS,
     DatasetSpec,
     FedConfig,
     ModelConfig,
@@ -34,6 +35,7 @@ from .experiment import ExperimentResult, run_experiment, run_gamma_sweep
 __all__ = [
     "CIC_IDS_2017",
     "UNSW_NB15",
+    "DATASETS",
     "DatasetSpec",
     "FedConfig",
     "ModelConfig",

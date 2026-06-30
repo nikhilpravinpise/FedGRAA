@@ -22,12 +22,25 @@ def test_softmax_stable_large_logits():
 
 
 def test_loss_matches_manual_cross_entropy(tiny_layer_sizes, rng):
+    """Both loss() and loss_and_grad() must agree and match log-softmax (gap 1.3)."""
     params = init_params(tiny_layer_sizes, seed=2)
     X = rng.normal(size=(7, tiny_layer_sizes[0]))
     y = rng.integers(0, tiny_layer_sizes[-1], size=7)
-    probs, _ = MLP.forward(params, X)
-    manual = -np.log(probs[np.arange(7), y] + 1e-12).mean()
-    assert abs(MLP.loss(params, X, y) - manual) < 1e-9
+
+    # Primary fix: loss() and loss_and_grad() must be numerically identical.
+    loss_scalar = MLP.loss(params, X, y)
+    loss_from_grad, _ = MLP.loss_and_grad(params, X, y)
+    np.testing.assert_allclose(
+        loss_scalar, loss_from_grad, atol=1e-12,
+        err_msg="MLP.loss() and MLP.loss_and_grad() disagree (gap 1.3)",
+    )
+
+    # Both should equal the numerically stable log-softmax formula.
+    _, cache = MLP.forward(params, X)
+    from fedgraa.model import _log_softmax
+    logp = _log_softmax(cache["final_logits"])
+    expected = float(-logp[np.arange(7), y].mean())
+    np.testing.assert_allclose(loss_scalar, expected, atol=1e-12)
 
 
 def test_backprop_matches_finite_differences(tiny_layer_sizes, rng):
@@ -63,6 +76,16 @@ def test_aggregate_linear_combination(tiny_layer_sizes, rng):
         np.testing.assert_allclose(a, 0.3 * b + 0.7 * c)
 
 
+def test_forward_caches_final_logits(tiny_layer_sizes, rng):
+    """forward() must cache 'final_logits' for numerically stable CE (gap 1.3)."""
+    params = init_params(tiny_layer_sizes, seed=9)
+    X = rng.normal(size=(5, tiny_layer_sizes[0]))
+    _, cache = MLP.forward(params, X)
+    assert "final_logits" in cache, "'final_logits' key missing from forward() cache"
+    logits = cache["final_logits"]
+    assert logits.shape == (5, tiny_layer_sizes[-1])
+
+
 def test_adam_decreases_loss(tiny_layer_sizes, rng):
     params = init_params(tiny_layer_sizes, seed=5)
     X = rng.normal(size=(64, tiny_layer_sizes[0]))
@@ -73,3 +96,4 @@ def test_adam_decreases_loss(tiny_layer_sizes, rng):
         _, g = MLP.loss_and_grad(params, X, y)
         opt.step(params, g)
     assert MLP.loss(params, X, y) < start
+
