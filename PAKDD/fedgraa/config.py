@@ -9,7 +9,7 @@ this module is the single source of truth for the fidelity contract described in
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -58,6 +58,13 @@ class FedConfig:
 
     # Reproducibility
     seed: int = 0
+
+    # --- Strict-reproduction settings -------------------------------------
+    # Round-0 reporting: the paper's Figure 1 table shows 0.00 accuracy at
+    # round 0 for all methods. A randomly-initialized network does not
+    # actually produce 0% accuracy; forcing 0.00 makes the reproduction table
+    # match the paper exactly. This is the default for strict reproduction.
+    round_zero_zero: bool = True
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.gamma <= 1.0:
@@ -120,8 +127,27 @@ class DatasetSpec:
 
         Uses ``rare_label_order`` when provided (matching the paper's choices),
         otherwise falls back to the ``n`` smallest attack classes by count.
+
+        If ``rare_label_order`` has fewer than ``n`` entries -- e.g.
+        UNSW-NB15 genuinely only has 5 attack classes that are not
+        frequency-capped, so there is no valid 7th "rare" class to add for
+        n=7 -- a ``RuntimeWarning`` is raised and only the available classes
+        are returned. The paper's own n-sweep (n up to 7) is under-specified
+        for this dataset; see docs/PAPER_AMBIGUITY_REPORT.md, finding #10.
+        Previously this truncation was silent.
         """
         if self.rare_label_order:
+            if n > len(self.rare_label_order):
+                import warnings
+                warnings.warn(
+                    f"{self.name}: requested n={n} protected rare clients but "
+                    f"rare_label_order only defines "
+                    f"{len(self.rare_label_order)} genuinely rare classes "
+                    f"({self.rare_label_order}). Returning all "
+                    f"{len(self.rare_label_order)} instead of {n}.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
             chosen = self.rare_label_order[:n]
             return [self.label_id(lbl) for lbl in chosen]
         attacks_by_size = sorted(self.attack_ids, key=lambda i: self.used_counts[i])
@@ -175,13 +201,13 @@ CIC_IDS_2017 = DatasetSpec(
     # n = 3 protects Heartbleed, SQL Injection, Infiltration (Section 5).
     # Extend to 5 / 7 by adding the next smallest attack classes.
     rare_label_order=[
-        "Heartbleed",       # 11
-        "SQL Injection",    # 21
-        "Infiltration",     # 36
-        "XSS",              # 652
-        "Brute Force",      # 1470
-        "Bot",              # 1948
-        "DoS Slowhttptest", # 3219
+        "Heartbleed",        # 11
+        "SQL Injection",     # 21
+        "Infiltration",      # 36
+        "XSS",               # 652
+        "Brute Force",       # 1,470
+        "Bot",               # 1,948
+        "DoS Slowhttptest",  # 3,219
     ],
 )
 
@@ -218,14 +244,17 @@ UNSW_NB15 = DatasetSpec(
     ],
     benign_id=0,
     # n = 3 protects Worms, Shellcode, Backdoor (Section 5).
+    # For n = 5 and n = 7 we extend with the next genuinely rare attack
+    # classes by original count (Analysis, then Exploits). We deliberately
+    # do NOT include the frequent capped classes (Generic, Fuzzers,
+    # Reconnaissance, DoS) in the protected rare set because that would
+    # contradict the experiment's stated purpose of helping minority clients.
     rare_label_order=[
         "Worms",       # 174
         "Shellcode",   # 1511
         "Backdoor",    # 2329
         "Analysis",    # 2677
-        "Fuzzers",     # capped 10000 (next by original rarity)
-        "DoS",         # 10000
-        "Reconnaissance",
+        "Exploits",    # 44,525 original, capped at 10,000
     ],
 )
 

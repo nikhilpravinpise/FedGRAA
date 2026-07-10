@@ -27,8 +27,10 @@ For the full reproducibility run (slow -- expect 30-120 min on CPU)::
 from __future__ import annotations
 
 import argparse
+import os
 import time
 
+from fedgraa.config import FedConfig
 from fedgraa.experiment import run_gamma_sweep, run_n_sweep, summarize_gamma_sweep
 
 
@@ -55,9 +57,31 @@ def main() -> None:
         default="both",
         help="Which sweep to run: 'gamma' (Fig 1), 'n' (Figs 2-3), or 'both' (default)",
     )
+    parser.add_argument(
+        "--plot-dir",
+        default=None,
+        help="If given, save matplotlib figures for each sweep here (gap m-5).",
+    )
+    parser.add_argument(
+        "--round-zero-zero",
+        action="store_true",
+        help="Force round-0 accuracies to 0.00 to match the paper's table (gap C-4).",
+    )
+    parser.add_argument(
+        "--baselines",
+        action="store_true",
+        help="Include FedProx, FedOpt, and FedSND baselines in gamma sweep (gap m-3).",
+    )
     parser.add_argument("--verbose", action="store_true",
                         help="Legacy flag (progress is now always printed)")
     args = parser.parse_args()
+
+    # Shared FedConfig carrying all reproduction-gap flags.
+    base_cfg = FedConfig(
+        rounds=args.rounds,
+        seed=args.seed,
+        round_zero_zero=args.round_zero_zero,
+    )
 
     t_total = time.time()
 
@@ -77,32 +101,73 @@ def main() -> None:
                 eval_every=args.eval_every,
                 seed=args.seed,
                 cache_dir=args.cache_dir,
+                cfg=base_cfg,
             )
             print(f"\nGamma sweep done in {time.time()-t0:.0f}s")
             print(summarize_gamma_sweep(gamma_results))
 
+            if args.baselines:
+                from fedgraa.experiment import run_experiment
+                print("\n--- Baselines (FedProx, FedOpt, FedSND) ---")
+                for method in ("fedprox", "fedopt", "fedsnd"):
+                    res = run_experiment(
+                        dataset, method=method, n_rare=3, rounds=args.rounds,
+                        data_dir=args.data_dir, eval_every=args.eval_every,
+                        seed=args.seed, cache_dir=args.cache_dir, cfg=base_cfg,
+                    )
+                    gamma_results[method] = res
+                    print(
+                        f"{method:<8} | all={res.final_all_acc*100:6.2f}  | "
+                        f"last-n={res.final_last_n_acc*100:6.2f}"
+                    )
+
+            if args.plot_dir:
+                os.makedirs(args.plot_dir, exist_ok=True)
+                try:
+                    from fedgraa.plot import plot_dual_metric
+                    path = os.path.join(args.plot_dir, f"{dataset}_figure1.png")
+                    plot_dual_metric(gamma_results, title=f"{dataset} — Figure 1", save_path=path)
+                    print(f"Saved Figure 1 plot to {path}")
+                except ImportError as exc:
+                    print(f"Plotting skipped: {exc}")
+
         if args.sweep in ("n", "both"):
-            print(f"\n--- Figures 2-3: n sweep (gamma=1) ---")
+            print(f"\n--- Figures 2-3: n sweep (gamma=0/0.5/1) ---")
             t0 = time.time()
             n_results = run_n_sweep(
                 dataset,
                 ns=(3, 5, 7),
-                gamma=1.0,
+                gammas=(0.0, 0.5, 1.0),
                 rounds=args.rounds,
                 data_dir=args.data_dir,
                 eval_every=args.eval_every,
                 seed=args.seed,
                 cache_dir=args.cache_dir,
+                cfg=base_cfg,
             )
             print(f"\nn sweep done in {time.time()-t0:.0f}s")
-            print("n | FedAvg(last-n) | Static(last-n) | FedGRAA(last-n)")
-            print("--+----------------+----------------+----------------")
+            print("n | FedAvg | Static | FedGRAA γ=0 | γ=0.5 | γ=1")
+            print("--+--------+--------+-------------+-------+------")
             for n, res in n_results.items():
                 print(
-                    f"{n} | {res['fedavg'].final_last_n_acc*100:13.2f}  | "
-                    f"{res['static'].final_last_n_acc*100:13.2f}  | "
-                    f"{res['fedgraa'].final_last_n_acc*100:13.2f}"
+                    f"{n} | "
+                    f"{res['fedavg'].final_last_n_acc*100:6.2f} | "
+                    f"{res['static'].final_last_n_acc*100:6.2f} | "
+                    f"{res['fedgraa_g0.0'].final_last_n_acc*100:11.2f} | "
+                    f"{res['fedgraa_g0.5'].final_last_n_acc*100:5.2f} | "
+                    f"{res['fedgraa_g1.0'].final_last_n_acc*100:5.2f}"
                 )
+
+            if args.plot_dir:
+                os.makedirs(args.plot_dir, exist_ok=True)
+                try:
+                    from fedgraa.plot import plot_n_sweep
+                    path = os.path.join(args.plot_dir, f"{dataset}_figure2_3.png")
+                    plot_n_sweep(n_results, metric="last_n",
+                                 title=f"{dataset} — Figures 2-3", save_path=path)
+                    print(f"Saved Figures 2-3 plot to {path}")
+                except ImportError as exc:
+                    print(f"Plotting skipped: {exc}")
 
     print(f"\nTotal wall time: {time.time()-t_total:.0f}s")
 

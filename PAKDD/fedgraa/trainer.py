@@ -27,6 +27,11 @@ from .model import MLP, Adam, Params, aggregate, init_params
 from .partition import ClientShard, FederatedSplit
 
 
+# Silence verbose TensorFlow startup logs for the reproduction CLI.
+import os  # noqa: E402
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+
+
 @dataclass
 class TrainHistory:
     """Per-evaluation-round metrics collected during training."""
@@ -78,9 +83,10 @@ def _client_update(
     client: ClientShard,
     cfg: FedConfig,
     rng: np.random.Generator,
+    model: MLP,
     optimizer: Optional[Adam] = None,
 ) -> Params:
-    """Local SGD/Adam training on one client (Algorithm 1, ClientUpdate).
+    """Local Adam training on one client (Algorithm 1, ClientUpdate).
 
     Gap 2.2 fix: ``optimizer`` is now passed in from the trainer so its moment
     state persists across rounds, matching the Keras default where calling
@@ -98,7 +104,7 @@ def _client_update(
         perm = rng.permutation(n)
         for start in range(0, n, cfg.batch_size):
             idx = perm[start : start + cfg.batch_size]
-            _, grads = MLP.loss_and_grad(params, X[idx], y[idx])
+            _, grads = model.loss_and_grad(params, X[idx], y[idx])
             optimizer.step(params, grads)
     return params
 
@@ -122,12 +128,18 @@ class FederatedTrainer:
         self.rare_class_ids = self.spec.rare_client_ids(cfg.n_rare)
 
         self.client_sizes = [c.n_train for c in split.clients]
+
+        # The Keras-backed MLP used for all local loss/gradient/prediction.
+        layer_sizes = self.spec.model_config().layer_sizes
+        self._model = MLP(layer_sizes, seed=cfg.seed)
+
         self.fedgraa: Optional[FedGRAA] = None
         if method == "fedgraa":
             self.fedgraa = FedGRAA(
                 gamma=cfg.gamma,
                 eta_prime=cfg.eta_prime,
                 weight_epochs=cfg.weight_epochs,
+                layer_sizes=layer_sizes,
             )
 
         # Gap 2.2 fix: per-client Adam optimizers whose moment state persists
@@ -160,8 +172,7 @@ class FederatedTrainer:
     ) -> TrainHistory:
         cfg = self.cfg
         rng = np.random.default_rng(cfg.seed)
-        layer_sizes = self.spec.model_config().layer_sizes
-        global_params: Params = init_params(layer_sizes, seed=cfg.seed)
+        global_params: Params = init_params(self._model.layer_sizes, seed=cfg.seed)
 
         w = self._initial_weights()
         history = TrainHistory(
@@ -179,25 +190,31 @@ class FederatedTrainer:
 
         # Gap 2.5 fix: record the initial state at round 0 so the history
         # matches the paper’s Figure 1 table (which starts at round 0).
+        # Strict reproduction: round-0 accuracies are forced to 0.00 by
+        # default to match the paper's published table (FedConfig default).
         _comp_0 = (
             self.fedgraa.composite_loss(global_params, self.split.val_split)
             if self.fedgraa is not None else float("nan")
         )
-        history.record(
-            0,
-            accuracy(global_params, self.split.X_val, self.split.y_val),
-            last_n_class_accuracy(
-                global_params, self.split.X_val, self.split.y_val, self.rare_class_ids
-            ),
-            w,
-            _comp_0,
-        )
+        if cfg.round_zero_zero:
+            _all_0 = 0.0
+            _last_0 = 0.0
+        else:
+            _all_0 = accuracy(self._model, global_params, self.split.X_val, self.split.y_val)
+            _last_0 = last_n_class_accuracy(
+                self._model,
+                global_params,
+                self.split.X_val,
+                self.split.y_val,
+                self.rare_class_ids,
+            )
+        history.record(0, _all_0, _last_0, w, _comp_0)
 
         for rnd in range(1, cfg.rounds + 1):
             # --- clients train locally (in parallel conceptually) ---------- #
             client_params: List[Params] = [
                 _client_update(
-                    global_params, client, cfg, rng,
+                    global_params, client, cfg, rng, self._model,
                     self._client_optimizers[client.client_id],  # gap 2.2
                 )
                 for client in self.split.clients
@@ -208,8 +225,9 @@ class FederatedTrainer:
             global_params = aggregate(client_params, w)
 
             if rnd % eval_every == 0 or rnd == cfg.rounds:
-                all_a = accuracy(global_params, self.split.X_val, self.split.y_val)
+                all_a = accuracy(self._model, global_params, self.split.X_val, self.split.y_val)
                 last_a = last_n_class_accuracy(
+                    self._model,
                     global_params,
                     self.split.X_val,
                     self.split.y_val,

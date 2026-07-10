@@ -17,12 +17,76 @@ integer class labels aligned to ``spec.labels``.
 from __future__ import annotations
 
 import os
+import urllib.request
+import zipfile
 from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
 from .config import DatasetSpec, get_dataset_spec
+
+
+# --------------------------------------------------------------------------- #
+# UNSW-NB15 downloader (gap B-1)
+# --------------------------------------------------------------------------- #
+UNSW_URLS = {
+    "UNSW_NB15_training-set.csv":
+        "https://cloudstor.aarnet.edu.au/plus/s/2DhnLGDdEECv4C4/download?path=%2F&files=UNSW_NB15_training-set.csv",
+    "UNSW_NB15_testing-set.csv":
+        "https://cloudstor.aarnet.edu.au/plus/s/2DhnLGDdEECv4C4/download?path=%2F&files=UNSW_NB15_testing-set.csv",
+    "UNSW-NB15_1.csv":
+        "https://cloudstor.aarnet.edu.au/plus/s/2DhnLGDdEECv4C4/download?path=%2F&files=UNSW-NB15_1.csv",
+    "UNSW-NB15_2.csv":
+        "https://cloudstor.aarnet.edu.au/plus/s/2DhnLGDdEECv4C4/download?path=%2F&files=UNSW-NB15_2.csv",
+    "UNSW-NB15_3.csv":
+        "https://cloudstor.aarnet.edu.au/plus/s/2DhnLGDdEECv4C4/download?path=%2F&files=UNSW-NB15_3.csv",
+    "UNSW-NB15_4.csv":
+        "https://cloudstor.aarnet.edu.au/plus/s/2DhnLGDdEECv4C4/download?path=%2F&files=UNSW-NB15_4.csv",
+}
+
+
+def download_unsw_nb15(
+    target_dir: str,
+    files: Optional[List[str]] = None,
+    timeout: int = 120,
+) -> List[str]:
+    """Attempt to download the UNSW-NB15 CSV files.
+
+    The official AARNet CloudStor URLs are tried first. If they fail (e.g.
+    because the service requires authentication or has moved), the function
+    prints manual-download instructions and returns an empty list.
+
+    Returns the list of successfully downloaded file paths.
+    """
+    os.makedirs(target_dir, exist_ok=True)
+    files = files or list(UNSW_URLS.keys())
+    downloaded: List[str] = []
+    for fname in files:
+        url = UNSW_URLS.get(fname)
+        if url is None:
+            continue
+        dest = os.path.join(target_dir, fname)
+        if os.path.exists(dest):
+            downloaded.append(dest)
+            continue
+        print(f"Downloading {fname} ...", flush=True)
+        try:
+            urllib.request.urlretrieve(url, dest)
+            downloaded.append(dest)
+            print(f"  saved {dest}", flush=True)
+        except Exception as exc:  # pragma: no cover - network dependent
+            print(f"  failed to download {fname}: {exc}", flush=True)
+            if os.path.exists(dest):
+                os.remove(dest)
+    if not downloaded:
+        print(
+            "\nCould not auto-download UNSW-NB15. Please obtain the CSV files "
+            "manually from https://research.unsw.edu.au/projects/unsw-nb15-dataset "
+            f"and place them in {target_dir}/",
+            flush=True,
+        )
+    return downloaded
 
 
 # --------------------------------------------------------------------------- #
@@ -95,6 +159,15 @@ def load_dataset(
             for f in sorted(os.listdir(data_dir))
             if f.lower().endswith(".csv")
         ]
+        # Gap B-1: auto-download UNSW-NB15 if the directory is empty.
+        if not csvs and name == "UNSW-NB15":
+            print(f"[{name}] Data directory is empty; attempting auto-download ...")
+            download_unsw_nb15(data_dir)
+            csvs = [
+                os.path.join(data_dir, f)
+                for f in sorted(os.listdir(data_dir))
+                if f.lower().endswith(".csv")
+            ]
         if csvs:
             # --- NPY cache check ----------------------------------------- #
             if cache_dir:
@@ -129,6 +202,7 @@ def _load_real_csvs(
     seed: int,
 ) -> Tuple[np.ndarray, np.ndarray, DatasetSpec]:
     print(f"  Loading {len(csv_paths)} CSV file(s)...", flush=True)
+
     frames = []
     for i, p in enumerate(csv_paths, 1):
         frames.append(pd.read_csv(p, skipinitialspace=True))
@@ -182,8 +256,12 @@ def _load_real_csvs(
     del X_df  # free the DataFrame before allocating the final capped array
     np.place(X, ~np.isfinite(X), 0.0)  # replace inf / NaN in one pass
 
-    print("  Capping frequent classes and scaling...", flush=True)
+    print("  Capping frequent classes...", flush=True)
     X, y = _cap_frequent_classes(X, y, spec, seed=seed)
+    # The paper is silent on feature scaling. Global standard scaling on the
+    # pooled data is the closest thing to an unmentioned default and is applied
+    # before partitioning (partition_non_iid re-centers the same statistics).
+    print("  Standard-scaling globally...", flush=True)
     X = _standard_scale(X)
     print(f"  Final dataset: {len(y):,} rows, {X.shape[1]} features, "
           f"{len(np.unique(y))} classes.", flush=True)
@@ -265,10 +343,17 @@ def _standard_scale(X: np.ndarray) -> np.ndarray:
 def _cap_frequent_classes(
     X: np.ndarray, y: np.ndarray, spec: DatasetSpec, seed: int
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Cap each class at ``spec.frequent_cap`` samples (Section 5)."""
+    """Cap each class at ``spec.frequent_cap`` samples (Section 5).
+
+    The paper says highly frequent *attacks* are capped at 10,000; the
+    Benign/Normal class is not in that list and is therefore left untouched.
+    """
     rng = np.random.default_rng(seed)
     keep_idx: List[np.ndarray] = []
     for class_id in range(spec.n_classes):
+        if class_id == spec.benign_id:
+            keep_idx.append(np.flatnonzero(y == class_id))
+            continue
         idx = np.flatnonzero(y == class_id)
         if len(idx) > spec.frequent_cap:
             idx = rng.choice(idx, size=spec.frequent_cap, replace=False)

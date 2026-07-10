@@ -1,4 +1,8 @@
+# TensorFlow 2.21+ requires Python 3.9-3.13. Use Python 3.13 for this project
+# because TensorFlow does not yet provide wheels for Python 3.14.
+tensorflow>=2.21.0
 numpy>=1.24
 pandas>=2.0
 scikit-learn>=1.3
 pytest>=7.0
+matplotlib>=3.7  # optional, only needed for plotting

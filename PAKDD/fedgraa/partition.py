@@ -68,12 +68,18 @@ class FederatedSplit:
 
 
 def _train_val_split(
-    X: np.ndarray, y: np.ndarray, val_fraction: float, rng: np.random.Generator
+    X: np.ndarray,
+    y: np.ndarray,
+    val_fraction: float,
+    rng: np.random.Generator,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Random 90/10 train/validation split used by the paper."""
     n = len(y)
     n_val = max(1, int(round(n * val_fraction))) if n > 1 else 0
+
     perm = rng.permutation(n)
     val_idx, train_idx = perm[:n_val], perm[n_val:]
+
     if len(train_idx) == 0:  # tiny class: keep at least one training sample
         train_idx, val_idx = perm[:1], perm[1:]
     return X[train_idx], y[train_idx], X[val_idx], y[val_idx]
@@ -96,6 +102,9 @@ def partition_non_iid(
     Gap 2.3 fix: benign samples are allocated sequentially from a single
     pre-shuffled pool (circular indexing) rather than by independent random
     draws. This minimises cross-client overlap and makes allocation deterministic.
+
+    Gap M-3: if total benign demand exceeds the benign pool, a warning is issued
+    because some benign samples will be shared across clients.
     """
     rng = np.random.default_rng(seed)
 
@@ -108,6 +117,17 @@ def partition_non_iid(
     benign_idx_all = np.flatnonzero(y == spec.benign_id)
     benign_pool = rng.permutation(benign_idx_all)
     pool_size = len(benign_pool)
+
+    total_attack_demand = sum(len(attack_idx_map[aid]) for aid in spec.attack_ids)
+    if total_attack_demand > pool_size:
+        import warnings
+        warnings.warn(
+            f"Benign pool ({pool_size:,}) is smaller than total attack demand "
+            f"({total_attack_demand:,}). {total_attack_demand - pool_size:,} "
+            f"benign samples will be reused across clients (gap M-3).",
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
     benign_alloc: dict = {}
     cursor = 0
@@ -142,6 +162,7 @@ def partition_non_iid(
         Xc, yc = X[idx], y[idx]
 
         Xtr, ytr, Xval, yval = _train_val_split(Xc, yc, val_fraction, rng)
+
         clients.append(
             ClientShard(
                 client_id=client_id,
@@ -159,6 +180,14 @@ def partition_non_iid(
     X_val = np.concatenate(val_X_parts, axis=0)
     y_val = np.concatenate(val_y_parts, axis=0)
 
+    # Feature scaling: the paper does not specify it. The single committed
+    # default (global standard scaling on the full pooled data) is applied
+    # exactly once, upstream of this function, by the data loader
+    # (``data.py::_load_real_csvs`` / ``make_synthetic_dataset``) before
+    # partitioning ever runs. Re-scaling here a second time -- using only the
+    # post-split validation pool's statistics -- would silently double-
+    # normalize every feature and leak validation-only statistics into the
+    # training data a second, narrower way. No further scaling happens here.
     rare_class_ids = spec.rare_client_ids(n_rare)
     val_split = median_frequency_split(X_val, y_val, rare_class_ids)
 

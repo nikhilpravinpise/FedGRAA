@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import List, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -44,7 +44,7 @@ def static_reparam_weights(client_sizes: Sequence[int]) -> np.ndarray:
 # FedGRAA weight learner (Algorithm 2)
 # --------------------------------------------------------------------------- #
 def _loss_and_grad_P(
-    params: Params, X: np.ndarray, y: np.ndarray
+    model: MLP, params: Params, X: np.ndarray, y: np.ndarray
 ) -> Tuple[float, Params]:
     """Loss and gradient w.r.t. the (aggregated) parameters on a subset.
 
@@ -53,27 +53,7 @@ def _loss_and_grad_P(
     """
     if len(y) == 0:
         return float("inf"), [np.zeros_like(p) for p in params]
-    return MLP.loss_and_grad(params, X, y)
-
-
-def _project_simplex(w: np.ndarray) -> np.ndarray:
-    """Euclidean projection of ``w`` onto the probability simplex.
-
-    Returns the closest point to ``w`` (in L2) that satisfies
-    ``w_k >= 0`` and ``sum(w_k) == 1`` (gap 1.1 fix).
-
-    Algorithm: Duchi et al. (2008), O(K log K).
-    """
-    n = len(w)
-    u = np.sort(w)[::-1]
-    cssv = np.cumsum(u)
-    rho_candidates = np.flatnonzero(u * np.arange(1, n + 1) > (cssv - 1.0))
-    if len(rho_candidates) == 0:
-        # w is already valid (all zeros, degenerate case): uniform
-        return np.full(n, 1.0 / n)
-    rho = rho_candidates[-1]
-    theta = (cssv[rho] - 1.0) / (rho + 1.0)
-    return np.maximum(w - theta, 0.0)
+    return model.loss_and_grad(params, X, y)
 
 
 def _grad_wrt_weights(
@@ -97,21 +77,39 @@ class FedGRAA:
     with the current client models and the previous weights.
     """
 
-    def __init__(self, gamma: float, eta_prime: float = 0.1, weight_epochs: int = 5):
+    def __init__(
+        self,
+        gamma: float,
+        eta_prime: float = 0.1,
+        weight_epochs: int = 5,
+        layer_sizes: Optional[Sequence[int]] = None,
+    ):
         if not 0.0 <= gamma <= 1.0:
             raise ValueError(f"gamma must be in [0, 1], got {gamma}")
         self.gamma = float(gamma)
         self.eta_prime = float(eta_prime)
         self.weight_epochs = int(weight_epochs)
         self.optimizer = Adam(lr=eta_prime)
+        self._model: Optional[MLP] = None
+        if layer_sizes is not None:
+            self._model = MLP(layer_sizes, seed=0)
+
+    def _get_model(self, params: Params) -> MLP:
+        """Return the held MLP, or build one from params if not provided."""
+        if self._model is not None:
+            return self._model
+        from .model import _infer_layer_sizes
+        n_features = params[0].shape[0]
+        return MLP(_infer_layer_sizes(params, n_features), seed=0)
 
     def composite_loss(self, params: Params, val: ValidationSplit) -> float:
         """``L' = (1-gamma) * min(L_h, L_m) + gamma * L_u`` (eq. 8-9)."""
-        L_h, _ = _loss_and_grad_P(params, val.X_h, val.y_h)
-        L_m, _ = _loss_and_grad_P(params, val.X_m, val.y_m)
-        L_u, _ = _loss_and_grad_P(params, val.X_n, val.y_n)
+        model = self._get_model(params)
+        L_h, _ = _loss_and_grad_P(model, params, val.X_h, val.y_h)
+        L_m, _ = _loss_and_grad_P(model, params, val.X_m, val.y_m)
+        L_u, _ = _loss_and_grad_P(model, params, val.X_n, val.y_n)
         L_a = min(L_h, L_m)
-        # Gap 3.8: both D_V^h and D_V^m empty — warn and fall back to L_u only.
+        # Both D_V^h and D_V^m empty — warn and fall back to L_u only.
         if not np.isfinite(L_a):
             if np.isfinite(L_u):
                 warnings.warn(
@@ -129,16 +127,19 @@ class FedGRAA:
         self, params: Params, val: ValidationSplit
     ) -> Tuple[float, Params]:
         """Composite loss and its gradient w.r.t. the aggregated parameters."""
-        L_h, g_h = _loss_and_grad_P(params, val.X_h, val.y_h)
-        L_m, g_m = _loss_and_grad_P(params, val.X_m, val.y_m)
-        L_u, g_u = _loss_and_grad_P(params, val.X_n, val.y_n)
+        model = self._get_model(params)
+        L_h, g_h = _loss_and_grad_P(model, params, val.X_h, val.y_h)
+        L_m, g_m = _loss_and_grad_P(model, params, val.X_m, val.y_m)
+        L_u, g_u = _loss_and_grad_P(model, params, val.X_n, val.y_n)
 
-        # Sub-gradient of L_a = min(L_h, L_m): follow whichever branch is smaller.
+        # Standard sub-gradient of L_a = min(L_h, L_m): gradient of the
+        # smaller branch. This is the only reading used for strict reproduction.
         if L_h <= L_m:
             L_a, g_a = L_h, g_h
         else:
             L_a, g_a = L_m, g_m
-        # Gap 3.8: both empty — warn and zero out (same as composite_loss).
+
+        # Both empty — warn and zero out (same as composite_loss).
         if not np.isfinite(L_a):
             if np.isfinite(L_u):
                 warnings.warn(
@@ -163,22 +164,26 @@ class FedGRAA:
     ) -> np.ndarray:
         """Refine the aggregation weights for ``E'`` epochs (Algorithm 2).
 
+        Implements Algorithm 2 exactly as printed: the weight vector is updated
+        by Adam for ``E'`` epochs with the gradient recomputed at the current
+        ``w`` each epoch (the literal reading of lines 2-6). No simplex
+        projection is applied afterwards, because Algorithm 2 does not contain
+        such a step.
+
         Gap 2.1 fix: Adam state is reset at the start of every round so that
         each call is an independent E'-epoch sub-problem (consistent with the
         natural reading of Algorithm 2 and with the paper's per-round framing).
 
-        Gap 1.1 fix: weights are projected onto the probability simplex after
-        the update to guarantee w_k >= 0 and sum(w_k) == 1, as required by the
-        convex-combination aggregation and the convergence proof.
-
         Returns the updated weight vector ``w^t``.
         """
         self.optimizer.reset()  # fresh Adam state each round (gap 2.1)
-        w = np.array(weights_prev, dtype=float).copy()
+        w = np.array(weights_prev, dtype=np.float32).copy()
+
+        # Iterative reading: recompute gradient at the current w each epoch.
         for _ in range(self.weight_epochs):
             P = aggregate(client_params, w)              # theta'_g = sum_k w_k theta_k
             _, grad_P = self._composite_grad_P(P, val)   # dL'/dP
             grad_w = _grad_wrt_weights(grad_P, client_params)  # dL'/dw
             self.optimizer.step([w], [grad_w])           # Adam step on w (eq. 10)
-        w = _project_simplex(w)                          # enforce simplex (gap 1.1)
+
         return w

@@ -190,8 +190,8 @@ def plot_weight_evolution(
 ) -> "plt.Figure":
     """Plot how the FedGRAA aggregation weights evolve over training rounds.
 
-    Helps verify that the simplex projection is working (all weights stay
-    non-negative and the sum-to-one constraint is satisfied).
+    Note: the strict reproduction does not apply a simplex projection, so
+    weights may leave the probability simplex if Algorithm 2 drives them there.
     """
     plt = _require_mpl()
     if not history.weights:
