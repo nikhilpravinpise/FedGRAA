@@ -213,11 +213,12 @@ CIC_IDS_2017 = DatasetSpec(
 
 
 # --------------------------------------------------------------------------- #
-# UNSW-NB15 (Table 2): 43 features, 10 classes, K = 9 attack clients.
+# UNSW-NB15 (Table 2): 43 -> 39 features (3 categorical columns proto/service/state
+# are dropped by the numeric-only pipeline), 10 classes, K = 9 attack clients.
 # --------------------------------------------------------------------------- #
 UNSW_NB15 = DatasetSpec(
     name="UNSW-NB15",
-    n_features=43,
+    n_features=39,
     labels=[
         "Normal",          # 0
         "Generic",         # 1

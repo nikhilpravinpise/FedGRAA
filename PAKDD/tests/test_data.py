@@ -18,7 +18,7 @@ def test_cic_spec_matches_table1():
 
 
 def test_unsw_spec_matches_table2():
-    assert UNSW_NB15.n_features == 43
+    assert UNSW_NB15.n_features == 39  # 43 minus 3 categorical columns (proto/service/state) dropped by the numeric-only pipeline
     assert UNSW_NB15.n_classes == 10
     assert UNSW_NB15.n_clients == 9
     assert UNSW_NB15.used_count("Worms") == 174

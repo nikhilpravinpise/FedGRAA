@@ -214,8 +214,9 @@ def _load_real_csvs(
     del frames  # free memory before heavy processing
 
     if label_column is None:
-        # CIC files use "Label"; UNSW exports often use "attack_cat"/"label".
-        for candidate in ("Label", "label", "attack_cat", "Attack", "class"):
+        # CIC files use "Label"; UNSW exports use "attack_cat" (multiclass) alongside "label" (binary 0/1).
+        # Prefer the multiclass column when available.
+        for candidate in ("attack_cat", "Label", "label", "Attack", "class"):
             if candidate in df.columns:
                 label_column = candidate
                 break
