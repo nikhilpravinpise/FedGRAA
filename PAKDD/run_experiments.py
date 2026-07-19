@@ -146,7 +146,7 @@ def main() -> None:
                 cfg=base_cfg,
             )
             print(f"\nn sweep done in {time.time()-t0:.0f}s")
-            print("n | FedAvg | Static | FedGRAA γ=0 | γ=0.5 | γ=1")
+            print("n | FedAvg | Static | FedGRAA g=0 | g=0.5 | g=1")
             print("--+--------+--------+-------------+-------+------")
             for n, res in n_results.items():
                 print(

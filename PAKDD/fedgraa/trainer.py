@@ -183,7 +183,7 @@ class FederatedTrainer:
 
         label = (
             f"{self.method}"
-            + (f" γ={cfg.gamma}" if self.method == "fedgraa" else "")
+            + (f" g={cfg.gamma}" if self.method == "fedgraa" else "")
             + f" n={cfg.n_rare}"
         )
         t_start = time.time()
