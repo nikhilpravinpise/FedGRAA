@@ -12,46 +12,75 @@ not part of the base paper's Figures 1-3.
 
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Sequence
 
 import numpy as np
+import tensorflow as tf
 
 from .config import FedConfig
 from .metrics import accuracy, last_n_class_accuracy
-from .model import Adam, MLP, Params, aggregate, init_params
+from .model import (
+    MLP,
+    Adam,
+    Params,
+    _fused_client_step,
+    _fused_proximal_step,
+    aggregate,
+    build_tf_optimizer,
+    init_params,
+)
 from .partition import ClientShard, FederatedSplit
-from .trainer import TrainHistory, _client_update
+from .trainer import TrainHistory, client_train_round
 
 
 # --------------------------------------------------------------------------- #
 # FedProx: local proximal term
 # --------------------------------------------------------------------------- #
-def _proximal_client_update(
-    global_params: Params,
-    client: ClientShard,
-    cfg: FedConfig,
-    rng: np.random.Generator,
+def proximal_client_train_round(
     model: MLP,
-    optimizer: Adam,
+    opt: tf.keras.optimizers.Optimizer,
+    X: np.ndarray,
+    y: np.ndarray,
+    cfg: FedConfig,
+    global_weights: Params,
+    rng: np.random.Generator,
     mu: float = 0.01,
 ) -> Params:
-    """Local training with FedProx proximal term: mu/2 * ||theta - theta_g||^2."""
-    params: Params = [p.copy() for p in global_params]
-    X, y = client.X_train, client.y_train
+    """Fused XLA client training with FedProx proximal term.
+
+    One ``set_weights`` per round, then all iterations run inside
+    ``_fused_proximal_step`` which adds ``mu * (v - v_global)`` to each gradient.
+    """
+    model.set_params(global_weights)
     n = len(y)
     if n == 0:
-        return params
+        return model.get_params()
+
+    global_vars = [tf.constant(g, dtype=tf.float32) for g in global_weights]
+    mu_tensor = tf.constant(mu, dtype=tf.float32)
+
+    pad_x = np.empty((cfg.batch_size, X.shape[1]), dtype=np.float32)
+    pad_y = np.empty(cfg.batch_size, dtype=np.int32)
+
     for _ in range(cfg.local_epochs):
         perm = rng.permutation(n)
         for start in range(0, n, cfg.batch_size):
             idx = perm[start : start + cfg.batch_size]
-            _, grads = model.loss_and_grad(params, X[idx], y[idx])
-            # Add proximal gradient: mu * (theta_k - theta_g)
-            for j, (g, p, gp) in enumerate(zip(grads, params, global_params)):
-                g = g + mu * (p - gp)
-                grads[j] = g
-            optimizer.step(params, grads)
-    return params
+            n_valid = len(idx)
+            if n_valid < cfg.batch_size:
+                pad_x[:n_valid] = X[idx]
+                pad_y[:n_valid] = y[idx]
+                x_batch, y_batch = pad_x, pad_y
+            else:
+                x_batch, y_batch = X[idx], y[idx]
+            _ = _fused_proximal_step(
+                tf.constant(x_batch, dtype=tf.float32),
+                tf.constant(y_batch, dtype=tf.int32),
+                model._model, opt,
+                global_vars, mu_tensor,
+                tf.constant(n_valid, dtype=tf.int32),
+            ).numpy()
+    return model.get_params()
 
 
 class FedProxTrainer:
@@ -71,8 +100,10 @@ class FedProxTrainer:
         self.client_sizes = [c.n_train for c in split.clients]
         layer_sizes = self.spec.model_config().layer_sizes
         self._model = MLP(layer_sizes, seed=cfg.seed)
-        self._client_optimizers: Dict[int, Adam] = {
-            c.client_id: Adam(lr=cfg.eta) for c in split.clients
+        self._client_tf_optimizers: Dict[int, tf.keras.optimizers.Adam] = {
+            c.client_id: build_tf_optimizer(cfg.eta,
+                                            self._model._model.trainable_variables)
+            for c in split.clients
         }
 
     def train(
@@ -107,9 +138,11 @@ class FedProxTrainer:
 
         for rnd in range(1, cfg.rounds + 1):
             client_params = [
-                _proximal_client_update(
-                    global_params, client, cfg, rng, self._model,
-                    self._client_optimizers[client.client_id], self.mu,
+                proximal_client_train_round(
+                    self._model,
+                    self._client_tf_optimizers[client.client_id],
+                    client.X_train, client.y_train,
+                    cfg, global_params, rng, self.mu,
                 )
                 for client in self.split.clients
             ]
@@ -164,9 +197,12 @@ class FedOptServer:
         self.client_sizes = [c.n_train for c in split.clients]
         layer_sizes = self.spec.model_config().layer_sizes
         self._model = MLP(layer_sizes, seed=cfg.seed)
-        self._client_optimizers: Dict[int, Adam] = {
-            c.client_id: Adam(lr=cfg.eta) for c in split.clients
+        self._client_tf_optimizers: Dict[int, tf.keras.optimizers.Adam] = {
+            c.client_id: build_tf_optimizer(cfg.eta,
+                                            self._model._model.trainable_variables)
+            for c in split.clients
         }
+        # Server optimizer operates on numpy params — Adam wrapper is fine.
         self.server_optimizer = Adam(lr=server_lr)
 
     def train(
@@ -197,9 +233,11 @@ class FedOptServer:
 
         for rnd in range(1, cfg.rounds + 1):
             client_params = [
-                _client_update(
-                    global_params, client, cfg, rng, self._model,
-                    self._client_optimizers[client.client_id],
+                client_train_round(
+                    self._model,
+                    self._client_tf_optimizers[client.client_id],
+                    client.X_train, client.y_train,
+                    cfg, global_params, rng,
                 )
                 for client in self.split.clients
             ]
@@ -248,8 +286,10 @@ class FedSNDTrainer:
         self.client_sizes = [c.n_train for c in split.clients]
         layer_sizes = self.spec.model_config().layer_sizes
         self._model = MLP(layer_sizes, seed=cfg.seed)
-        self._client_optimizers: Dict[int, Adam] = {
-            c.client_id: Adam(lr=cfg.eta) for c in split.clients
+        self._client_tf_optimizers: Dict[int, tf.keras.optimizers.Adam] = {
+            c.client_id: build_tf_optimizer(cfg.eta,
+                                            self._model._model.trainable_variables)
+            for c in split.clients
         }
 
     def train(
@@ -279,9 +319,11 @@ class FedSNDTrainer:
 
         for rnd in range(1, cfg.rounds + 1):
             client_params = [
-                _client_update(
-                    global_params, client, cfg, rng, self._model,
-                    self._client_optimizers[client.client_id],
+                client_train_round(
+                    self._model,
+                    self._client_tf_optimizers[client.client_id],
+                    client.X_train, client.y_train,
+                    cfg, global_params, rng,
                 )
                 for client in self.split.clients
             ]

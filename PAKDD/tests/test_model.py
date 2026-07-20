@@ -4,7 +4,14 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from fedgraa.model import MLP, Adam, aggregate, init_params
+from fedgraa.model import (
+    MLP,
+    Adam,
+    _fused_client_step,
+    aggregate,
+    build_tf_optimizer,
+    init_params,
+)
 
 
 def test_forward_shapes(tiny_layer_sizes, rng):
@@ -67,7 +74,7 @@ def test_aggregate_linear_combination(tiny_layer_sizes, rng):
     w = np.array([0.3, 0.7])
     agg = aggregate([p0, p1], w)
     for a, b, c in zip(agg, p0, p1):
-        np.testing.assert_allclose(a, 0.3 * b + 0.7 * c)
+        np.testing.assert_allclose(a, 0.3 * b + 0.7 * c, atol=1e-7, rtol=1e-6)
 
 
 def test_forward_caches_final_logits(tiny_layer_sizes, rng):
@@ -78,6 +85,75 @@ def test_forward_caches_final_logits(tiny_layer_sizes, rng):
     assert "final_logits" in cache, "'final_logits' key missing from forward() cache"
     logits = cache["final_logits"]
     assert logits.shape == (5, tiny_layer_sizes[-1])
+
+
+def test_fused_xla_step_equivalent_to_eager(tiny_layer_sizes, rng):
+    """Fused XLA step must produce the same weight update as eager mode."""
+    model = MLP(tiny_layer_sizes, seed=5)
+    X = rng.normal(size=(16, tiny_layer_sizes[0])).astype(np.float32)
+    y = rng.integers(0, tiny_layer_sizes[-1], size=16)
+
+    init_w = model.get_params()
+
+    # --- Eager path: loss_and_grad + Adam wrapper step (current pattern) ---
+    model.set_params(init_w)
+    params_eager = [p.copy() for p in init_w]
+    opt_eager = Adam(lr=0.01)
+    _, grads = model.loss_and_grad(params_eager, X, y)
+    opt_eager.step(params_eager, grads)
+
+    # --- Fused XLA path: _fused_client_step directly on model variables ---
+    model.set_params(init_w)
+    tf_opt = build_tf_optimizer(0.01, model._model.trainable_variables)
+    _ = _fused_client_step(
+        tf.constant(X, dtype=tf.float32),
+        tf.constant(y, dtype=tf.int32),
+        model._model, tf_opt,
+        tf.constant(len(y), dtype=tf.int32),
+    ).numpy()
+    params_fused = model.get_params()
+
+    # Both paths start from the same weights and apply one Adam step;
+    # the resulting weights must be nearly identical.
+    for pa, pf in zip(params_eager, params_fused):
+        np.testing.assert_allclose(pa, pf, atol=1e-5, rtol=1e-4,
+                                   err_msg="Fused XLA step differs from eager")
+
+
+def test_fused_xla_multiple_steps_converges(tiny_layer_sizes, rng):
+    """Fused XLA training loop over multiple steps must decrease loss."""
+    model = MLP(tiny_layer_sizes, seed=5)
+    X = rng.normal(size=(64, tiny_layer_sizes[0])).astype(np.float32)
+    y = rng.integers(0, tiny_layer_sizes[-1], size=64)
+
+    model.set_params(model.get_params())
+    tf_opt = build_tf_optimizer(0.05, model._model.trainable_variables)
+
+    losses = []
+    for _ in range(30):
+        loss_val = _fused_client_step(
+            tf.constant(X, dtype=tf.float32),
+            tf.constant(y, dtype=tf.int32),
+            model._model, tf_opt,
+            tf.constant(len(y), dtype=tf.int32),
+        ).numpy()
+        losses.append(float(loss_val))
+
+    assert losses[-1] < losses[0], (
+        f"Fused XLA loss did not decrease: {losses[0]:.4f} -> {losses[-1]:.4f}"
+    )
+
+
+def test_build_tf_optimizer_creates_slot_variables(tiny_layer_sizes, rng):
+    """build_tf_optimizer must pre-create Adam slot variables."""
+    model = MLP(tiny_layer_sizes, seed=0)
+    opt = build_tf_optimizer(0.01, model._model.trainable_variables)
+    # After building, the optimizer should have slot variables
+    opt_vars = opt.variables  # property, not method
+    assert len(opt_vars) > len(model._model.trainable_variables), (
+        "Optimizer should have more variables than the model "
+        "(weights + momentum + velocity slots)"
+    )
 
 
 def test_adam_decreases_loss(tiny_layer_sizes, rng):

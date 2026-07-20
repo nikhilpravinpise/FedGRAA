@@ -118,13 +118,13 @@ def test_client_optimizer_objects_created_and_used():
     cfg = FedConfig(rounds=10, gamma=1.0, n_rare=1, seed=0)
     trainer = FederatedTrainer(split, cfg, method="fedgraa")
 
-    assert len(trainer._client_optimizers) == split.n_clients, (
-        "Expected one Adam optimizer per client"
+    assert len(trainer._client_tf_optimizers) == split.n_clients, (
+        "Expected one TF Adam optimizer per client"
     )
     trainer.train(eval_every=5)
 
     # After training, every optimizer's step counter must be > 0.
-    for client_id, opt in trainer._client_optimizers.items():
-        assert opt._t > 0, (
+    for client_id, opt in trainer._client_tf_optimizers.items():
+        assert opt.iterations.numpy() > 0, (
             f"Client {client_id} optimizer step count is 0 — was it used?"
         )

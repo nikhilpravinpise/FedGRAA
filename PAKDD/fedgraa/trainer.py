@@ -14,22 +14,31 @@ The only line that differs between methods is how ``w^t`` is produced; the local
 
 from __future__ import annotations
 
+# Env vars MUST be set BEFORE importing tensorflow (Phase 7 of speedup plan).
+import os  # noqa: E402
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+os.environ.setdefault("TF_NUM_INTEROP_THREADS", "2")
+os.environ.setdefault("TF_NUM_INTRAOP_THREADS", "4")
+
 import time
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 import numpy as np
+import tensorflow as tf
 
 from .aggregation import FedGRAA, fedavg_weights, static_reparam_weights
 from .config import FedConfig
 from .metrics import accuracy, last_n_class_accuracy
-from .model import MLP, Adam, Params, aggregate, init_params
+from .model import (
+    MLP,
+    Params,
+    _fused_client_step,
+    aggregate,
+    build_tf_optimizer,
+    init_params,
+)
 from .partition import ClientShard, FederatedSplit
-
-
-# Silence verbose TensorFlow startup logs for the reproduction CLI.
-import os  # noqa: E402
-os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 
 
 @dataclass
@@ -78,35 +87,80 @@ class TrainHistory:
         return self.last_n_acc[-1] if self.last_n_acc else 0.0
 
 
+def client_train_round(
+    model: MLP,
+    opt: tf.keras.optimizers.Optimizer,
+    X: np.ndarray,
+    y: np.ndarray,
+    cfg: FedConfig,
+    global_weights: Params,
+    rng: np.random.Generator,
+) -> Params:
+    """Train one client with fused XLA — no numpy↔TF ping-pong.
+
+    Operates directly on ``model``'s ``tf.Variable`` s via ``_fused_client_step``.
+    One ``set_weights`` per round (not per iteration). Reads params back to
+    numpy exactly once at the end.
+
+    Args:
+        model: Keras-backed MLP with pre-built variables.
+        opt: Pre-built TF Adam optimizer (``build_tf_optimizer``).
+        X: Client training features (numpy).
+        y: Client training labels (numpy).
+        cfg: FedConfig (uses ``local_epochs``, ``batch_size``).
+        global_weights: Global model params to start from (numpy arrays).
+        rng: NumPy RNG for shuffling.
+    """
+    # ONE numpy→TF copy per round (instead of per iteration):
+    model.set_params(global_weights)
+
+    n = len(y)
+    if n == 0:
+        return model.get_params()
+
+    # Pre-allocated padding buffers — allocated once, reused every iteration
+    # to avoid per-iteration ``np.zeros`` overhead.
+    pad_x = np.empty((cfg.batch_size, X.shape[1]), dtype=np.float32)
+    pad_y = np.empty(cfg.batch_size, dtype=np.int32)
+
+    for _ in range(cfg.local_epochs):
+        perm = rng.permutation(n)
+        for start in range(0, n, cfg.batch_size):
+            idx = perm[start : start + cfg.batch_size]
+            n_valid = len(idx)
+            if n_valid < cfg.batch_size:
+                pad_x[:n_valid] = X[idx]
+                pad_y[:n_valid] = y[idx]
+                x_batch, y_batch = pad_x, pad_y
+            else:
+                x_batch, y_batch = X[idx], y[idx]
+            _ = _fused_client_step(
+                tf.constant(x_batch, dtype=tf.float32),
+                tf.constant(y_batch, dtype=tf.int32),
+                model._model, opt,
+                tf.constant(n_valid, dtype=tf.int32),
+            ).numpy()
+    # ONE TF→numpy copy per round:
+    return model.get_params()
+
+
 def _client_update(
     global_params: Params,
     client: ClientShard,
     cfg: FedConfig,
     rng: np.random.Generator,
     model: MLP,
-    optimizer: Optional[Adam] = None,
+    optimizer: tf.keras.optimizers.Optimizer,
 ) -> Params:
-    """Local Adam training on one client (Algorithm 1, ClientUpdate).
+    """Legacy shim — delegates to ``client_train_round``.
 
-    Gap 2.2 fix: ``optimizer`` is now passed in from the trainer so its moment
-    state persists across rounds, matching the Keras default where calling
-    ``model.fit()`` multiple times on the same compiled optimizer carries over
-    the Adam moments (m, v, t) between calls.
+    Kept so that ``baselines.py`` callers continue to work with the old
+    call signature while benefiting from the fused XLA path.
     """
-    params: Params = [p.copy() for p in global_params]
-    if optimizer is None:                      # fallback for direct callers
-        optimizer = Adam(lr=cfg.eta)
-    X, y = client.X_train, client.y_train
-    n = len(y)
-    if n == 0:
-        return params
-    for _ in range(cfg.local_epochs):
-        perm = rng.permutation(n)
-        for start in range(0, n, cfg.batch_size):
-            idx = perm[start : start + cfg.batch_size]
-            _, grads = model.loss_and_grad(params, X[idx], y[idx])
-            optimizer.step(params, grads)
-    return params
+    return client_train_round(
+        model, optimizer, client.X_train, client.y_train,
+        cfg, global_params, rng,
+    )
 
 
 class FederatedTrainer:
@@ -142,11 +196,14 @@ class FederatedTrainer:
                 layer_sizes=layer_sizes,
             )
 
-        # Gap 2.2 fix: per-client Adam optimizers whose moment state persists
-        # across rounds, matching the Keras default behaviour (optimizer state
-        # is not reset between model.fit() calls on the same optimizer object).
-        self._client_optimizers: Dict[int, Adam] = {
-            c.client_id: Adam(lr=cfg.eta) for c in split.clients
+        # Phase 2: pre-built TF Adam optimizers for fused XLA client training.
+        # Each optimizer has its slot variables pre-created via
+        # ``build_tf_optimizer`` so that ``@tf.function(jit_compile=True)``
+        # does not re-trace. The moment state persists across rounds (Gap 2.2).
+        self._client_tf_optimizers: Dict[int, tf.keras.optimizers.Adam] = {
+            c.client_id: build_tf_optimizer(cfg.eta,
+                                            self._model._model.trainable_variables)
+            for c in split.clients
         }
 
     def _initial_weights(self) -> np.ndarray:
@@ -211,11 +268,13 @@ class FederatedTrainer:
         history.record(0, _all_0, _last_0, w, _comp_0)
 
         for rnd in range(1, cfg.rounds + 1):
-            # --- clients train locally (in parallel conceptually) ---------- #
+            # --- clients train locally (fused XLA, no ping-pong) ----------- #
             client_params: List[Params] = [
-                _client_update(
-                    global_params, client, cfg, rng, self._model,
-                    self._client_optimizers[client.client_id],  # gap 2.2
+                client_train_round(
+                    self._model,
+                    self._client_tf_optimizers[client.client_id],
+                    client.X_train, client.y_train,
+                    cfg, global_params, rng,
                 )
                 for client in self.split.clients
             ]

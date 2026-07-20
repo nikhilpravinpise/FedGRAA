@@ -244,3 +244,74 @@ class Adam:
 
         for p, v in zip(params, self._vars):
             p[...] = v.numpy().astype(np.float32)
+
+
+# --------------------------------------------------------------------------- #
+# Fused XLA training step (Phase 2: eliminate numpy↔TF ping-pong)
+# --------------------------------------------------------------------------- #
+@tf.function(jit_compile=True, reduce_retracing=True)
+def _fused_client_step(
+    x: tf.Tensor, y: tf.Tensor, model: tf.keras.Model,
+    opt: tf.keras.optimizers.Optimizer,
+    n_valid: tf.Tensor,
+) -> tf.Tensor:
+    """One step: forward + backward + optimizer. All XLA-fused, no numpy conversion.
+
+    ``x`` and ``y`` are **always** padded to the full trace-time batch shape.
+    ``n_valid`` (scalar tensor) indicates how many of the leading samples are
+    real; the remainder are padding with zero gradient contribution via masking.
+    This ensures fixed-shape tensors and eliminates ``tf.function`` retracing
+    across epochs and clients.
+    """
+    with tf.GradientTape() as tape:
+        logits = model(x, training=True)
+        losses = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            labels=y, logits=logits
+        )
+        batch_size = tf.shape(x)[0]
+        mask = tf.cast(tf.range(batch_size) < n_valid, dtype=losses.dtype)
+        loss = tf.reduce_sum(losses * mask) / tf.cast(n_valid, dtype=losses.dtype)
+    grads = tape.gradient(loss, model.trainable_variables)
+    opt.apply_gradients(zip(grads, model.trainable_variables))
+    return loss
+
+
+@tf.function(jit_compile=True, reduce_retracing=True)
+def _fused_proximal_step(
+    x: tf.Tensor, y: tf.Tensor, model: tf.keras.Model,
+    opt: tf.keras.optimizers.Optimizer,
+    global_vars: Sequence[tf.Tensor], mu: tf.Tensor,
+    n_valid: tf.Tensor,
+) -> tf.Tensor:
+    """Fused step with FedProx proximal term: ``mu/2 * ||theta - theta_g||^2``."""
+    with tf.GradientTape() as tape:
+        logits = model(x, training=True)
+        losses = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            labels=y, logits=logits
+        )
+        batch_size = tf.shape(x)[0]
+        mask = tf.cast(tf.range(batch_size) < n_valid, dtype=losses.dtype)
+        loss = tf.reduce_sum(losses * mask) / tf.cast(n_valid, dtype=losses.dtype)
+    grads = tape.gradient(loss, model.trainable_variables)
+    prox_grads = [
+        g + mu * (v - gv)
+        for g, v, gv in zip(grads, model.trainable_variables, global_vars)
+    ]
+    opt.apply_gradients(zip(prox_grads, model.trainable_variables))
+    return loss
+
+
+def build_tf_optimizer(
+    lr: float,
+    variables: Sequence[tf.Variable],
+) -> tf.keras.optimizers.Adam:
+    """Create and pre-build a TF Adam optimizer for a set of variables.
+
+    Pre-building ensures the optimizer's slot variables (momentum, velocity)
+    exist before ``@tf.function(jit_compile=True)`` tracing, preventing
+    re-triggered compilation.
+    """
+    opt = tf.keras.optimizers.Adam(learning_rate=lr)
+    opt.apply_gradients([(tf.zeros_like(v), v) for v in variables])
+    opt.iterations.assign(0)
+    return opt
