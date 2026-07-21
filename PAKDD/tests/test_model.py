@@ -156,6 +156,60 @@ def test_build_tf_optimizer_creates_slot_variables(tiny_layer_sizes, rng):
     )
 
 
+def test_fused_xla_step_partial_batch_no_nan(tiny_layer_sizes, rng):
+    """_fused_client_step must not produce NaN when n_valid < batch_size
+    and the padding region contains out-of-range labels (the root cause
+    of the NaN collapse — the tf.where guard must catch it)."""
+    model = MLP(tiny_layer_sizes, seed=0)
+    batch_size = 16
+    n_valid = 7
+
+    X = rng.normal(size=(batch_size, tiny_layer_sizes[0])).astype(np.float32)
+    y_valid = rng.integers(0, tiny_layer_sizes[-1], size=n_valid).astype(np.int32)
+    y_pad = np.concatenate([y_valid, np.full(batch_size - n_valid, -1, dtype=np.int32)])
+
+    tf_opt = build_tf_optimizer(0.01, model._model.trainable_variables)
+    loss_val = _fused_client_step(
+        tf.constant(X, dtype=tf.float32),
+        tf.constant(y_pad, dtype=tf.int32),
+        model._model, tf_opt,
+        tf.constant(n_valid, dtype=tf.int32),
+    ).numpy()
+
+    assert np.isfinite(loss_val), (
+        f"Loss is NaN despite tf.where guard and valid mask: {loss_val}"
+    )
+    params = model.get_params()
+    for p in params:
+        assert np.all(np.isfinite(p)), (
+            f"NaN parameter after partial-batch fused step with garbage labels"
+        )
+
+
+def test_fused_xla_step_full_batch_no_nan(tiny_layer_sizes, rng):
+    """_fused_client_step with n_valid == batch_size must also be NaN-free."""
+    model = MLP(tiny_layer_sizes, seed=0)
+    batch_size = 16
+
+    X = rng.normal(size=(batch_size, tiny_layer_sizes[0])).astype(np.float32)
+    y = rng.integers(0, tiny_layer_sizes[-1], size=batch_size).astype(np.int32)
+
+    tf_opt = build_tf_optimizer(0.01, model._model.trainable_variables)
+    loss_val = _fused_client_step(
+        tf.constant(X, dtype=tf.float32),
+        tf.constant(y, dtype=tf.int32),
+        model._model, tf_opt,
+        tf.constant(batch_size, dtype=tf.int32),
+    ).numpy()
+
+    assert np.isfinite(loss_val), f"Full-batch loss is NaN: {loss_val}"
+    params = model.get_params()
+    for p in params:
+        assert np.all(np.isfinite(p)), (
+            f"NaN parameter after full-batch fused step"
+        )
+
+
 def test_adam_decreases_loss(tiny_layer_sizes, rng):
     model = MLP(tiny_layer_sizes, seed=5)
     params = model.get_params()

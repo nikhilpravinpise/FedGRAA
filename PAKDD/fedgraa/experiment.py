@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field, replace
 from typing import Dict, List, Optional, Sequence
 
@@ -60,8 +61,12 @@ def run_experiment(
     additional baselines from :mod:`fedgraa.baselines` ("fedprox", "fedopt",
     "fedsnd"), addressing gap m-3.
     """
+    dataset_data_dir = (
+        os.path.join(data_dir, dataset) if data_dir and os.path.isdir(os.path.join(data_dir, dataset))
+        else data_dir
+    )
     X, y, spec = load_dataset(
-        dataset, data_dir=data_dir, seed=seed, cache_dir=cache_dir
+        dataset, data_dir=dataset_data_dir, seed=seed, cache_dir=cache_dir
     )
     if cfg is None:
         cfg = FedConfig(

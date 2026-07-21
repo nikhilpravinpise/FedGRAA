@@ -120,8 +120,8 @@ def client_train_round(
 
     # Pre-allocated padding buffers — allocated once, reused every iteration
     # to avoid per-iteration ``np.zeros`` overhead.
-    pad_x = np.empty((cfg.batch_size, X.shape[1]), dtype=np.float32)
-    pad_y = np.empty(cfg.batch_size, dtype=np.int32)
+    pad_x = np.zeros((cfg.batch_size, X.shape[1]), dtype=np.float32)
+    pad_y = np.zeros(cfg.batch_size, dtype=np.int32)
 
     for _ in range(cfg.local_epochs):
         perm = rng.permutation(n)

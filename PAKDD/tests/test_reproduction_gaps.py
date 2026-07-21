@@ -177,6 +177,33 @@ def test_round_zero_zero_flag():
 # Baselines (gap m-3)
 # --------------------------------------------------------------------------- #
 
+def test_all_methods_no_nan_collapse():
+    """All methods must produce finite global params at every checkpoint.
+    Regression test: ensures the np.empty→np.zeros fix + NaN-safe loss
+    prevents the NaN collapse that affected all methods."""
+    split = _tiny_split(seed=0)
+    cfg = FedConfig(rounds=5, gamma=0.5, n_rare=1, seed=0, round_zero_zero=False)
+
+    methods = {
+        "fedavg": FederatedTrainer(split, cfg, method="fedavg"),
+        "static": FederatedTrainer(split, cfg, method="static"),
+        "fedgraa": FederatedTrainer(split, cfg, method="fedgraa"),
+        "fedprox": FedProxTrainer(split, cfg, mu=0.01),
+        "fedopt": FedOptServer(split, cfg, server_lr=0.01),
+        "fedsnd": FedSNDTrainer(split, cfg),
+    }
+
+    for name, trainer in methods.items():
+        trainer.train(eval_every=5)
+        params = trainer.final_params
+        assert params is not None, f"{name}: final_params is None"
+        for p in params:
+            assert np.all(np.isfinite(p)), (
+                f"{name}: final params contain NaN — padding bug still present\n"
+                f"  param shape={p.shape}, num_nan={np.sum(~np.isfinite(p))}"
+            )
+
+
 def test_baseline_trainers_run():
     """Gap m-3: FedProx, FedOpt, and FedSND trainers run end-to-end."""
     split = _tiny_split()

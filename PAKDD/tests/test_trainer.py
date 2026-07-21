@@ -11,7 +11,8 @@ import pytest
 from fedgraa.config import DatasetSpec, FedConfig
 from fedgraa.data import make_synthetic_dataset
 from fedgraa.partition import partition_non_iid
-from fedgraa.trainer import FederatedTrainer
+from fedgraa.model import MLP, build_tf_optimizer
+from fedgraa.trainer import FederatedTrainer, client_train_round
 
 
 def _small_spec() -> DatasetSpec:
@@ -46,13 +47,29 @@ def test_fedgraa_beats_fedavg_on_rare_class():
     split = _make_split(n_rare=1, seed=0)
 
     cfg_avg = FedConfig(rounds=40, gamma=0.0, n_rare=1, seed=0)
-    avg = FederatedTrainer(split, cfg_avg, method="fedavg").train(eval_every=20)
+    avg_trainer = FederatedTrainer(split, cfg_avg, method="fedavg")
+    avg = avg_trainer.train(eval_every=20)
 
     cfg_graa = FedConfig(rounds=40, gamma=1.0, n_rare=1, seed=0)
-    graa = FederatedTrainer(split, cfg_graa, method="fedgraa").train(eval_every=20)
+    graa_trainer = FederatedTrainer(split, cfg_graa, method="fedgraa")
+    graa = graa_trainer.train(eval_every=20)
 
     # The whole point of the paper: FedGRAA detects the rare class better.
     assert graa.final_last_n_acc >= avg.final_last_n_acc
+
+    # Hardening: the bug fix must ensure all model params remain finite.
+    avg_params = avg_trainer.final_params
+    assert avg_params is not None
+    for p in avg_params:
+        assert np.all(np.isfinite(p)), (
+            "FedAvg final params contain NaN — padding bug still present"
+        )
+    graa_params = graa_trainer.final_params
+    assert graa_params is not None
+    for p in graa_params:
+        assert np.all(np.isfinite(p)), (
+            "FedGRAA final params contain NaN — padding bug still present"
+        )
 
 
 def test_methods_all_constructible():
@@ -111,6 +128,29 @@ def test_composite_loss_nan_for_non_fedgraa():
 # --------------------------------------------------------------------------- #
 # Gap 2.2: per-client optimizer persistence
 # --------------------------------------------------------------------------- #
+
+def test_client_train_round_small_client_no_nan():
+    """client_train_round on a client with n_train < batch_size must
+    return finite params (regression test for the np.empty padding bug)."""
+    split = _make_split(n_rare=1, seed=0)
+    client = split.clients[0]
+    cfg = FedConfig(rounds=1, batch_size=64, local_epochs=2, seed=0)
+
+    layer_sizes = split.spec.model_config().layer_sizes
+    model = MLP(layer_sizes, seed=cfg.seed)
+    global_params = model.get_params()
+    rng = np.random.default_rng(cfg.seed)
+    opt = build_tf_optimizer(cfg.eta, model._model.trainable_variables)
+
+    params = client_train_round(
+        model, opt, client.X_train, client.y_train,
+        cfg, global_params, rng,
+    )
+    for p in params:
+        assert np.all(np.isfinite(p)), (
+            f"client_train_round returned NaN params for a small client"
+        )
+
 
 def test_client_optimizer_objects_created_and_used():
     """Gap 2.2: FederatedTrainer must maintain per-client Adam instances."""

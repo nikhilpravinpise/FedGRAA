@@ -265,8 +265,16 @@ def _fused_client_step(
     """
     with tf.GradientTape() as tape:
         logits = model(x, training=True)
+        n_classes = tf.shape(logits)[-1]
+        # Guard: clamp out-of-range labels (from uninitialized padding) to 0
+        # so that sparse_softmax_cross_entropy always computes a finite gradient,
+        # even for padding entries. The mask below zeros the gradient contribution.
+        labels_safe = tf.where(
+            tf.logical_or(y < 0, y >= tf.cast(n_classes, y.dtype)),
+            tf.zeros_like(y), y
+        )
         losses = tf.nn.sparse_softmax_cross_entropy_with_logits(
-            labels=y, logits=logits
+            labels=labels_safe, logits=logits
         )
         batch_size = tf.shape(x)[0]
         mask = tf.cast(tf.range(batch_size) < n_valid, dtype=losses.dtype)
@@ -286,8 +294,13 @@ def _fused_proximal_step(
     """Fused step with FedProx proximal term: ``mu/2 * ||theta - theta_g||^2``."""
     with tf.GradientTape() as tape:
         logits = model(x, training=True)
+        n_classes = tf.shape(logits)[-1]
+        labels_safe = tf.where(
+            tf.logical_or(y < 0, y >= tf.cast(n_classes, y.dtype)),
+            tf.zeros_like(y), y
+        )
         losses = tf.nn.sparse_softmax_cross_entropy_with_logits(
-            labels=y, logits=logits
+            labels=labels_safe, logits=logits
         )
         batch_size = tf.shape(x)[0]
         mask = tf.cast(tf.range(batch_size) < n_valid, dtype=losses.dtype)
