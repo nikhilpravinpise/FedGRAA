@@ -13,7 +13,7 @@
 | Is the GPU rejection correct? | **Yes.** Measured, sound, and re-derivable from first principles. The model is too small for a GPU to win. |
 | Should we delete the GPU scripts? | **No.** They *are* the evidence for the negative result. Deleting them makes "we tried GPU, it was slower" unreproducible. Archive + label instead. |
 | Is there GPU *code* to remove from `fedgraa/`? | **None.** The source is device-agnostic. There is literally nothing to rip out. |
-| Is anything actually broken? | **Yes — one doc.** [`v2_completion.md`](v2_completion.md) still calls GPU "the single remaining action item" and promises **192–320×**. That directly contradicts the measured result in [`speedup_plan_v2.md`](speedup_plan_v2.md). Fix that contradiction. |
+| Is anything actually broken? | **Yes — one doc.** [`v2_completion.md`](archive/v2_completion.md) still calls GPU "the single remaining action item" and promises **192–320×**. That directly contradicts the measured result in [`speedup_plan_v2.md`](speedup_plan_v2.md). Fix that contradiction. |
 | What should we spend time on instead? | **Reproduction, not performance.** Speed is *solved* (full repro ≈ 2 h on CPU). FedGRAA getting **0% rare-class accuracy** — versus the paper's headline **88%** — is the real, unsolved problem. |
 
 ---
@@ -38,7 +38,7 @@ The 6 GPU helper scripts have been **archived** (not deleted) to
 | [`test_gpu.py`](../scripts/archive/gpu/test_gpu.py), [`run_tests_gpu.py`](../scripts/archive/gpu/run_tests_gpu.py) | Run the suite under XLA:GPU | **Kept (archived)** |
 | [`setup_wsl2_gpu.ps1`](../scripts/archive/gpu/setup_wsl2_gpu.ps1), [`setup_gpu_wsl.sh`](../scripts/archive/gpu/setup_gpu_wsl.sh) | WSL2 + CUDA + TF install automation | **Kept (archived)** |
 | GPU section of [`speedup_plan_v2.md`](speedup_plan_v2.md) | The negative result, fully measured | **Keep — this is canonical** |
-| GPU section of [`v2_completion.md`](v2_completion.md) | Optimistic "5–10× / 192–320×" projection + "remaining action item" | **Reconciled** — SUPERSEDED banner added (see §4) |
+| GPU section of [`v2_completion.md`](archive/v2_completion.md) | Optimistic "5–10× / 192–320×" projection + "remaining action item" | **Reconciled** — SUPERSEDED banner added (see §4) |
 | GPU rows in [`../PAKDD_STATUS_REPORT.md`](../PAKDD_STATUS_REPORT.md) | "GPU rejected" summary | **Keep — correct** |
 
 *(The 7th script in `scripts/`, `real_reproduction.py`, is the CPU reproduction
@@ -96,7 +96,7 @@ faster than that. Chasing GPU is optimizing a non-bottleneck.
 
 ## 4. The one thing that is actually wrong: contradicting docs
 
-[`v2_completion.md`](v2_completion.md) predates the GPU benchmark and still says:
+[`v2_completion.md`](archive/v2_completion.md) predates the GPU benchmark and still says:
 
 - *"What's Left: Phase 19 — GPU via WSL2 … the **single remaining action item**"*
 - Expected *"**~0.15–0.30 ms per step** (5–10× vs CPU)"*
@@ -110,8 +110,8 @@ question surfaces.
 **Fix:** add a "SUPERSEDED — see GPU benchmark" banner at the top of
 `v2_completion.md`'s Phase 19 section (or delete that section and point to
 `speedup_plan_v2.md`). Keep the rest of `v2_completion.md` — its shipped-phase
-log is fine. *(Note: `v2_completion.md` is currently untracked — it hasn't been
-committed yet, so this reconciliation should happen before it ever lands.)*
+log is fine. *(Done — the banner was added and the file has since been moved to
+`docs/archive/v2_completion.md` as part of a broader docs decluttering pass.)*
 
 ---
 

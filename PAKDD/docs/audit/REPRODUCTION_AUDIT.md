@@ -35,10 +35,11 @@ documentation-only deliverable: **no code was changed to produce this report.**
 
 ## 0. Why this document exists and what it supersedes
 
-Four earlier audit documents already exist in this folder:
-[`reproduction_gaps.md`](reproduction_gaps.md),
-[`full_reproduction_gap_analysis.md`](full_reproduction_gap_analysis.md),
-[`paper_vs_code_line_by_line_gap_analysis.md`](paper_vs_code_line_by_line_gap_analysis.md),
+Four earlier audit documents already exist in this folder (the first three now
+moved to `archive/`, since this document supersedes them):
+[`reproduction_gaps.md`](archive/reproduction_gaps.md),
+[`full_reproduction_gap_analysis.md`](archive/full_reproduction_gap_analysis.md),
+[`paper_vs_code_line_by_line_gap_analysis.md`](archive/paper_vs_code_line_by_line_gap_analysis.md),
 and [`strict_reproduction_report.md`](strict_reproduction_report.md).
 
 **Every one of them is at least partially stale.** The codebase went through a

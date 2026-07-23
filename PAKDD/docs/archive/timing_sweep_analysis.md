@@ -1,5 +1,10 @@
 # Timing Analysis: Why the Sweep Feels Slow
 
+> **⚠️ ARCHIVED — the bottlenecks described here (serial client loop, eager
+> TF, no sweep parallelism) were fixed by the work in
+> `docs/speedup_plan_v2.md`.** Kept for historical record of the
+> pre-optimization diagnosis.
+
 This note explains why the current real-data sweep still takes a long time on a newer laptop, even though the measured wall time is better than the older machine.
 
 ## What Was Measured

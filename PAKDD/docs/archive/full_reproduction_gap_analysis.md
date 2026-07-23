@@ -4,6 +4,11 @@
 **Codebase:** `PAKDD/fedgraa/`  
 **Date:** 2026-06-30
 
+> **⚠️ ARCHIVED — superseded by `docs/REPRODUCTION_AUDIT.md`** (2026-07-10),
+> which explicitly supersedes this file. Its headline blocking gap (UNSW-NB15
+> data missing) is resolved — see `docs/data_provenance_audit.md`. Kept for
+> historical record.
+
 This document is a complete, independent audit of everything standing between the
 current codebase and a verifiable 100% reproduction of the paper's results.
 It extends the existing `reproduction_gaps.md` (which tracks incremental fixes) by

@@ -221,6 +221,18 @@ docs/
   fedgraa_divergence_diagnosis.md   # root-cause analysis of the FedGRAA reproduction gap
   GPU_DECISION_AND_NEXT_STEPS.md
   PAKDD_Final_Version_Submit (3).md
+  full_audit_2026-07-23.md          # from-scratch independent re-audit of the whole project
+  data_provenance_audit.md          # dataset genuineness verification
+  REPRODUCTION_AUDIT.md             # line-by-line paper<->code fidelity audit
+  PAPER_AMBIGUITY_REPORT.md         # paper-only critique (contradictions, undefined terms)
+  research_followup.md              # FL-privacy literature notes + framework survey
+  FedGRAA_Deep_Research_Compendium.md  # citation fact-check of the literature review
+  privacy_compliant_fedgraa_redesign.md  # unbuilt "FedGRAA-v2" privacy-compliant redesign
+  SPEEDUP_REPRODUCTION_AUDIT.md     # confirms speedup work didn't break fidelity
+  speedup_plan_v2.md
+  literature_review_and_publication_strategy.md
+  publication_roadmap.md            # router doc pointing to the above for manuscript assembly
+  archive/                          # superseded/historical docs — see archive/README.md, do not treat as current
 run_experiments.py # main entry point (--results-dir persists sweep JSON)
 requirements.txt
 ```

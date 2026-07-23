@@ -1,5 +1,12 @@
 # Plan — Faithful Reproduction of FedGRAA
 
+> **⚠️ ARCHIVED — describes a codebase state that no longer exists.** This was
+> the original 2026-06-28 build plan and proposed a **hand-written NumPy MLP**
+> (no TensorFlow). The project was later rewritten Keras-only; see
+> `docs/strict_reproduction_report.md` for the current architecture and
+> `PAKDD_STATUS_REPORT.md` (repo root) for current status. Kept for historical
+> record of the original design intent.
+
 > **Goal.** Build a complete, working, tested implementation of the paper
 > *"Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems"*
 > (FedGRAA) that reproduces **exactly** what the paper describes — with **no
