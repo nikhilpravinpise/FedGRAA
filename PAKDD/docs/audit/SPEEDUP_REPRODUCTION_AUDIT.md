@@ -12,7 +12,7 @@ you have a fast + faithful reproduction.**
 ## 1. What the Audits Say (Algorithm is Correct)
 
 Three independent audits agree:
-- [`paper_vs_code_line_by_line_gap_analysis.md`](paper_vs_code_line_by_line_gap_analysis.md)
+- [`paper_vs_code_line_by_line_gap_analysis.md`](archive/paper_vs_code_line_by_line_gap_analysis.md) (archived, superseded by `REPRODUCTION_AUDIT.md`)
 - [`REPRODUCTION_AUDIT.md`](REPRODUCTION_AUDIT.md)
 - [`strict_reproduction_report.md`](strict_reproduction_report.md)
 

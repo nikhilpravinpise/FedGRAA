@@ -53,7 +53,7 @@ v2 CPU + parallel sweeps:     ~2 hours             → 40×  (3.2× on v1)
 
 ## v1 Audit (Re-verified Jul 2026)
 
-Every claim from v1's `docs/speedup_plan.md` was independently re-verified. The corrected measurements use a single warm model:
+Every claim from v1's `docs/archive/speedup_plan.md` was independently re-verified. The corrected measurements use a single warm model:
 
 | Optimization | v1 Claim | v2 Draft (wrong) | v2 Audited (correct) | Verdict |
 |-------------|----------|-------------------|---------------------|---------|

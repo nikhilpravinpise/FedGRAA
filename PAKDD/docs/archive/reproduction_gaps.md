@@ -1,5 +1,13 @@
 # FedGRAA Reproduction Gaps & Holes
 
+> **⚠️ ARCHIVED — superseded by `docs/REPRODUCTION_AUDIT.md`, and one claim
+> below is actively wrong today.** §1.1 below claims a simplex-projection fix
+> (`_project_simplex`) was added and tested. That fix was **later deliberately
+> reverted** — the current code has **no** simplex projection (Algorithm 2 as
+> printed has none), and this is the root cause investigated in
+> `docs/fedgraa_divergence_diagnosis.md`. Do not treat any "✅ Fixed" line below
+> as current. Kept only as a historical record of the NumPy-era codebase.
+
 A systematic audit comparing the codebase (`fedgraa/`) against the paper
 *"Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems"*
 (PAKDD submission). Each item is classified by severity and mapped to the

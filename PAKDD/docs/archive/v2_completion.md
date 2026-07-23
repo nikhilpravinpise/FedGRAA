@@ -1,5 +1,11 @@
 # v2 Completion Report: What's Done, What's Left, How to Finish It
 
+> **⚠️ ARCHIVED — historical completion snapshot.** The shipped-phases log
+> below is accurate as a record; for current status see
+> `PAKDD_STATUS_REPORT.md` (repo root). The GPU section further down carries
+> its own superseded banner already (GPU was tested and rejected — see
+> `docs/GPU_DECISION_AND_NEXT_STEPS.md`).
+
 *Generated 2026-07-21 after systematic audit + implementation pass.*  
 *Setup instructions verified against official Microsoft, NVIDIA, and TensorFlow docs.*
 

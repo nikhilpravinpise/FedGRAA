@@ -1,5 +1,10 @@
 # Speedup Plan: Boiling the Ocean
 
+> **⚠️ ARCHIVED — superseded by `docs/speedup_plan_v2.md`**, which
+> independently re-audited every claim in this document and found some of its
+> own measurements wrong (toy-model timings). v2 is the current, audited
+> speedup plan per `PAKDD_STATUS_REPORT.md`. Kept for historical record.
+
 Empirically-grounded optimization strategy for the FedGRAA reproduction pipeline. Every claim, every multiplier, every assumption in this document has been directly measured on this machine. Nothing is guessed.
 
 ---

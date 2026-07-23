@@ -1,3 +1,11 @@
+> **⚠️ ARCHIVED — raw intermediate artifact, superseded by
+> `docs/privacy_compliant_fedgraa_redesign.md`.** This is the unedited output
+> of an automated literature-survey tool (~400 numbered entries, opens
+> mid-sentence). Every paper it surfaced was independently re-verified against
+> live arXiv and folded into `privacy_compliant_fedgraa_redesign.md`; the
+> handful that couldn't be verified are flagged there too. Not citable on its
+> own — kept only as a record of the raw corpus.
+
 Now I have an exhaustive collection. Let me compile the comprehensive report.
 
 ---
