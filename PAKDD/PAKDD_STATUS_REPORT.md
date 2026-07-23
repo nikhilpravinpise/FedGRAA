@@ -1,6 +1,34 @@
 # PAKDD / FedGRAA — Project Status Report
 
-**Date:** 2026-07-15
+**Date:** 2026-07-23 (Divergence diagnosis complete — see update below)
+
+---
+
+## Update 2026-07-23: FedGRAA's divergence is now diagnosed, not just observed
+
+The "reproduction gap" noted below (FedGRAA getting 0% rare-class accuracy)
+has been root-caused. Full writeup:
+[`docs/fedgraa_divergence_diagnosis.md`](docs/fedgraa_divergence_diagnosis.md).
+
+**Short version:** the aggregation-weight vector `w^t` leaves the probability
+simplex in round 1, at every `γ`, because Algorithm 2 as printed has no
+projection step (a deliberate strict-reproduction choice, not a bug — see
+`docs/strict_reproduction_report.md` §2.2). This causes the composite loss
+`L'(w^t)` to blow up 2.7×–193× depending on `γ`, directly violating the
+paper's own Lemma 1. A diagnostic-only simplex-projection ablation confirms
+the mechanism (blowup collapses to 1.0×–4.3×) and a real-data hyperparameter
+intervention (`η'=0.001` vs. the paper's `0.1`) eliminates the blowup entirely
+and recovers 75-100% rare-class accuracy for most of a 60-round run — at the
+cost of collapsing overall accuracy instead, since `γ=1`'s objective has
+nothing pushing back against overweighting the rare clients. UNSW-NB15's and
+CIC-IDS-2017's cached datasets were also independently verified to be
+genuine CSV-derived data, not synthetic. Also new: canonical sweep results
+are now persisted to [`results/`](results/) instead of existing only as
+stdout, and seed-variance sweeps (`results/diagnostics/seed_sweep_*.json`)
+show FedAvg's rare-class failure is exact and seed-independent (0.00% ± 0.00%
+across 3 seeds) while Static Reparam's advantage is real (88.9% ± 3.9%).
+
+---
 
 ## Code
 
@@ -8,107 +36,82 @@
 |---|---|
 | Framework | Keras-only (TF 2.21) |
 | Architecture | Dense(200→100→50, tanh) → Dense(n_classes, softmax) |
-| Tests | **52/52 passed** (291 s) |
-| Latest commit | `c1d6bd5` — fix: UNSW-NB15 feature count 43 → 39 |
+| Tests | **79/79 passed** — 14 new tests added for the divergence diagnosis + result persistence (2026-07-23) |
+| Latest commit | `270d1ed` — docs: update speedup plan v2 with GPU profile |
+| V2 Shipped | Sweep parallelism, pre-computed indices, no `.numpy()` on unused loss, checkpoint/resume, TF threading tune |
+| Bugs fixed (this audit) | 3: parallel sweep tuple unpacking, checkpoint TF 2.21 API incompatibility, resume_or_init dead code |
 
-## Data
+## Real Data Gamma Sweep — CIC-IDS-2017 (200 rounds, n=3)
 
-| Dataset | Status | Cache |
+Completed 2026-07-22. **Sequential: 68 min. Parallel (5 workers): 20 min (3.3×).**
+
+| Method | All-class acc | Last-n (rare) acc |
 |---|---|---|
-| CIC-IDS-2017 | ✅ 8 CSVs present | ✅ `.npy` cache exists |
-| UNSW-NB15 | ✅ `training-set.csv` + `testing-set.csv` present | ✅ `.npy` cache exists |
+| FedAvg | 61.00% | **0.00%** |
+| Static Reparam | 52.29% | **91.67%** |
+| FedGRAA γ=0 | 62.53% | **0.00%** |
+| FedGRAA γ=0.5 | 18.56% | **0.00%** |
+| FedGRAA γ=1.0 | 17.38% | **0.00%** |
 
-## Qualitative Result Verified (UNSW-NB15, real data, 2 rounds)
+**Key finding:** FedGRAA weight learning does not converge on CIC-IDS-2017 with default hyperparameters (eta_prime=0.1, weight_epochs=5). The algorithm oscillates and composite loss diverges. This is a reproduction gap, not a code bug. Static Reparam (inverse-size weighting) achieves 91.67% rare-class accuracy without any learning. **This is now fully root-caused, not just observed — see [`docs/fedgraa_divergence_diagnosis.md`](docs/fedgraa_divergence_diagnosis.md).** The aggregation weights leave the probability simplex in round 1 at every γ (measured directly), the composite loss blows up 2.7×-193× as a direct result, and a diagnostic ablation + a real-data hyperparameter intervention both confirm the mechanism.
 
-| Method | All-class | Last-n (rare) |
-|---|---|---|
-| FedAvg | 59.3% | **0.0%** |
-| Static Reparam | 54.7% | **13.8%** |
-| FedGRAA γ=0 | 64.0% | **0.0%** |
-| FedGRAA γ=1 | 3.6% | **41.5%** |
+## GPU Report: RTX 5050 via WSL2
 
-**Ordering:** FedGRAA(γ=1) >> Static > FedAvg ≈ 0% on rare classes ✅
-
-## Partial CIC-IDS-2017 Gamma Sweep (was in progress)
-
-| Round | Method | All-class | Last-n |
+| Metric | CPU (native) | GPU (WSL2) | Verdict |
 |---|---|---|---|
-| 10/50 | FedAvg | 59.2% | 0.0% |
-| 20/50 | FedAvg | 59.7% | 0.0% |
+| Per-step | **0.70 ms** | 0.87 ms | **GPU 25% slower** |
+| XLA compile | **0.66 s** | 3.45 s (PTX JIT) | CPU faster |
+| Tests passing | **65/65** | 62/65 (3 FP32 precision fails) | CPU deterministic |
 
-## Known Gaps (from `docs/`)
+**GPU rejected for this project.** Small model (78→200→100→50→15, batch=64) means kernel launch overhead dominates. CPU + oneDNN + XLA is the optimal path.
 
-| ID | Issue | Severity |
-|---|---|---|
-| B-2 | Framework mismatch: NumPy → Keras (✅ resolved by Keras-only refactor) | Blocking (resolved) |
-| B-3 | No random seed reported in paper → code uses `seed=0` | Blocking (unresolvable) |
-| C-1 | Standard scaling fitted pre-split (documented choice) | Critical |
-| M-3 | Benign pool smaller than demand → reuse warning | Minor |
-| C-4 | Round-0 accuracy forced to 0.00 to match paper's | Minor |
+## Verification Results
+
+| Claim | Documented | Actual | Status |
+|---|---|---|---|
+| Tests passing | 55/55 | **79/79** | ✅ More tests added |
+| Per-step time | 1.50 ms | **0.70 ms** | ✅ Code faster than claimed |
+| Parallel speedup | 3-5× | **3.3×** | ✅ Within range |
+| GPU speedup | 5-10× | **0.8× (slowdown)** | ❌ GPU rejected |
 
 ## Key Files
 
 | File | Purpose |
 |---|---|
 | `fedgraa/config.py` | Hyperparameters + dataset specs |
-| `fedgraa/model.py` | Keras MLP |
-| `fedgraa/data.py` | CSV loader + NPY cache + synthetic generator |
+| `fedgraa/model.py` | Keras MLP + fused XLA step |
 | `fedgraa/aggregation.py` | FedAvg, Static, FedGRAA |
-| `fedgraa/trainer.py` | Algorithm 1 federated loop |
-| `fedgraa/experiment.py` | Figure 1 / 2 / 3 sweep runners |
-| `run_experiments.py` | Main CLI entry point |
-| `tests/` | 52 unit + gradient + e2e tests |
+| `fedgraa/trainer.py` | Algorithm 1 federated loop + checkpoint/resume |
+| `fedgraa/experiment.py` | Figure 1 / 2 / 3 sweep runners + parallel executor |
+| `run_experiments.py` | Main CLI entry point (`--results-dir` persists sweep JSON, `--plot-dir` saves figures) |
+| `tests/` | 79 tests (unit + gradient + e2e + v2 features + divergence diagnosis) |
+| `docs/speedup_plan_v2.md` | Final audited speedup plan |
 | `docs/strict_reproduction_report.md` | All documented deviations from paper |
-| `docs/privacy_compliant_fedgraa_redesign.md` | FedGRAA-v2 redesign blueprint |
-| `understanding/` | Paper explanation from scratch (9 files) |
-
-## Next-Step Options
-
-| Lane | What | Est. time |
-|---|---|---|
-| **B (continued)** | Full 200-round sweep on CIC + UNSW | ~40-70 h CPU |
-| **B (quick)** | 50-round sweep on CIC only (was in progress) | ~8-10 h CPU |
-| **C** | Implement FedGRAA-v2 (privacy-compliant) | Days of dev |
-| **D** | Paper revision (algorithms, related work, privacy analysis) | N/A |
+| `docs/fedgraa_divergence_diagnosis.md` | Root-cause diagnosis of FedGRAA's 0% rare-class accuracy |
+| `scripts/diagnose_fedgraa.py` | Per-round divergence instrumentation + simplex-projection ablation |
+| `scripts/sensitivity_sweep.py` | eta'/E' sensitivity sweep |
+| `scripts/run_seed_sweep.py` | Seed-variance bands |
+| `results/` | Persisted sweep JSON + figures + raw diagnostic data |
+| `scripts/archive/gpu/` | WSL2 + GPU setup + benchmark (explored, rejected — 25% slower; kept as evidence) |
 
 ## CLI Reference
 
 ```powershell
-# Quick smoke test (synthetic data)
-python run_experiments.py --rounds 5 --eval-every 5 --sweep gamma
-
-# CIC sweep (real data)
-python run_experiments.py --data-dir data/CIC-IDS-2017 --cache-dir .cache --datasets CIC-IDS-2017 --rounds 200
+# Full reproduction (CIC-IDS-2017 gamma sweep, parallel, persisted to results/)
+python run_experiments.py --data-dir data --cache-dir .cache --parallel --rounds 200 --results-dir results --plot-dir results/figures
 
 # Single experiment
-python -m fedgraa run --dataset CIC-IDS-2017 --method fedgraa --gamma 1 --n 3 --rounds 50
+python -m fedgraa run --dataset CIC-IDS-2017 --method fedgraa --gamma 1 --n 3 --rounds 200
+
+# With checkpoint/resume
+python run_experiments.py --data-dir data --cache-dir .cache --checkpoint-dir .checkpoint
+
+# Divergence diagnosis (per-round composite loss + weight trajectory)
+python scripts/diagnose_fedgraa.py --dataset CIC-IDS-2017 --gammas 0 0.5 1.0 --rounds 60 --eval-every 1
 
 # Run tests
 .venv313\Scripts\python.exe -m pytest tests --tb=short
+
+# Quick smoke test (synthetic data)
+python run_experiments.py --rounds 5 --eval-every 5 --sweep gamma
 ```
-
-## Update: Completed Real Data Sweep (5 rounds)
-
-As of 2026-07-15, a 5-round experiment was successfully completed on real data for both datasets to verify training pipeline behavior and initial accuracy sweeps.
-
-### CIC-IDS-2017 (5 rounds, real data)
-| Method | All-class | Last-n (rare) |
-|---|---|---|
-| FedAvg | 53.13% | 0.00% |
-| Static Reparam | 43.65% | **75.00%** |
-| FedGRAA g=0 | 58.29% | 0.00% |
-| FedGRAA g=0.5 | 25.18% | 0.00% |
-| FedGRAA g=1 | 43.12% | 0.00% |
-
-**Note:** At 5 rounds, FedGRAA's learnable validation weights have not yet adapted to boost rare classes on the full CIC dataset.
-
-### UNSW-NB15 (5 rounds, real data)
-| Method | All-class | Last-n (rare) |
-|---|---|---|
-| FedAvg | 64.09% | 0.00% |
-| Static Reparam | 49.05% | **32.28%** |
-| FedGRAA g=0 | 64.02% | 0.00% |
-| FedGRAA g=0.5 | 52.91% | 0.00% |
-| FedGRAA g=1 | 48.14% | **29.92%** |
-
-**Note:** FedGRAA (g=1) successfully begins boosting rare classes to 29.92% recall in just 5 rounds, performing close to Static Reparameterization (32.28%) and outperforming FedAvg (0.00%).

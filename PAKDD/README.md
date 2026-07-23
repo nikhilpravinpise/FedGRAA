@@ -80,6 +80,10 @@ automatically.
 | `--cache-dir DIR` | Cache/reload preprocessed arrays here. |
 | `--round-zero-zero` | Force round-0 accuracies to 0.00 (default True). |
 | `--baselines` | Include FedProx / FedOpt / FedSND (related work only). |
+| `--parallel` | Run sweep configs concurrently via `ProcessPoolExecutor`. |
+| `--results-dir DIR` | Persist raw sweep results to `<DIR>/<dataset>_gamma_sweep.json` / `_n_sweep.json`. |
+| `--plot-dir DIR` | Save Figure 1 / 2-3 PNGs here. |
+| `--checkpoint-dir DIR` | Save/resume training checkpoints. |
 
 ### Recommended workflows
 
@@ -100,19 +104,32 @@ python -m fedgraa run --dataset CIC-IDS-2017 --method fedgraa --gamma 1 --n 3 --
 
 ---
 
-## Expected qualitative results
-
-On the rare ("last-n") classes:
+## Actual measured results (real CIC-IDS-2017, 200 rounds, n=3)
 
 ```
-FedGRAA(γ=1)  ≥  Static Reparam.  >  FedAvg ≈ 0%
+Static Reparam.  >  FedAvg ≈ FedGRAA(any γ) ≈ 0%     (rare-class accuracy)
 ```
 
-- **FedAvg** over-weights large clients and drives rare-class accuracy to near
-  zero.
-- **Static Reparameterization** recovers rare-class accuracy but can sacrifice
-  overall accuracy.
-- **FedGRAA** balances the two via `γ`; higher `γ` prioritizes rare classes.
+| Method | All-class acc | Rare-class acc |
+|---|---|---|
+| FedAvg | 61.0% | 0.0% |
+| Static Reparam. | 52.3% | **91.7%** |
+| FedGRAA (γ=0) | 62.5% | 0.0% |
+| FedGRAA (γ=0.5) | 18.6% | 0.0% |
+| FedGRAA (γ=1) | 17.4% | 0.0% |
+
+This is **not** what the paper reports (it claims FedGRAA reaches ~88% on
+minority classes, beating both baselines). The gap has been diagnosed, not
+just observed: FedGRAA's aggregation weights `w^t` leave the probability
+simplex in round 1 at every `γ` because Algorithm 2 as printed has no
+projection step, driving the composite loss to blow up 2.7×–193× and the
+weight learner to destabilize the global model. See
+[`docs/fedgraa_divergence_diagnosis.md`](docs/fedgraa_divergence_diagnosis.md)
+for the full measurement-backed root-cause analysis, including a diagnostic
+ablation and a real-data hyperparameter intervention that confirm the
+mechanism. **FedAvg's 0% is structural and seed-independent** (verified
+across 3 seeds); Static Reparam's 91.7% is real and reproducible (88.9% ± 3.9%
+across 3 seeds), not a lucky single run.
 
 ---
 
@@ -185,46 +202,26 @@ fedgraa/
   __main__.py      # CLI: python -m fedgraa ...
 data/
   CIC-IDS-2017/    # 8 CSV files (already present)
-  UNSW-NB15/       # put downloaded CSVs here
+  UNSW-NB15/       # downloaded CSVs (already present)
 .cache/            # auto-created NPY cache (git-ignored)
-tests/             # 50 unit + gradient + e2e tests
+scripts/
+  diagnose_fedgraa.py    # per-round divergence instrumentation + simplex-projection ablation
+  sensitivity_sweep.py   # eta'/E' sweep
+  render_diagnostics.py  # figures + summary tables from diagnostic JSON
+  run_seed_sweep.py      # seed-variance bands
+  real_reproduction.py   # canonical real-data gamma sweep
+  archive/gpu/           # explored-and-rejected GPU benchmark (25% slower than CPU)
+results/
+  *_gamma_sweep.json, *_n_sweep.json  # persisted sweep results (--results-dir)
+  figures/               # Figure 1-3 PNGs + diagnostic plots
+  diagnostics/           # raw per-round divergence/sensitivity/seed-sweep data
+tests/             # 79 unit + gradient + e2e + diagnostic tests
 docs/
   strict_reproduction_report.md
+  fedgraa_divergence_diagnosis.md   # root-cause analysis of the FedGRAA reproduction gap
+  GPU_DECISION_AND_NEXT_STEPS.md
   PAKDD_Final_Version_Submit (3).md
-run_experiments.py # main entry point
+run_experiments.py # main entry point (--results-dir persists sweep JSON)
 requirements.txt
 ```
 
----
-
-## Expected behaviour
-
-Reproducing the paper's qualitative result, on the rare ("last-n") classes:
-
-```
-FedGRAA(γ=1)  >  Static Reparam.  >  FedAvg ≈ 0
-```
-
-Raising `γ` trades a small amount of overall accuracy for higher rare-class
-accuracy; FedGRAA's advantage grows as more clients hold rare data (`n = 5, 7`).
-
----
-
-## Project layout
-
-```
-fedgraa/
-  config.py        # hyperparameters + Table 1/2 dataset specs
-  model.py         # MLP forward/backprop + Adam (from scratch)
-  data.py          # real CSV loader + synthetic generator
-  partition.py     # non-IID partition + median-frequency split
-  aggregation.py   # FedAvg / Static / FedGRAA
-  trainer.py       # Algorithm 1 loop
-  metrics.py       # all-class / last-n accuracy
-  experiment.py    # Figure 1/2/3 sweeps
-  __main__.py      # CLI: python -m fedgraa ...
-tests/             # full unit + gradient + e2e suite
-run_experiments.py # reproduce all headline tables
-plan.md            # design + fidelity contract
-requirements.txt
-```

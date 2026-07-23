@@ -13,7 +13,10 @@ from __future__ import annotations
 
 import json
 import os
+import warnings
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field, replace
+from pathlib import Path
 from typing import Dict, List, Optional, Sequence
 
 import numpy as np
@@ -54,12 +57,17 @@ def run_experiment(
     verbose: bool = False,
     cache_dir: Optional[str] = None,
     cfg: Optional[FedConfig] = None,
+    checkpoint_dir: Optional[str] = None,
 ) -> ExperimentResult:
     """Run one configuration end-to-end and return its history.
 
     Supports the three main methods ("fedavg", "static", "fedgraa") and the
     additional baselines from :mod:`fedgraa.baselines` ("fedprox", "fedopt",
     "fedsnd"), addressing gap m-3.
+
+    If ``checkpoint_dir`` is given, the trainer saves checkpoints after each
+    eval round; if a checkpoint already exists, training resumes from the
+    saved round (Phase 14).
     """
     dataset_data_dir = (
         os.path.join(data_dir, dataset) if data_dir and os.path.isdir(os.path.join(data_dir, dataset))
@@ -99,7 +107,7 @@ def run_experiment(
     else:
         trainer = FederatedTrainer(split, cfg, method=method)
 
-    history = trainer.train(eval_every=eval_every, verbose=verbose)
+    history = trainer.train(eval_every=eval_every, verbose=verbose, checkpoint_dir=checkpoint_dir)
     return ExperimentResult(
         dataset=spec.name,
         method=method,
@@ -107,6 +115,172 @@ def run_experiment(
         n_rare=n_rare,
         history=history,
     )
+
+
+# --------------------------------------------------------------------------- #
+# Phase 9: Sweep-Level Parallelism
+# --------------------------------------------------------------------------- #
+
+def _run_single_config(args: tuple) -> tuple:
+    """Top-level function for multiprocessing — runs one experiment config.
+
+    Must be at module level (not nested or lambda) for Windows ``spawn``.
+    Returns ``(key, result_or_exception)``.
+    """
+    key, dataset, method, gamma, n_rare, rounds, data_dir, \
+        eval_every, seed, verbose, cache_dir, cfg_dict, checkpoint_dir = args
+    try:
+        cfg = FedConfig(**cfg_dict) if cfg_dict else None
+        res = run_experiment(
+            dataset, method=method, gamma=gamma, n_rare=n_rare,
+            rounds=rounds, data_dir=data_dir, eval_every=eval_every,
+            seed=seed, verbose=verbose, cache_dir=cache_dir, cfg=cfg,
+            checkpoint_dir=checkpoint_dir,
+        )
+        return (key, res)
+    except Exception as exc:
+        warnings.warn(f"Worker for {key} failed: {exc}", RuntimeWarning, stacklevel=1)
+        return (key, exc)
+
+
+def run_gamma_sweep_parallel(
+    dataset: str,
+    gammas: Sequence[float] = (0.0, 0.5, 1.0),
+    n_rare: int = 3,
+    rounds: int = 200,
+    data_dir: Optional[str] = None,
+    eval_every: int = 20,
+    seed: int = 0,
+    verbose: bool = False,
+    cache_dir: Optional[str] = None,
+    cfg: Optional[FedConfig] = None,
+    workers: Optional[int] = None,
+    checkpoint_dir: Optional[str] = None,
+) -> Dict[str, ExperimentResult]:
+    """Reproduce Figure 1 with parallel workers (Phase 9)."""
+    if workers is None:
+        workers = min(5, os.cpu_count() // 2)
+    if cfg is None:
+        cfg = FedConfig(rounds=rounds, gamma=1.0, n_rare=n_rare, seed=seed)
+
+    cfg_dict = {
+        "rounds": rounds, "gamma": cfg.gamma, "n_rare": cfg.n_rare,
+        "seed": cfg.seed, "eta": cfg.eta, "local_epochs": cfg.local_epochs,
+        "batch_size": cfg.batch_size, "eta_prime": cfg.eta_prime,
+        "weight_epochs": cfg.weight_epochs, "val_fraction": cfg.val_fraction,
+        "round_zero_zero": cfg.round_zero_zero,
+    }
+
+    configs = [
+        ("fedavg", dataset, "fedavg", 0.0, n_rare, rounds, data_dir,
+         eval_every, seed, verbose, cache_dir, cfg_dict,
+         str(checkpoint_dir) + "/fedavg" if checkpoint_dir else None),
+        ("static", dataset, "static", 0.0, n_rare, rounds, data_dir,
+         eval_every, seed, verbose, cache_dir, cfg_dict,
+         str(checkpoint_dir) + "/static" if checkpoint_dir else None),
+    ]
+    for g in gammas:
+        key = f"fedgraa_g{g}"
+        configs.append(
+            (key, dataset, "fedgraa", g, n_rare, rounds, data_dir,
+             eval_every, seed, verbose, cache_dir, cfg_dict,
+             str(checkpoint_dir) + f"/fedgraa_g{g}" if checkpoint_dir else None),
+        )
+
+    results: Dict[str, ExperimentResult] = {}
+    with ProcessPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_run_single_config, c): c[0] for c in configs}
+        for future in as_completed(futures):
+            key = futures[future]
+            try:
+                val = future.result()
+                result_key, result_or_exc = val
+                if isinstance(result_or_exc, Exception):
+                    print(f"  [parallel] {result_key} failed: {result_or_exc}", flush=True)
+                else:
+                    results[result_key] = result_or_exc
+                    print(f"  [parallel] {result_key} done", flush=True)
+            except Exception as exc:
+                print(f"  [parallel] {key} raised: {exc}", flush=True)
+
+    # Sort results by method name for deterministic ordering
+    sorted_keys = sorted(results.keys(), key=lambda k: (k != "fedavg", k != "static", k))
+    return {k: results[k] for k in sorted_keys}
+
+
+def run_n_sweep_parallel(
+    dataset: str,
+    ns: Sequence[int] = (3, 5, 7),
+    gammas: Sequence[float] = (0.0, 0.5, 1.0),
+    rounds: int = 200,
+    data_dir: Optional[str] = None,
+    eval_every: int = 20,
+    seed: int = 0,
+    verbose: bool = False,
+    cache_dir: Optional[str] = None,
+    cfg: Optional[FedConfig] = None,
+    workers: Optional[int] = None,
+    checkpoint_dir: Optional[str] = None,
+) -> Dict[int, Dict[str, ExperimentResult]]:
+    """Reproduce Figures 2-3 with parallel workers (Phase 9)."""
+    if workers is None:
+        workers = min(8, os.cpu_count() // 2)
+    if cfg is None:
+        cfg = FedConfig(rounds=rounds, gamma=1.0, n_rare=3, seed=seed)
+
+    cfg_dict = {
+        "rounds": rounds, "gamma": cfg.gamma, "n_rare": cfg.n_rare,
+        "seed": cfg.seed, "eta": cfg.eta, "local_epochs": cfg.local_epochs,
+        "batch_size": cfg.batch_size, "eta_prime": cfg.eta_prime,
+        "weight_epochs": cfg.weight_epochs, "val_fraction": cfg.val_fraction,
+        "round_zero_zero": cfg.round_zero_zero,
+    }
+
+    configs = []
+    for n in ns:
+        for g in gammas:
+            key = (n, f"fedgraa_g{g}")
+            ckpt = (
+                str(Path(checkpoint_dir) / f"n{n}" / f"fedgraa_g{g}")
+                if checkpoint_dir else None
+            )
+            configs.append(
+                (key, dataset, "fedgraa", g, n, rounds, data_dir,
+                 eval_every, seed, verbose, cache_dir, cfg_dict, ckpt),
+            )
+        for method in ("fedavg", "static"):
+            key = (n, method)
+            ckpt = (
+                str(Path(checkpoint_dir) / f"n{n}" / method)
+                if checkpoint_dir else None
+            )
+            configs.append(
+                (key, dataset, method, 0.0, n, rounds, data_dir,
+                 eval_every, seed, verbose, cache_dir, cfg_dict, ckpt),
+            )
+
+    raw: Dict[int, Dict[str, ExperimentResult]] = {}
+    with ProcessPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_run_single_config, c): c[0] for c in configs}
+        for future in as_completed(futures):
+            n_key, method_key = futures[future]
+            try:
+                val = future.result()
+                result_key, result_or_exc = val
+                if isinstance(result_or_exc, Exception):
+                    print(f"  [parallel] n={n_key} {method_key} failed: {result_or_exc}", flush=True)
+                else:
+                    raw.setdefault(n_key, {})[method_key] = result_or_exc
+                    print(f"  [parallel] n={n_key} {method_key} done", flush=True)
+            except Exception as exc:
+                print(f"  [parallel] n={n_key} {method_key} raised: {exc}", flush=True)
+
+    out: Dict[int, Dict[str, ExperimentResult]] = {}
+    for n in sorted(raw.keys()):
+        methods = raw[n]
+        order = ["fedavg", "static"] + [f"fedgraa_g{g}" for g in gammas]
+        out[n] = {k: methods[k] for k in order if k in methods}
+    return out
 
 
 def run_gamma_sweep(
@@ -267,6 +441,64 @@ def save_results(results: Dict[str, ExperimentResult], path: str) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=2)
     print(f"Results saved to {path}", flush=True)
+
+
+def save_n_sweep_results(
+    results: Dict[int, Dict[str, ExperimentResult]], path: str
+) -> None:
+    """Persist the nested ``n``-sweep results (Figures 2-3) to a JSON file.
+
+    Mirrors :func:`save_results` but keys the outer level by ``n`` (as a
+    string, since JSON object keys must be strings) and the inner level by
+    method string.
+    """
+    out: Dict = {}
+    for n, methods in results.items():
+        out[str(n)] = {}
+        for key, r in methods.items():
+            h = r.history
+            out[str(n)][key] = {
+                "dataset": r.dataset,
+                "method": r.method,
+                "gamma": r.gamma,
+                "n_rare": r.n_rare,
+                "rounds": h.rounds,
+                "all_acc": h.all_acc,
+                "last_n_acc": h.last_n_acc,
+                "composite_loss": [
+                    v if np.isfinite(v) else None for v in h.composite_loss
+                ],
+            }
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(out, f, indent=2)
+    print(f"Results saved to {path}", flush=True)
+
+
+def load_n_sweep_results(path: str) -> Dict[int, Dict[str, ExperimentResult]]:
+    """Reload results previously saved with :func:`save_n_sweep_results`."""
+    from .trainer import TrainHistory
+
+    with open(path, encoding="utf-8") as f:
+        raw = json.load(f)
+
+    out: Dict[int, Dict[str, ExperimentResult]] = {}
+    for n_str, methods in raw.items():
+        n = int(n_str)
+        out[n] = {}
+        for key, d in methods.items():
+            h = TrainHistory(method=d["method"], gamma=d.get("gamma"), n_rare=d["n_rare"])
+            h.rounds = d["rounds"]
+            h.all_acc = d["all_acc"]
+            h.last_n_acc = d["last_n_acc"]
+            raw_comp = d.get("composite_loss", [])
+            h.composite_loss = [
+                float(v) if v is not None else float("nan") for v in raw_comp
+            ] or [float("nan")] * len(h.rounds)
+            out[n][key] = ExperimentResult(
+                dataset=d["dataset"], method=d["method"], gamma=d.get("gamma"),
+                n_rare=d["n_rare"], history=h,
+            )
+    return out
 
 
 def run_seed_sweep(

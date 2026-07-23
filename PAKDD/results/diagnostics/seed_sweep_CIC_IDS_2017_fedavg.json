@@ -1,0 +1,26 @@
+{
+  "dataset": "CIC-IDS-2017",
+  "method": "fedavg",
+  "gamma": null,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "rounds": 100,
+  "wall_time_s": 1909.2910406589508,
+  "all_acc_per_seed": [
+    0.5547139868715285,
+    0.5462742552117147,
+    0.5677703238837193
+  ],
+  "last_n_acc_per_seed": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "all_acc_mean": 0.5562528553223208,
+  "all_acc_std": 0.008842938017405653,
+  "last_n_acc_mean": 0.0,
+  "last_n_acc_std": 0.0
+}
