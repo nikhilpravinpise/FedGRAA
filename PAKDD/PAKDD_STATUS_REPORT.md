@@ -37,7 +37,7 @@ across 3 seeds) while Static Reparam's advantage is real (88.9% ± 3.9%).
 | Framework | Keras-only (TF 2.21) |
 | Architecture | Dense(200→100→50, tanh) → Dense(n_classes, softmax) |
 | Tests | **79/79 passed** — 14 new tests added for the divergence diagnosis + result persistence (2026-07-23) |
-| Latest commit | `270d1ed` — docs: update speedup plan v2 with GPU profile |
+| Latest commit | `71839ee` — docs: audit data provenance — CIC-IDS-2017 & UNSW-NB15 verified genuine |
 | V2 Shipped | Sweep parallelism, pre-computed indices, no `.numpy()` on unused loss, checkpoint/resume, TF threading tune |
 | Bugs fixed (this audit) | 3: parallel sweep tuple unpacking, checkpoint TF 2.21 API incompatibility, resume_or_init dead code |
 

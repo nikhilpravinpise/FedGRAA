@@ -1,5 +1,14 @@
 # Latest Baseline — Post-Speedup Performance
 
+> **⚠️ SUPERSEDED — historical snapshot, not current state.** This document
+> captures a NaN-collapse regression that existed at commit `f95092a`
+> (2026-07-20) and was fixed the same day by `2bb548a` ("fix: NaN collapse
+> from np.empty padding buffers in XLA fused steps"). The 55/55 test count and
+> the 0%-everywhere accuracy table below are **not** current — see
+> [`PAKDD_STATUS_REPORT.md`](PAKDD_STATUS_REPORT.md) for the current 79/79
+> test count and [`results/`](results/) for current accuracy numbers. Kept for
+> historical record of the regression and its diagnosis.
+
 **Date:** 2026-07-20
 **Commit:** `f95092a` (HEAD)
 **Python:** 3.13.14 · **TensorFlow:** 2.21.0 (CPU, oneDNN on) · **NumPy:** 2.5.1 (OpenBLAS)

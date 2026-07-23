@@ -159,7 +159,7 @@ def run_gamma_sweep_parallel(
 ) -> Dict[str, ExperimentResult]:
     """Reproduce Figure 1 with parallel workers (Phase 9)."""
     if workers is None:
-        workers = min(5, os.cpu_count() // 2)
+        workers = max(1, min(5, (os.cpu_count() or 2) // 2))
     if cfg is None:
         cfg = FedConfig(rounds=rounds, gamma=1.0, n_rare=n_rare, seed=seed)
 
@@ -224,7 +224,7 @@ def run_n_sweep_parallel(
 ) -> Dict[int, Dict[str, ExperimentResult]]:
     """Reproduce Figures 2-3 with parallel workers (Phase 9)."""
     if workers is None:
-        workers = min(8, os.cpu_count() // 2)
+        workers = max(1, min(8, (os.cpu_count() or 2) // 2))
     if cfg is None:
         cfg = FedConfig(rounds=rounds, gamma=1.0, n_rare=3, seed=seed)
 
