@@ -1,5 +1,5 @@
 > **⚠️ ARCHIVED — raw intermediate artifact, superseded by
-> `docs/privacy_compliant_fedgraa_redesign.md`.** This is the unedited output
+> `../current/privacy_compliant_fedgraa_redesign.md`.** This is the unedited output
 > of an automated literature-survey tool (~400 numbered entries, opens
 > mid-sentence). Every paper it surfaced was independently re-verified against
 > live arXiv and folded into `privacy_compliant_fedgraa_redesign.md`; the

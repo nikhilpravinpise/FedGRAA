@@ -2,7 +2,7 @@
 
 ## Exhaustive Verification & Analysis of *Literature Review & Publication Strategy for FedGRAA*
 
-> **Scope.** This document is a complete, verified, source-checked expansion of every paper, algorithm, dataset, venue, and claim contained in [literature_review_and_publication_strategy.md](../literature_review_and_publication_strategy.md). Every item listed in the original review was independently researched against arXiv, DBLP, Semantic Scholar, OpenReview, IEEE Xplore, ACM DL, official venue proceedings, and official dataset portals. For each item we report the exact title, authors, verified venue/year, core mechanism, key results, problem addressed, its precise relationship to FedGRAA, an approximate citation count, and a **verification verdict** (confirmed / corrected / unverifiable).
+> **Scope.** This document is a complete, verified, source-checked expansion of every paper, algorithm, dataset, venue, and claim contained in [literature_review_and_publication_strategy.md](literature_review_and_publication_strategy.md). Every item listed in the original review was independently researched against arXiv, DBLP, Semantic Scholar, OpenReview, IEEE Xplore, ACM DL, official venue proceedings, and official dataset portals. For each item we report the exact title, authors, verified venue/year, core mechanism, key results, problem addressed, its precise relationship to FedGRAA, an approximate citation count, and a **verification verdict** (confirmed / corrected / unverifiable).
 >
 > **FedGRAA** = *Federated Gradient-Refined Adaptive Averaging* — an aggregation-side federated-learning method that dynamically reweights client contributions using **gradient information** so that clients with **small datasets and minority (rare) attack classes** retain meaningful influence on the global model in **non-IID intrusion detection**. It is evaluated on CIC-IDS-2017 and UNSW-NB15 and targeted at **PAKDD**.
 >
@@ -96,7 +96,7 @@ Corrections required in the original literature review and/or the FedGRAA paper.
 
 ## 3. FedGRAA Itself — What the Paper Actually Proposes
 
-**Title:** *Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems* (PAKDD submission draft, see [PAKDD_Final_Version_Submit (3).md](PAKDD_Final_Version_Submit%20(3).md)).
+**Title:** *Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems* (PAKDD submission draft, see [PAKDD_Final_Version_Submit (3).md](../paper/PAKDD_Final_Version_Submit%20(3).md)).
 
 **Core problem.** Standard **FedAvg** aggregates client models in proportion to dataset size ($\theta_g^{t+1} = \sum_{k\in S_t}\frac{|D_k|}{|D|}\theta_k^{t+1}$). Under non-IID intrusion-detection data, clients holding **rare attack classes** (Heartbleed, SQL Injection, Infiltration in CIC-IDS-2017) usually also hold **little data**, so the $\frac{|D_k|}{|D|}$ weight crushes their contribution and the global model fails to detect exactly the attacks that matter most.
 

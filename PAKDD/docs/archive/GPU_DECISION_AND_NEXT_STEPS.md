@@ -13,7 +13,7 @@
 | Is the GPU rejection correct? | **Yes.** Measured, sound, and re-derivable from first principles. The model is too small for a GPU to win. |
 | Should we delete the GPU scripts? | **No.** They *are* the evidence for the negative result. Deleting them makes "we tried GPU, it was slower" unreproducible. Archive + label instead. |
 | Is there GPU *code* to remove from `fedgraa/`? | **None.** The source is device-agnostic. There is literally nothing to rip out. |
-| Is anything actually broken? | **Yes — one doc.** [`v2_completion.md`](archive/v2_completion.md) still calls GPU "the single remaining action item" and promises **192–320×**. That directly contradicts the measured result in [`speedup_plan_v2.md`](speedup_plan_v2.md). Fix that contradiction. |
+| Is anything actually broken? | **Yes — one doc.** [`v2_completion.md`](v2_completion.md) still calls GPU "the single remaining action item" and promises **192–320×**. That directly contradicts the measured result in [`speedup_plan_v2.md`](speedup_plan_v2.md). Fix that contradiction. |
 | What should we spend time on instead? | **Reproduction, not performance.** Speed is *solved* (full repro ≈ 2 h on CPU). FedGRAA getting **0% rare-class accuracy** — versus the paper's headline **88%** — is the real, unsolved problem. |
 
 ---
@@ -21,25 +21,25 @@
 ## 2. What "GPU stuff" actually is (inventory)
 
 There is **no GPU-specific code in the model or training path**. A grep for
-`gpu|cuda|device|physical_device` across [`../fedgraa/`](../fedgraa/) returns
+`gpu|cuda|device|physical_device` across [`../../fedgraa/`](../../fedgraa/) returns
 **zero matches**. The fused step is `@tf.function(jit_compile=True)` and would
 transparently use a GPU if TF saw one — nothing to add, nothing to remove.
 
 "GPU stuff" is entirely **tooling + prose**:
 
 The 6 GPU helper scripts have been **archived** (not deleted) to
-[`../scripts/archive/gpu/`](../scripts/archive/gpu/) with a
-[`README.md`](../scripts/archive/gpu/README.md) marking them explored-and-rejected:
+[`../../scripts/archive/gpu/`](../../scripts/archive/gpu/) with a
+[`README.md`](../../scripts/archive/gpu/README.md) marking them explored-and-rejected:
 
 | Location (now under `scripts/archive/gpu/`) | What | Verdict |
 |---|---|---|
-| [`benchmark_gpu.py`](../scripts/archive/gpu/benchmark_gpu.py) | CPU-vs-GPU per-step timing harness | **Kept** — the measurement that produced the 25%-slower finding |
-| [`fix_gpu_import.py`](../scripts/archive/gpu/fix_gpu_import.py) | ctypes `RTLD_GLOBAL` CUDA preload (the TF 2.21 WSL2 workaround) | **Kept** — non-obvious, hard-won, documents a real TF bug |
-| [`test_gpu.py`](../scripts/archive/gpu/test_gpu.py), [`run_tests_gpu.py`](../scripts/archive/gpu/run_tests_gpu.py) | Run the suite under XLA:GPU | **Kept (archived)** |
-| [`setup_wsl2_gpu.ps1`](../scripts/archive/gpu/setup_wsl2_gpu.ps1), [`setup_gpu_wsl.sh`](../scripts/archive/gpu/setup_gpu_wsl.sh) | WSL2 + CUDA + TF install automation | **Kept (archived)** |
+| [`benchmark_gpu.py`](../../scripts/archive/gpu/benchmark_gpu.py) | CPU-vs-GPU per-step timing harness | **Kept** — the measurement that produced the 25%-slower finding |
+| [`fix_gpu_import.py`](../../scripts/archive/gpu/fix_gpu_import.py) | ctypes `RTLD_GLOBAL` CUDA preload (the TF 2.21 WSL2 workaround) | **Kept** — non-obvious, hard-won, documents a real TF bug |
+| [`test_gpu.py`](../../scripts/archive/gpu/test_gpu.py), [`run_tests_gpu.py`](../../scripts/archive/gpu/run_tests_gpu.py) | Run the suite under XLA:GPU | **Kept (archived)** |
+| [`setup_wsl2_gpu.ps1`](../../scripts/archive/gpu/setup_wsl2_gpu.ps1), [`setup_gpu_wsl.sh`](../../scripts/archive/gpu/setup_gpu_wsl.sh) | WSL2 + CUDA + TF install automation | **Kept (archived)** |
 | GPU section of [`speedup_plan_v2.md`](speedup_plan_v2.md) | The negative result, fully measured | **Keep — this is canonical** |
-| GPU section of [`v2_completion.md`](archive/v2_completion.md) | Optimistic "5–10× / 192–320×" projection + "remaining action item" | **Reconciled** — SUPERSEDED banner added (see §4) |
-| GPU rows in [`../PAKDD_STATUS_REPORT.md`](../PAKDD_STATUS_REPORT.md) | "GPU rejected" summary | **Keep — correct** |
+| GPU section of [`v2_completion.md`](v2_completion.md) | Optimistic "5–10× / 192–320×" projection + "remaining action item" | **Reconciled** — SUPERSEDED banner added (see §4) |
+| GPU rows in [`../../PAKDD_STATUS_REPORT.md`](../../PAKDD_STATUS_REPORT.md) | "GPU rejected" summary | **Keep — correct** |
 
 *(The 7th script in `scripts/`, `real_reproduction.py`, is the CPU reproduction
 runner — not GPU — and stays in place.)*
@@ -96,7 +96,7 @@ faster than that. Chasing GPU is optimizing a non-bottleneck.
 
 ## 4. The one thing that is actually wrong: contradicting docs
 
-[`v2_completion.md`](archive/v2_completion.md) predates the GPU benchmark and still says:
+[`v2_completion.md`](v2_completion.md) predates the GPU benchmark and still says:
 
 - *"What's Left: Phase 19 — GPU via WSL2 … the **single remaining action item**"*
 - Expected *"**~0.15–0.30 ms per step** (5–10× vs CPU)"*
@@ -111,14 +111,14 @@ question surfaces.
 `v2_completion.md`'s Phase 19 section (or delete that section and point to
 `speedup_plan_v2.md`). Keep the rest of `v2_completion.md` — its shipped-phase
 log is fine. *(Done — the banner was added and the file has since been moved to
-`docs/archive/v2_completion.md` as part of a broader docs decluttering pass.)*
+`v2_completion.md` as part of a broader docs decluttering pass.)*
 
 ---
 
 ## 5. Where the effort should actually go — the reproduction is not done
 
 > **Update (2026-07-23): P0 below is now answered.** See
-> [`fedgraa_divergence_diagnosis.md`](fedgraa_divergence_diagnosis.md) for the
+> [`fedgraa_divergence_diagnosis.md`](../current/fedgraa_divergence_diagnosis.md) for the
 > full measurement-backed diagnosis. Short version: FedGRAA's aggregation
 > weights measurably leave the probability simplex in round 1 at every γ,
 > causing the composite loss to blow up 2.7×–193× — a direct, confirmed
@@ -130,7 +130,7 @@ not yet reproduced.** Ranked by importance:
 
 ### P0 — FedGRAA does not converge (the headline result is missing)
 
-Real CIC-IDS-2017, 200 rounds, n=3 (from [`../PAKDD_STATUS_REPORT.md`](../PAKDD_STATUS_REPORT.md)):
+Real CIC-IDS-2017, 200 rounds, n=3 (from [`../../PAKDD_STATUS_REPORT.md`](../../PAKDD_STATUS_REPORT.md)):
 
 | Method | All-class acc | Rare (last-n) acc |
 |---|---|---|
@@ -167,7 +167,7 @@ publish "FedGRAA does not reproduce," we owe a real diagnosis:
 
 There are **zero result JSON/PNG files** anywhere in the repo — the numbers in
 the status report can't be regenerated from disk or plotted.
-[`../scripts/real_reproduction.py`](../scripts/real_reproduction.py) already
+[`../../scripts/real_reproduction.py`](../../scripts/real_reproduction.py) already
 calls `save_results(...)` and there's a `plot.py`; wire the canonical run to
 emit `results/*.json` + Figure 1/2/3 PNGs and commit them. Without this, "we
 reproduced X" is an unverifiable claim.
@@ -195,18 +195,18 @@ matching a number that may not be real.
 
 **GPU (DONE — 2026-07-23):**
 - [x] Added a "SUPERSEDED by GPU benchmark, see `speedup_plan_v2.md`" banner to the Phase 19 section of `v2_completion.md` (before committing that untracked file).
-- [x] Moved the 6 GPU scripts into [`../scripts/archive/gpu/`](../scripts/archive/gpu/) with a [`README.md`](../scripts/archive/gpu/README.md) recording the negative result. `real_reproduction.py` (CPU) stays in `scripts/`.
+- [x] Moved the 6 GPU scripts into [`../../scripts/archive/gpu/`](../../scripts/archive/gpu/) with a [`README.md`](../../scripts/archive/gpu/README.md) recording the negative result. `real_reproduction.py` (CPU) stays in `scripts/`.
 - [x] Left `fedgraa/` untouched — it's device-agnostic; nothing to remove.
 - [x] Updated the `scripts/setup_wsl2_gpu.ps1` reference in `PAKDD_STATUS_REPORT.md` to point at the archive.
 
-**Science (DONE — 2026-07-23, see [`fedgraa_divergence_diagnosis.md`](fedgraa_divergence_diagnosis.md) for the full writeup):**
+**Science (DONE — 2026-07-23, see [`fedgraa_divergence_diagnosis.md`](../current/fedgraa_divergence_diagnosis.md) for the full writeup):**
 - [x] Instrumented and dumped `is_composite_loss_monotone` + full `w` trajectory per round (not just per eval round) for γ=0/0.5/1 on real CIC-IDS-2017 via `scripts/diagnose_fedgraa.py` (zero changes to `fedgraa/trainer.py`/`aggregation.py` required — `TrainHistory` already tracked both). **Confirmed weight-learner divergence**: the aggregation weight vector leaves the probability simplex in **round 1, at every γ**, and the composite loss `L'(w^t)` blows up 2.7×–193× depending on γ, a direct, measured violation of the paper's own Lemma 1.
 - [x] Ran a diagnostic-only simplex-projection ablation (`ProjectedFedGRAA` in `scripts/diagnose_fedgraa.py`, never imported by `fedgraa/`) that isolates the mechanism: constraining `w` to the simplex collapses the blowup ratio to 1.0×–4.3×, confirming unconstrained weight drift is the proximate cause — but does **not** by itself recover rare-class accuracy within 60 rounds, so this is reported as a partial, not a full, explanation.
 - [x] Ran the `η' × E'` sensitivity sweep on synthetic (6 configs, γ=1) — smaller `η'` restores monotonicity and 100% rare-class accuracy on synthetic — then confirmed a reduced-`η'` config on real CIC data (`scripts/diagnose_fedgraa.py --eta-prime`) to check whether the same fix transfers; see the diagnosis doc for the real-data result, which differs from synthetic in an important, honest way.
 - [x] Persisted the canonical 200-round gamma sweep to `results/CIC-IDS-2017_gamma_sweep.json` (new `run_experiments.py --results-dir` flag, wired through `save_results`/`save_n_sweep_results`, both now with test coverage) and rendered Figure 1 PNGs to `results/figures/`.
 - [x] Verified UNSW-NB15 **and** CIC-IDS-2017 cache provenance directly: both are real, CSV-derived data (UNSW's attack-class counts hit the paper's exact Table 2 values while Benign sits at the true uncapped 93,000, not the paper's 56,691 — synthetic generation would hit 56,691 exactly). No result in this repo is synthetic-blocked.
 - [x] Ran seed-variance sweeps (Static, FedAvg; 3 seeds, real CIC data) to report a variance band instead of a single point.
-- [x] Wrote the honest reproduction verdict — [`fedgraa_divergence_diagnosis.md`](fedgraa_divergence_diagnosis.md) — now that the divergence is diagnosed, not before.
+- [x] Wrote the honest reproduction verdict — [`fedgraa_divergence_diagnosis.md`](../current/fedgraa_divergence_diagnosis.md) — now that the divergence is diagnosed, not before.
 
 ---
 

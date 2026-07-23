@@ -2,7 +2,7 @@
 
 > **⚠️ ARCHIVED — the bottlenecks described here (serial client loop, eager
 > TF, no sweep parallelism) were fixed by the work in
-> `docs/speedup_plan_v2.md`.** Kept for historical record of the
+> `speedup_plan_v2.md`.** Kept for historical record of the
 > pre-optimization diagnosis.
 
 This note explains why the current real-data sweep still takes a long time on a newer laptop, even though the measured wall time is better than the older machine.
@@ -40,12 +40,12 @@ With `--rounds 1`, that is still a full pass through the entire federated setup,
 
 ### 1. The training loop is serial
 
-The core loop in [fedgraa/trainer.py](../fedgraa/trainer.py) iterates over all clients in Python, then iterates over batches inside each client update. There is no parallel client execution here.
+The core loop in [fedgraa/trainer.py](../../fedgraa/trainer.py) iterates over all clients in Python, then iterates over batches inside each client update. There is no parallel client execution here.
 
 Relevant paths:
 
-- [fedgraa/trainer.py](../fedgraa/trainer.py)
-- [fedgraa/model.py](../fedgraa/model.py)
+- [fedgraa/trainer.py](../../fedgraa/trainer.py)
+- [fedgraa/model.py](../../fedgraa/model.py)
 
 ### 2. Every batch uses eager TensorFlow gradient computation
 
@@ -53,7 +53,7 @@ Each local step goes through `MLP.loss_and_grad(...)`, which uses `tf.GradientTa
 
 Relevant path:
 
-- [fedgraa/model.py](../fedgraa/model.py)
+- [fedgraa/model.py](../../fedgraa/model.py)
 
 ### 3. FedGRAA adds extra validation optimization work
 
@@ -61,8 +61,8 @@ For FedGRAA, every round also runs a weight-update loop with `weight_epochs = 5`
 
 Relevant paths:
 
-- [fedgraa/config.py](../fedgraa/config.py)
-- [fedgraa/aggregation.py](../fedgraa/aggregation.py)
+- [fedgraa/config.py](../../fedgraa/config.py)
+- [fedgraa/aggregation.py](../../fedgraa/aggregation.py)
 
 ### 4. The sweep multiplies the cost
 
@@ -70,7 +70,7 @@ The gamma sweep does not run one model and vary a flag inside it. It runs a full
 
 Relevant path:
 
-- [fedgraa/experiment.py](../fedgraa/experiment.py)
+- [fedgraa/experiment.py](../../fedgraa/experiment.py)
 
 ### 5. Caching only skips preprocessing, not training
 
@@ -78,7 +78,7 @@ The `.cache` directory removes the big CSV load and normalization step, but afte
 
 Relevant path:
 
-- [fedgraa/data.py](../fedgraa/data.py)
+- [fedgraa/data.py](../../fedgraa/data.py)
 
 ## Why The New Laptop Still Looks "Slow"
 

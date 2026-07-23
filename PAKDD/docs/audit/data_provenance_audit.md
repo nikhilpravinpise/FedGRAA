@@ -16,7 +16,7 @@ published by their originators** — present in every mirror, not artifacts of a
 unreliable download — and the existing pipeline already handles all of them.
 The data is **not** the culprit. The divergence is algorithmic (missing simplex
 projection + oversized `η'`), as established in
-[`fedgraa_divergence_diagnosis.md`](fedgraa_divergence_diagnosis.md).
+[`fedgraa_divergence_diagnosis.md`](../current/fedgraa_divergence_diagnosis.md).
 
 ---
 
@@ -120,15 +120,15 @@ Backdoor, Shellcode, Worms) match the paper's Table 2 exactly.
 
 The audit deliberately looked for signs of a bad download. What it found are
 the datasets' famous, originator-side quirks — each independently documented in
-the literature (§5) and each already handled by [`fedgraa/data.py`](../fedgraa/data.py):
+the literature (§5) and each already handled by [`fedgraa/data.py`](../../fedgraa/data.py):
 
 | Observation (CIC-IDS-2017) | Count | What it actually is | Handled by |
 |---|---|---|---|
-| `inf` cells | 4,376 | CICFlowMeter divide-by-zero in `Flow Bytes/s`, `Flow Packets/s` (no zero-check) | `np.place(X, ~np.isfinite(X), 0.0)` — [data.py:258](../fedgraa/data.py#L258) |
+| `inf` cells | 4,376 | CICFlowMeter divide-by-zero in `Flow Bytes/s`, `Flow Packets/s` (no zero-check) | `np.place(X, ~np.isfinite(X), 0.0)` — [data.py:258](../../fedgraa/data.py#L258) |
 | `NaN` cells | 1,358 | Same CICFlowMeter gap | same |
 | Columns with negatives | 13 | Negative flow durations from PCAP packet misordering | globally standard-scaled; not dropped (paper is silent on dropping) |
 | Fully-duplicate rows | 308,381 (10.9%) | Documented CIC duplicate-flow issue | present in raw set (paper does not dedup either) — see §4.1 |
-| Mangled label `Web Attack � Brute Force` | 1,507 rows | The notorious non-ASCII en-dash (`–`) rendered as `�` under cp1252 | `_normalize_label` collapses `�`→space, alias `"brute force"→"Brute Force"` — [data.py:294](../fedgraa/data.py#L294) |
+| Mangled label `Web Attack � Brute Force` | 1,507 rows | The notorious non-ASCII en-dash (`–`) rendered as `�` under cp1252 | `_normalize_label` collapses `�`→space, alias `"brute force"→"Brute Force"` — [data.py:294](../../fedgraa/data.py#L294) |
 
 ### 4.1 On the 10.9% duplicates
 
@@ -182,7 +182,7 @@ Sources:
 Independent of provenance, the data is logically excluded as the root cause:
 
 1. **The instability reproduces on pristine synthetic data.** In
-   [`fedgraa_divergence_diagnosis.md`](fedgraa_divergence_diagnosis.md) §6, the
+   [`fedgraa_divergence_diagnosis.md`](../current/fedgraa_divergence_diagnosis.md) §6, the
    aggregation weight vector leaves the probability simplex (`Σw` → 0.20,
    rare-acc → 0%) at `η'=0.1, E'=1` on cleanly-separable Gaussian features with
    the exact paper class counts. Clean data triggers the same failure ⇒ real
@@ -204,8 +204,8 @@ none has anything to do with the divergence:
 
 **UNSW-NB15 benign.** The Normal class enters training at its full **93,000**
 rows because `_cap_frequent_classes` never caps the benign/normal class
-([data.py:344](../fedgraa/data.py#L344)), whereas the paper's Table 2 lists
-**56,691** "Used." (Same note already flagged in [`config.py`](../fedgraa/config.py)
+([data.py:344](../../fedgraa/data.py#L344)), whereas the paper's Table 2 lists
+**56,691** "Used." (Same note already flagged in [`config.py`](../../fedgraa/config.py)
 and diagnosis §5.)
 
 **CIC-IDS-2017 mid-tier classes.** Six classes between the rare tier and the
@@ -241,4 +241,4 @@ duplicates, one mangled label) are the datasets' own well-known,
 literature-documented quirks, present in every mirror, and every one is already
 handled by the preprocessing pipeline. **Provenance is clean. The data is not
 the culprit; the divergence is the algorithmic defect diagnosed in
-[`fedgraa_divergence_diagnosis.md`](fedgraa_divergence_diagnosis.md).**
+[`fedgraa_divergence_diagnosis.md`](../current/fedgraa_divergence_diagnosis.md).**

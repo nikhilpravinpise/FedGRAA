@@ -3,10 +3,10 @@
 **Paper:** *"Federated Gradient-Refined Adaptive Averaging for Intrusion Detection
 Systems"* — `PAKDD_Final_Version_Submit (3).md` **only**.
 
-> **⚠️ ARCHIVED — superseded by `docs/REPRODUCTION_AUDIT.md`.** Written
+> **⚠️ ARCHIVED — superseded by `../audit/REPRODUCTION_AUDIT.md`.** Written
 > 2026-07-09 against a codebase state that has since changed (e.g. the
 > `reading="A"/"B"` ambiguity toggle referenced below has been removed — see
-> `docs/strict_reproduction_report.md`). Kept for historical record.
+> `strict_reproduction_report.md`). Kept for historical record.
 
 This document
 deliberately ignores `privacy_compliant_fedgraa_redesign.md` (the "FedGRAA-v2"
