@@ -196,16 +196,39 @@ Independent of provenance, the data is logically excluded as the root cause:
    `η'=0.01` recovers 72–94% rare-class accuracy on the *same* data (diagnosis
    §8), confirmed across 3 seeds. The data did not change; only the algorithm did.
 
-## 7. One genuine reproduction gap (not corruption)
+## 7. Genuine reproduction gaps (not corruption)
 
-Worth recording because it touches the data, but distinct from any provenance
-concern: the UNSW-NB15 benign class enters training at its full **93,000** rows
-because `_cap_frequent_classes` never caps the benign/normal class
+Worth recording because they touch the data, but distinct from any provenance
+concern — none of these affect the rarest, protected classes (§2.2, §3), and
+none has anything to do with the divergence:
+
+**UNSW-NB15 benign.** The Normal class enters training at its full **93,000**
+rows because `_cap_frequent_classes` never caps the benign/normal class
 ([data.py:344](../fedgraa/data.py#L344)), whereas the paper's Table 2 lists
-**56,691** "Used." This is a preprocessing-fidelity gap to revisit for
-table-exact reproduction — it has **nothing to do with an unreliable source**
-and nothing to do with the divergence. (Same note already flagged in
-[`config.py`](../fedgraa/config.py) and diagnosis §5.)
+**56,691** "Used." (Same note already flagged in [`config.py`](../fedgraa/config.py)
+and diagnosis §5.)
+
+**CIC-IDS-2017 mid-tier classes.** Six classes between the rare tier and the
+10,000 cap keep their raw CSV count rather than the paper's subsampled "Used"
+count, because `_load_real_csvs` only *cleans* rows (inf/NaN → 0, never drops)
+and `_cap_frequent_classes` only downsamples classes above 10,000 — there is no
+subsampling step for classes below the cap:
+
+| Label | This copy ("Used" in pipeline) | Paper Table 1 "Used" |
+|---|---|---|
+| FTP-Patator | 7,938 | 5,931 |
+| SSH-Patator | 5,897 | 5,385 |
+| DoS slowloris | 5,796 | 5,228 |
+| DoS Slowhttptest | 5,499 | 3,219 |
+| Bot | 1,966 | 1,948 |
+| Web Attack – Brute Force | 1,507 | 1,470 |
+
+The paper does not describe how it subsampled these six classes down from
+their raw counts (no stated sampling method or seed), so there is no
+paper-faithful way to reproduce its exact numbers here; this pipeline keeps
+the full raw count for every class below the cap instead. Both preprocessing
+gaps are preprocessing-fidelity items to revisit for table-exact reproduction —
+they have **nothing to do with an unreliable source**.
 
 ## 8. Bottom line
 
