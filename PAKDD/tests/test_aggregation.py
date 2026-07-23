@@ -109,6 +109,92 @@ def test_fedgraa_update_runs_and_changes_weights(rng):
 # Gap 2.1: Adam reset each round
 # --------------------------------------------------------------------------- #
 
+def test_fedgraa_default_hyperparameters_drift_off_simplex():
+    """Regression test locking in the root cause documented in
+    ``docs/fedgraa_divergence_diagnosis.md``: with the paper's own default
+    hyperparameters (eta'=0.1, E'=5) and no simplex projection (deliberate,
+    see strict_reproduction_report.md Sec 2.2), repeated FedGRAA weight
+    updates against a validation split with a small rare-class pool (mirroring
+    real CIC-IDS-2017's 11-36-sample rare classes) drive `w` progressively
+    further from the simplex (`sum(w) != 1`, `min(w) < 0`) within a handful of
+    rounds. This is the measured mechanism behind FedGRAA's divergence on real
+    data; if a future change to FedGRAA/Adam/aggregate silently made this
+    stable, that would be a meaningful behavioural change worth noticing.
+
+    Uses a locally-seeded RNG (not the shared ``rng`` fixture) because the
+    escalating drift is a property of this specific data realization, verified
+    empirically; it is not claimed to hold for arbitrary seeds within 8 rounds.
+    """
+    local_rng = np.random.default_rng(0)
+    layer_sizes = (6, 7, 5, 4)
+    K = 5
+    client_params = [init_params(layer_sizes, seed=s) for s in range(K)]
+
+    Xh = local_rng.normal(size=(50, 6)).astype(np.float32)
+    yh = local_rng.integers(0, 4, size=50)
+    Xm = local_rng.normal(size=(40, 6)).astype(np.float32)
+    ym = local_rng.integers(0, 4, size=40)
+    Xn = local_rng.normal(size=(6, 6)).astype(np.float32)
+    yn = local_rng.integers(0, 4, size=6)
+    val = ValidationSplit(Xh, yh, Xm, ym, Xn, yn, rare_class_ids=[0])
+
+    fg = FedGRAA(gamma=1.0, eta_prime=0.1, weight_epochs=5, layer_sizes=layer_sizes)
+    w = static_reparam_weights([100, 50, 30, 20, 11])
+    assert abs(w.sum() - 1.0) < 1e-6  # starts on the simplex (Static Reparam init)
+
+    sum_deviation = []
+    for _ in range(8):
+        w = fg.update(client_params, w, val)
+        sum_deviation.append(abs(float(w.sum()) - 1.0))
+
+    # The deviation from sum(w)=1 must grow, not stay bounded near 0 --
+    # this is what "no simplex projection" means in practice under the
+    # paper's own default learning rate.
+    assert sum_deviation[-1] > 1.0, (
+        "expected sum(w) to have drifted well off the simplex after 8 rounds "
+        f"of default-hyperparameter FedGRAA updates; got deviations {sum_deviation}"
+    )
+    assert sum_deviation[-1] > sum_deviation[0], (
+        "expected the simplex deviation to grow round-over-round, not shrink"
+    )
+
+
+def test_fedgraa_reduced_eta_prime_stays_near_simplex():
+    """Mirror of ``test_fedgraa_default_hyperparameters_drift_off_simplex``:
+    the same scenario, same seed, same client params and validation split,
+    but with ``eta'=0.001`` (vs. the paper's default 0.1) stays close to the
+    simplex instead of drifting away. This is the mechanism behind the
+    sensitivity-sweep finding in ``docs/fedgraa_divergence_diagnosis.md`` §6
+    (smaller eta' avoids the blowup) reproduced at unit-test scale/speed.
+    """
+    local_rng = np.random.default_rng(0)
+    layer_sizes = (6, 7, 5, 4)
+    K = 5
+    client_params = [init_params(layer_sizes, seed=s) for s in range(K)]
+
+    Xh = local_rng.normal(size=(50, 6)).astype(np.float32)
+    yh = local_rng.integers(0, 4, size=50)
+    Xm = local_rng.normal(size=(40, 6)).astype(np.float32)
+    ym = local_rng.integers(0, 4, size=40)
+    Xn = local_rng.normal(size=(6, 6)).astype(np.float32)
+    yn = local_rng.integers(0, 4, size=6)
+    val = ValidationSplit(Xh, yh, Xm, ym, Xn, yn, rare_class_ids=[0])
+
+    fg = FedGRAA(gamma=1.0, eta_prime=0.001, weight_epochs=1, layer_sizes=layer_sizes)
+    w = static_reparam_weights([100, 50, 30, 20, 11])
+
+    sum_deviation = []
+    for _ in range(8):
+        w = fg.update(client_params, w, val)
+        sum_deviation.append(abs(float(w.sum()) - 1.0))
+        assert w.min() > -1e-6, "expected all weights to stay non-negative"
+
+    assert sum_deviation[-1] < 0.1, (
+        "expected sum(w) to stay close to the simplex with a small eta'; "
+        f"got deviations {sum_deviation}"
+    )
+
+
 def test_fedgraa_update_is_deterministic_across_calls(rng):
     """Gap 2.1: two calls with the same inputs must return the same weights."""
     layer_sizes = (6, 7, 5, 4)

@@ -31,7 +31,15 @@ import os
 import time
 
 from fedgraa.config import FedConfig
-from fedgraa.experiment import run_gamma_sweep, run_n_sweep, summarize_gamma_sweep
+from fedgraa.experiment import (
+    run_gamma_sweep,
+    run_gamma_sweep_parallel,
+    run_n_sweep,
+    run_n_sweep_parallel,
+    save_n_sweep_results,
+    save_results,
+    summarize_gamma_sweep,
+)
 
 
 def main() -> None:
@@ -63,6 +71,13 @@ def main() -> None:
         help="If given, save matplotlib figures for each sweep here (gap m-5).",
     )
     parser.add_argument(
+        "--results-dir",
+        default=None,
+        help="If given, persist every sweep's raw results to "
+             "<results-dir>/<dataset>_gamma_sweep.json / _n_sweep.json (P1: "
+             "results existed only as stdout prose before this flag).",
+    )
+    parser.add_argument(
         "--round-zero-zero",
         action="store_true",
         help="Force round-0 accuracies to 0.00 to match the paper's table (gap C-4).",
@@ -71,6 +86,16 @@ def main() -> None:
         "--baselines",
         action="store_true",
         help="Include FedProx, FedOpt, and FedSND baselines in gamma sweep (gap m-3).",
+    )
+    parser.add_argument(
+        "--parallel",
+        action="store_true",
+        help="Run sweep configurations in parallel using ProcessPoolExecutor (Phase 9).",
+    )
+    parser.add_argument(
+        "--checkpoint-dir",
+        default=None,
+        help="Directory to save/load training checkpoints for resume on crash (Phase 14).",
     )
     parser.add_argument("--verbose", action="store_true",
                         help="Legacy flag (progress is now always printed)")
@@ -93,18 +118,38 @@ def main() -> None:
         if args.sweep in ("gamma", "both"):
             print(f"\n--- Figure 1: gamma sweep (n=3) ---")
             t0 = time.time()
-            gamma_results = run_gamma_sweep(
-                dataset,
-                n_rare=3,
-                rounds=args.rounds,
-                data_dir=args.data_dir,
-                eval_every=args.eval_every,
-                seed=args.seed,
-                cache_dir=args.cache_dir,
-                cfg=base_cfg,
-            )
+            if args.parallel:
+                gamma_results = run_gamma_sweep_parallel(
+                    dataset,
+                    n_rare=3,
+                    rounds=args.rounds,
+                    data_dir=args.data_dir,
+                    eval_every=args.eval_every,
+                    seed=args.seed,
+                    cache_dir=args.cache_dir,
+                    cfg=base_cfg,
+                    checkpoint_dir=args.checkpoint_dir,
+                )
+            else:
+                gamma_results = run_gamma_sweep(
+                    dataset,
+                    n_rare=3,
+                    rounds=args.rounds,
+                    data_dir=args.data_dir,
+                    eval_every=args.eval_every,
+                    seed=args.seed,
+                    cache_dir=args.cache_dir,
+                    cfg=base_cfg,
+                )
             print(f"\nGamma sweep done in {time.time()-t0:.0f}s")
             print(summarize_gamma_sweep(gamma_results))
+
+            if args.results_dir:
+                os.makedirs(args.results_dir, exist_ok=True)
+                save_results(
+                    gamma_results,
+                    os.path.join(args.results_dir, f"{dataset}_gamma_sweep.json"),
+                )
 
             if args.baselines:
                 from fedgraa.experiment import run_experiment
@@ -134,17 +179,31 @@ def main() -> None:
         if args.sweep in ("n", "both"):
             print(f"\n--- Figures 2-3: n sweep (gamma=0/0.5/1) ---")
             t0 = time.time()
-            n_results = run_n_sweep(
-                dataset,
-                ns=(3, 5, 7),
-                gammas=(0.0, 0.5, 1.0),
-                rounds=args.rounds,
-                data_dir=args.data_dir,
-                eval_every=args.eval_every,
-                seed=args.seed,
-                cache_dir=args.cache_dir,
-                cfg=base_cfg,
-            )
+            if args.parallel:
+                n_results = run_n_sweep_parallel(
+                    dataset,
+                    ns=(3, 5, 7),
+                    gammas=(0.0, 0.5, 1.0),
+                    rounds=args.rounds,
+                    data_dir=args.data_dir,
+                    eval_every=args.eval_every,
+                    seed=args.seed,
+                    cache_dir=args.cache_dir,
+                    cfg=base_cfg,
+                    checkpoint_dir=args.checkpoint_dir,
+                )
+            else:
+                n_results = run_n_sweep(
+                    dataset,
+                    ns=(3, 5, 7),
+                    gammas=(0.0, 0.5, 1.0),
+                    rounds=args.rounds,
+                    data_dir=args.data_dir,
+                    eval_every=args.eval_every,
+                    seed=args.seed,
+                    cache_dir=args.cache_dir,
+                    cfg=base_cfg,
+                )
             print(f"\nn sweep done in {time.time()-t0:.0f}s")
             print("n | FedAvg | Static | FedGRAA g=0 | g=0.5 | g=1")
             print("--+--------+--------+-------------+-------+------")
@@ -156,6 +215,13 @@ def main() -> None:
                     f"{res['fedgraa_g0.0'].final_last_n_acc*100:11.2f} | "
                     f"{res['fedgraa_g0.5'].final_last_n_acc*100:5.2f} | "
                     f"{res['fedgraa_g1.0'].final_last_n_acc*100:5.2f}"
+                )
+
+            if args.results_dir:
+                os.makedirs(args.results_dir, exist_ok=True)
+                save_n_sweep_results(
+                    n_results,
+                    os.path.join(args.results_dir, f"{dataset}_n_sweep.json"),
                 )
 
             if args.plot_dir:

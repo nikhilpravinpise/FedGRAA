@@ -22,7 +22,9 @@ from .config import DATASETS
 from .experiment import (
     run_experiment,
     run_gamma_sweep,
+    run_gamma_sweep_parallel,
     run_n_sweep,
+    run_n_sweep_parallel,
     summarize_gamma_sweep,
 )
 
@@ -44,6 +46,14 @@ def _build_parser() -> argparse.ArgumentParser:
         "--cache-dir", default=None,
         help="Directory to cache preprocessed .npy arrays (skips CSV re-processing)",
     )
+    common.add_argument(
+        "--parallel", action="store_true",
+        help="Run sweep configurations in parallel via ProcessPoolExecutor (Phase 9)",
+    )
+    common.add_argument(
+        "--checkpoint-dir", default=None,
+        help="Directory for training checkpoints (Phase 14)",
+    )
 
     run_p = sub.add_parser("run", parents=[common], help="single configuration")
     run_p.add_argument(
@@ -60,7 +70,6 @@ def _build_parser() -> argparse.ArgumentParser:
     ns_p = sub.add_parser(
         "n-sweep", parents=[common], help="Figures 2-3 reproduction"
     )
-    ns_p.add_argument("--gamma", type=float, default=1.0)
     return p
 
 
@@ -79,6 +88,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             seed=args.seed,
             verbose=args.verbose,
             cache_dir=args.cache_dir,
+            checkpoint_dir=args.checkpoint_dir,
         )
         print(
             f"\n[{res.dataset}] method={res.method} gamma={res.gamma} "
@@ -88,38 +98,66 @@ def main(argv: Optional[List[str]] = None) -> int:
         )
 
     elif args.command == "gamma-sweep":
-        results = run_gamma_sweep(
-            args.dataset,
-            n_rare=args.n_rare,
-            rounds=args.rounds,
-            data_dir=args.data_dir,
-            eval_every=args.eval_every,
-            seed=args.seed,
-            verbose=args.verbose,
-            cache_dir=args.cache_dir,
-        )
+        if args.parallel:
+            results = run_gamma_sweep_parallel(
+                args.dataset,
+                n_rare=args.n_rare,
+                rounds=args.rounds,
+                data_dir=args.data_dir,
+                eval_every=args.eval_every,
+                seed=args.seed,
+                verbose=args.verbose,
+                cache_dir=args.cache_dir,
+                checkpoint_dir=args.checkpoint_dir,
+            )
+        else:
+            results = run_gamma_sweep(
+                args.dataset,
+                n_rare=args.n_rare,
+                rounds=args.rounds,
+                data_dir=args.data_dir,
+                eval_every=args.eval_every,
+                seed=args.seed,
+                verbose=args.verbose,
+                cache_dir=args.cache_dir,
+            )
         print(f"\n=== Figure 1 reproduction — {args.dataset} (n={args.n_rare}) ===")
         print(summarize_gamma_sweep(results))
 
     elif args.command == "n-sweep":
-        out = run_n_sweep(
-            args.dataset,
-            gamma=args.gamma,
-            rounds=args.rounds,
-            data_dir=args.data_dir,
-            eval_every=args.eval_every,
-            seed=args.seed,
-            verbose=args.verbose,
-            cache_dir=args.cache_dir,
-        )
-        print(f"\n=== Figures 2-3 reproduction — {args.dataset} (gamma={args.gamma}) ===")
-        print("n | FedAvg(last-n) | Static(last-n) | FedGRAA(last-n)")
-        print("--+----------------+----------------+----------------")
+        if args.parallel:
+            out = run_n_sweep_parallel(
+                args.dataset,
+                gammas=(0.0, 0.5, 1.0),
+                rounds=args.rounds,
+                data_dir=args.data_dir,
+                eval_every=args.eval_every,
+                seed=args.seed,
+                verbose=args.verbose,
+                cache_dir=args.cache_dir,
+                checkpoint_dir=args.checkpoint_dir,
+            )
+        else:
+            out = run_n_sweep(
+                args.dataset,
+                gammas=(0.0, 0.5, 1.0),
+                rounds=args.rounds,
+                data_dir=args.data_dir,
+                eval_every=args.eval_every,
+                seed=args.seed,
+                verbose=args.verbose,
+                cache_dir=args.cache_dir,
+            )
+        print(f"\n=== Figures 2-3 reproduction — {args.dataset} ===")
+        print("n | FedAvg(last-n) | Static(last-n) | FedGRAA g=0 | g=0.5 | g=1")
+        print("--+----------------+----------------+-------------+-------+------")
         for n, res in out.items():
             print(
                 f"{n} | {res['fedavg'].final_last_n_acc*100:13.2f}  | "
                 f"{res['static'].final_last_n_acc*100:13.2f}  | "
-                f"{res['fedgraa'].final_last_n_acc*100:13.2f}"
+                f"{res['fedgraa_g0.0'].final_last_n_acc*100:11.2f} | "
+                f"{res['fedgraa_g0.5'].final_last_n_acc*100:5.2f} | "
+                f"{res['fedgraa_g1.0'].final_last_n_acc*100:5.2f}"
             )
 
     return 0

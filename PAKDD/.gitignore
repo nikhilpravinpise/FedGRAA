@@ -21,6 +21,9 @@ Thumbs.db
 # Kaggle credentials (never commit)
 kaggle.json
 
-# Experiment outputs (large result files)
-results/
+# Experiment outputs: results/*.json and results/figures/*.png ARE committed
+# (they are the persisted, verifiable reproduction artifacts — see
+# docs/GPU_DECISION_AND_NEXT_STEPS.md P1 and docs/fedgraa_divergence_diagnosis.md).
+# Only checkpoints and .npy caches are excluded as large/regeneratable.
+.checkpoint/
 *.npy

@@ -62,8 +62,12 @@ def proximal_client_train_round(
     pad_x = np.zeros((cfg.batch_size, X.shape[1]), dtype=np.float32)
     pad_y = np.zeros(cfg.batch_size, dtype=np.int32)
 
-    for _ in range(cfg.local_epochs):
-        perm = rng.permutation(n)
+    all_perm = np.array(
+        [rng.permutation(n) for _ in range(cfg.local_epochs)],
+        dtype=np.int32,
+    )
+    for epoch in range(cfg.local_epochs):
+        perm = all_perm[epoch]
         for start in range(0, n, cfg.batch_size):
             idx = perm[start : start + cfg.batch_size]
             n_valid = len(idx)
@@ -73,13 +77,13 @@ def proximal_client_train_round(
                 x_batch, y_batch = pad_x, pad_y
             else:
                 x_batch, y_batch = X[idx], y[idx]
-            _ = _fused_proximal_step(
+            _fused_proximal_step(
                 tf.constant(x_batch, dtype=tf.float32),
                 tf.constant(y_batch, dtype=tf.int32),
                 model._model, opt,
                 global_vars, mu_tensor,
                 tf.constant(n_valid, dtype=tf.int32),
-            ).numpy()
+            )
     return model.get_params()
 
 
