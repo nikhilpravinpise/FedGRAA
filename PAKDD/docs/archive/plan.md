@@ -3,15 +3,15 @@
 > **⚠️ ARCHIVED — describes a codebase state that no longer exists.** This was
 > the original 2026-06-28 build plan and proposed a **hand-written NumPy MLP**
 > (no TensorFlow). The project was later rewritten Keras-only; see
-> `docs/strict_reproduction_report.md` for the current architecture and
-> `PAKDD_STATUS_REPORT.md` (repo root) for current status. Kept for historical
+> `strict_reproduction_report.md` for the current architecture and
+> `../../PAKDD_STATUS_REPORT.md` (repo root) for current status. Kept for historical
 > record of the original design intent.
 
 > **Goal.** Build a complete, working, tested implementation of the paper
 > *"Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems"*
 > (FedGRAA) that reproduces **exactly** what the paper describes — with **no
 > deviations** introduced by the critical questions in
-> [understanding/07_my_questions.md](understanding/07_my_questions.md). Every
+> [understanding/07_my_questions.md](../../understanding/07_my_questions.md). Every
 > design choice the paper makes is implemented *as written*; the alternatives
 > raised in the critique (ReLU, SMOTE, SGD, stratified split, etc.) are
 > deliberately **not** substituted.

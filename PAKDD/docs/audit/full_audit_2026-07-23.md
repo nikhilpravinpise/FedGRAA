@@ -49,7 +49,7 @@ statistics:
   = 42 (after dropping `id`/`label`/`attack_cat`) − 3 categorical
   (`proto`/`service`/`state`). Matches the loader and the actual array.
 
-This corroborates `docs/data_provenance_audit.md` completely.
+This corroborates `data_provenance_audit.md` completely.
 
 ## 3. Divergence diagnosis — fully reproducible from raw JSON
 
@@ -81,7 +81,7 @@ strict-repro default is intentionally left unpatched).
    `_load_real_csvs` replaces inf/NaN in place (never drops rows) and
    `_cap_frequent_classes` only caps > 10 k. The three protected **rare** classes
    match exactly, so no conclusion was ever affected.
-   **Fix:** `docs/data_provenance_audit.md` §7 now documents this gap explicitly
+   **Fix:** `data_provenance_audit.md` §7 now documents this gap explicitly
    alongside the pre-existing UNSW-benign note, with a table of all six affected
    classes and why the paper's exact subsampling can't be reproduced (no stated
    method or seed).
@@ -98,11 +98,11 @@ strict-repro default is intentionally left unpatched).
    while HEAD had advanced to `71839ee`.
    **Fix:** updated to `71839ee` — docs: audit data provenance.
 
-4. **`latest_baseline.md` still reported 55/55 tests** (now 79) with no
+4. **`../../latest_baseline.md` still reported 55/55 tests** (now 79) with no
    indication it was a historical snapshot of a since-fixed NaN-collapse
    regression.
    **Fix:** added a `⚠️ SUPERSEDED` banner at the top pointing to the current
-   79/79 count in `PAKDD_STATUS_REPORT.md` and current results in `results/`,
+   79/79 count in `../../PAKDD_STATUS_REPORT.md` and current results in `results/`,
    while preserving the historical regression record intact (rewriting its
    numbers would falsify the record of what the regression looked like).
 

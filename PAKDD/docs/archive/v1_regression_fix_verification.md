@@ -1,7 +1,7 @@
 # V1 Regression — Fix Verification Report
 
 > **⚠️ ARCHIVED — historical record of a fixed regression, not current state.**
-> See `PAKDD_STATUS_REPORT.md` (repo root) for current status. Kept intact for
+> See `../../PAKDD_STATUS_REPORT.md` (repo root) for current status. Kept intact for
 > the record of the fix and its verification.
 
 **Date:** 2026-07-21

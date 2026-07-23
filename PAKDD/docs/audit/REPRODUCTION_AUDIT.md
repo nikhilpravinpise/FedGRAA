@@ -1,12 +1,12 @@
 # FedGRAA — Ruthless Reproduction Audit (Current Code State)
 
 **Paper:** *"Federated Gradient-Refined Adaptive Averaging for Intrusion
-Detection Systems"* — [`PAKDD_Final_Version_Submit (3).md`](PAKDD_Final_Version_Submit%20(3).md).
+Detection Systems"* — [`PAKDD_Final_Version_Submit (3).md`](../paper/PAKDD_Final_Version_Submit%20(3).md).
 
 **Codebase audited:** `PAKDD/fedgraa/` **as it exists right now** (Keras/TensorFlow
 backend, `model.py`/`aggregation.py`/`trainer.py`/`partition.py`/`data.py`/`metrics.py`/`experiment.py`).
 
-**Scope:** the **base paper only**. `docs/privacy_compliant_fedgraa_redesign.md`
+**Scope:** the **base paper only**. `../current/privacy_compliant_fedgraa_redesign.md`
 ("FedGRAA‑v2"), every related-work method cited in §2/References that is not
 one of the paper's own Figures 1–3 curves (FedProx/FedOpt/FedSND baselines in
 `fedgraa/baselines.py`), and every piece of v2-only code (`secagg.py`-style
@@ -37,21 +37,21 @@ documentation-only deliverable: **no code was changed to produce this report.**
 
 Four earlier audit documents already exist in this folder (the first three now
 moved to `archive/`, since this document supersedes them):
-[`reproduction_gaps.md`](archive/reproduction_gaps.md),
-[`full_reproduction_gap_analysis.md`](archive/full_reproduction_gap_analysis.md),
-[`paper_vs_code_line_by_line_gap_analysis.md`](archive/paper_vs_code_line_by_line_gap_analysis.md),
-and [`strict_reproduction_report.md`](strict_reproduction_report.md).
+[`reproduction_gaps.md`](../archive/reproduction_gaps.md),
+[`full_reproduction_gap_analysis.md`](../archive/full_reproduction_gap_analysis.md),
+[`paper_vs_code_line_by_line_gap_analysis.md`](../archive/paper_vs_code_line_by_line_gap_analysis.md),
+and [`strict_reproduction_report.md`](../archive/strict_reproduction_report.md).
 
 **Every one of them is at least partially stale.** The codebase went through a
 full backend rewrite (hand-written NumPy MLP → real `tf.keras.Sequential`
 model in `fedgraa/model.py`) and an ambiguity-removal pass (all
 "interpretation" config flags such as `fedgraa_reading`, `subgradient`,
 `grad_clip`, `val_split_strategy`, `cap_benign`, `rare_metric` were deleted)
-**after** `full_reproduction_gap_analysis.md` (2026-06-30) and
-`paper_vs_code_line_by_line_gap_analysis.md` (2026-07-09) were written. Those
+**after** `../archive/full_reproduction_gap_analysis.md` (2026-06-30) and
+`../archive/paper_vs_code_line_by_line_gap_analysis.md` (2026-07-09) were written. Those
 two documents describe a codebase state (NumPy backend, unconditional
 `_project_simplex`, a `reading="A"/"B"` toggle, an `Optional`-import bug) that
-**no longer exists**. `strict_reproduction_report.md` reflects the rewrite
+**no longer exists**. `../archive/strict_reproduction_report.md` reflects the rewrite
 correctly at a summary level but does not go line-by-line through every
 equation/algorithm-box line the way this document does, and it does not
 independently verify the arithmetic claims it repeats from the older
@@ -301,7 +301,7 @@ and the intended experimental design.
 
 ### 5.6 Correction to a prior document: the UNSW "benign pool shortage" claim is arithmetically wrong
 
-`full_reproduction_gap_analysis.md` (§ M-3) claims *"total attack demand
+`../archive/full_reproduction_gap_analysis.md` (§ M-3) claims *"total attack demand
 (66,691) exceeds the Normal/benign pool (56,691) by ≈10,000 samples"* and
 treats this as an unresolved data contradiction inherited by the code's
 circular-indexing benign allocator. **Re-adding the same 9 numbers that

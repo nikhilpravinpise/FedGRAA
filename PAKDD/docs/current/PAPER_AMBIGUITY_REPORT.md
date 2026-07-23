@@ -1,7 +1,7 @@
 # FedGRAA — Paper Ambiguity Report
 
 **Paper:** *"Federated Gradient-Refined Adaptive Averaging for Intrusion
-Detection Systems"* — [`PAKDD_Final_Version_Submit (3).md`](PAKDD_Final_Version_Submit%20(3).md).
+Detection Systems"* — [`PAKDD_Final_Version_Submit (3).md`](../paper/PAKDD_Final_Version_Submit%20(3).md).
 
 **Purpose of this document.** This is a **paper-only** critique. It does not
 discuss the code, does not reference `fedgraa/`, and does not propose fixes to
@@ -11,7 +11,7 @@ internally inconsistent, so that any reproduction attempt (this one or a
 future one, in any language or framework) runs into the exact same open
 questions and can see them collected in one place. For the corresponding
 code-level audit (how the current implementation resolves each of these), see
-[`REPRODUCTION_AUDIT.md`](REPRODUCTION_AUDIT.md).
+[`REPRODUCTION_AUDIT.md`](../audit/REPRODUCTION_AUDIT.md).
 
 **Method.** Every equation, every algorithm-box line, every sentence of §5
 ("Experiments and Results"), every table, every figure caption, and the

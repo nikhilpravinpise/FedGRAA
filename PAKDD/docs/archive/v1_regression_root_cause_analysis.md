@@ -2,7 +2,7 @@
 
 > **⚠️ ARCHIVED — historical record of a fixed regression, not current state.**
 > The NaN-collapse bug diagnosed here was fixed the same day (`2bb548a`). See
-> `PAKDD_STATUS_REPORT.md` (repo root) for current status and `results/` for
+> `../../PAKDD_STATUS_REPORT.md` (repo root) for current status and `results/` for
 > current accuracy numbers. Kept intact for the record of the regression and
 > its diagnosis.
 
@@ -11,8 +11,8 @@
 **Bug introduced at:** `596c040` (fused XLA speedup, 2026-07-19)
 **Fixes verified on working tree at:** `596c040` (same commit + uncommitted fixes)
 **Scope:** 23 Python files reviewed (all source + all tests)
-**Symptoms:** `latest_baseline.md`
-**Fix verification report:** `docs/archive/v1_regression_fix_verification.md`
+**Symptoms:** `../../latest_baseline.md`
+**Fix verification report:** `v1_regression_fix_verification.md`
 
 ---
 
@@ -157,7 +157,7 @@ Class 0 = BENIGN/Normal for both datasets. When every prediction is class 0, acc
 - CIC-IDS-2017: **51.02%**
 - UNSW-NB15: **49.95%**
 
-These match the reported "all-class" accuracies exactly (`latest_baseline.md` lines 64, 74).
+These match the reported "all-class" accuracies exactly (`../../latest_baseline.md` lines 64, 74).
 
 ### Step 5: FedGRAA composite loss becomes 0.0000
 

@@ -2,9 +2,9 @@
 
 > **⚠️ ARCHIVED — historical completion snapshot.** The shipped-phases log
 > below is accurate as a record; for current status see
-> `PAKDD_STATUS_REPORT.md` (repo root). The GPU section further down carries
+> `../../PAKDD_STATUS_REPORT.md` (repo root). The GPU section further down carries
 > its own superseded banner already (GPU was tested and rejected — see
-> `docs/GPU_DECISION_AND_NEXT_STEPS.md`).
+> `GPU_DECISION_AND_NEXT_STEPS.md`).
 
 *Generated 2026-07-21 after systematic audit + implementation pass.*  
 *Setup instructions verified against official Microsoft, NVIDIA, and TensorFlow docs.*
@@ -50,7 +50,7 @@ Every measurable phase from the speedup plan is **implemented, tested, compiling
 > (5–10× vs CPU)" and "v2 + RTX 5050 GPU: ~15–25 minutes → 192–320×" did **not**
 > materialize. GPU is *not* a remaining action item — it is a closed, rejected
 > path. The setup steps below are retained only as a historical record of what
-> was attempted (the scripts now live in [`../scripts/archive/gpu/`](../scripts/archive/gpu/)).
+> was attempted (the scripts now live in [`../../scripts/archive/gpu/`](../../scripts/archive/gpu/)).
 > 
 > **Canonical, measured truth:** see the GPU Report in
 > [`speedup_plan_v2.md`](speedup_plan_v2.md) and the decision write-up in
@@ -313,7 +313,7 @@ sweeps (~2 h, 40×) is the final path.*
 | `fedgraa/experiment.py` | Phase 9 sweep parallelism, Phase 14 checkpoint wiring |
 | `fedgraa/baselines.py` | Phase 12 pre-computed indices, Phase 13 `.numpy()` removal |
 | `run_experiments.py` | `--parallel` and `--checkpoint-dir` CLI flags |
-| `docs/speedup_plan_v2.md` | Final audited plan with shipped/rejected/remaining status |
+| `speedup_plan_v2.md` | Final audited plan with shipped/rejected/remaining status |
 
 ### New Files (2)
 
@@ -326,7 +326,7 @@ sweeps (~2 h, 40×) is the final path.*
 
 | File | What |
 |------|------|
-| `scripts/archive/gpu/setup_wsl2_gpu.ps1` | Automated WSL2 installation — **archived; GPU was tested and rejected (25% slower than CPU), see banner in Phase 19 above** |
+| `../../scripts/archive/gpu/setup_wsl2_gpu.ps1` | Automated WSL2 installation — **archived; GPU was tested and rejected (25% slower than CPU), see banner in Phase 19 above** |
 
 All 25 Python files compile clean. Zero `TODO`/`FIXME`/`HACK` comments exist.
 
@@ -353,4 +353,4 @@ All 25 Python files compile clean. Zero `TODO`/`FIXME`/`HACK` comments exist.
 no remaining action; the CPU + parallel-sweep path (~2 h full reproduction, 40×)
 is final. See [`speedup_plan_v2.md`](speedup_plan_v2.md) and
 [`GPU_DECISION_AND_NEXT_STEPS.md`](GPU_DECISION_AND_NEXT_STEPS.md). The WSL2/GPU
-setup scripts are archived in [`../scripts/archive/gpu/`](../scripts/archive/gpu/).*
+setup scripts are archived in [`../../scripts/archive/gpu/`](../../scripts/archive/gpu/).*

@@ -4,7 +4,7 @@
 second-dataset generalization check)
 **Question:** Is FedGRAA's 0% rare-class accuracy on real CIC-IDS-2017 (vs. the
 paper's claimed ~88%) a code bug, a reproduction gap, or a genuine weakness of
-Algorithm 2 as printed? [`docs/GPU_DECISION_AND_NEXT_STEPS.md`](GPU_DECISION_AND_NEXT_STEPS.md)
+Algorithm 2 as printed? [`../archive/GPU_DECISION_AND_NEXT_STEPS.md`](../archive/GPU_DECISION_AND_NEXT_STEPS.md)
 P0 asked for a real diagnosis instead of writing this off unearned. This
 document is that diagnosis.
 
@@ -14,7 +14,7 @@ must be non-increasing) on real data, at every tested `γ`. The root cause is
 structural, not incidental: Algorithm 2, taken literally, updates `w` with
 Adam and **never projects it back onto the probability simplex**
 (`w_k ≥ 0`, `Σw_k = 1`) — a design choice this codebase deliberately preserves
-for strict reproduction (see [`strict_reproduction_report.md`](strict_reproduction_report.md)
+for strict reproduction (see [`../archive/strict_reproduction_report.md`](../archive/strict_reproduction_report.md)
 §2.2). Empirically, the weight vector leaves the simplex **in round 1, every
 single time**, at every `γ`, and the composite loss blows up by **2.7×–193×**
 depending on `γ`. A diagnostic-only ablation that re-projects `w` onto the
@@ -66,8 +66,8 @@ Two variants were run, 60 rounds each, `n=3`, seed 0, at `γ ∈ {0, 0.5, 1.0}`:
   it exists solely to test whether unconstrained weight drift is the cause of
   the divergence.
 
-Raw data: [`results/diagnostics/`](../results/diagnostics/). Figures:
-[`results/figures/`](../results/figures/).
+Raw data: [`../../results/diagnostics/`](../../results/diagnostics/). Figures:
+[`results/figures/`](../../results/figures/).
 
 ## 2. Finding 1 — the weight vector leaves the simplex in round 1, always
 
@@ -84,9 +84,9 @@ Raw data: [`results/diagnostics/`](../results/diagnostics/). Figures:
 the 60-round run. "First simplex violation round" = first round where
 `|Σw − 1| > 1e-3` or `min(w) < −1e-6`.)*
 
-![Composite loss, literal Algorithm 2 — note the γ=1 spike to ~575 around round 11](../results/figures/diagnosis_literal_composite_loss.png)
+![Composite loss, literal Algorithm 2 — note the γ=1 spike to ~575 around round 11](../../results/figures/diagnosis_literal_composite_loss.png)
 
-![Composite loss, simplex-projected ablation — same y-axis story capped at ~13, not ~600](../results/figures/diagnosis_projected_composite_loss.png)
+![Composite loss, simplex-projected ablation — same y-axis story capped at ~13, not ~600](../../results/figures/diagnosis_projected_composite_loss.png)
 
 At `γ=1`, the literal run's composite loss trajectory over the first 10
 rounds is:
@@ -130,7 +130,7 @@ and noisier in both variants — 1-10 range rather than γ=1's 1-300 range — s
 the blowup *ratio* is a less stable statistic there; the effect is
 unambiguous only where the literal loss reaches large absolute values, i.e.
 γ=1. The qualitative pattern — projection removes the worst excursions — holds
-at every γ; see the full per-round trace in `results/diagnostics/`.)*
+at every γ; see the full per-round trace in `../../results/diagnostics/`.)*
 
 ## 4. Finding 3 — projection stabilizes the loss but does not, by itself, recover rare-class accuracy
 
@@ -141,7 +141,7 @@ two separable claims must not be conflated:
 1. **"Is the divergence real and explained?"** — Yes. Finding 1 + Finding 2
    answer this completely: the literal Algorithm 2 is numerically unstable on
    this real dataset because it has no simplex projection, exactly as
-   `strict_reproduction_report.md` §2.2 already flagged as a live risk (not
+   `../archive/strict_reproduction_report.md` §2.2 already flagged as a live risk (not
    previously *measured*, only *anticipated* — this diagnosis is the
    measurement).
 2. **"Would fixing the projection reproduce the paper's ~88%?"** — Not
@@ -289,7 +289,7 @@ the same point (~48-50% all-acc, 91.7% rare-acc), while the paper's own
 | 0.5 | 1.0× | 1.000 | **56.7%** | **91.7%** |
 | 1.0 | 1.0× | 1.000 | **49.0%** | **91.7%** |
 
-![Composite loss under the combined fix — flat, not exploding, at every γ](../results/figures/diagnosis_combined_fix_composite_loss.png)
+![Composite loss under the combined fix — flat, not exploding, at every γ](../../results/figures/diagnosis_combined_fix_composite_loss.png)
 
 Every `γ` now: (a) never leaves the simplex (`Σw = 1.0000` exactly, by
 construction of the projection), (b) has a flat, non-exploding composite loss
@@ -297,7 +297,7 @@ construction of the projection), (b) has a flat, non-exploding composite loss
 **83–92%** range — matching the paper's own claimed ballpark (~88%) and
 landing within Static Reparam's measured seed-variance band
 (88.89% ± 3.93%, §6.2) almost exactly. This also answers the open lead from
-`GPU_DECISION_AND_NEXT_STEPS.md` P0 ("is `γ=0` FedGRAA ≈ Static, and if not,
+`../archive/GPU_DECISION_AND_NEXT_STEPS.md` P0 ("is `γ=0` FedGRAA ≈ Static, and if not,
 why not?"): under the combined fix, `γ=0` reaches 83.3% rare-class accuracy —
 close to Static's 91.7%, not the 0% the literal algorithm produces. The
 literal algorithm's γ=0 failure was not something inherent to `γ=0` weighting;
@@ -322,8 +322,8 @@ Reparam's own seed-variance band (88.89% ± 3.93%), with `γ=1.0` even
 reaching 100% on one seed. `γ=0` is the one soft spot — 72.2% ± 10.4%,
 noticeably noisier and consistently below the `γ>0` configs and below Static
 — but still worlds away from the literal algorithm's exact, seed-independent
-0%. (Raw per-seed data: `results/diagnostics/CIC_IDS_2017_projected_combined_eta0.01_E5{,_seed1,_seed2}_r60.json`;
-aggregated band: `results/diagnostics/seed_sweep_CIC_IDS_2017_fedgraa_combined_fix.json`.)
+0%. (Raw per-seed data: `../../results/diagnostics/CIC_IDS_2017_projected_combined_eta0.01_E5{,_seed1,_seed2}_r60.json`;
+aggregated band: `../../results/diagnostics/seed_sweep_CIC_IDS_2017_fedgraa_combined_fix.json`.)
 
 **What this changes, and what it does not.** This is the difference between
 "the paper's Algorithm 2 doesn't work" and "the paper's Algorithm 2 needs one
@@ -334,7 +334,7 @@ architecture change), and recovers essentially the paper's own numbers. It
 does **not** retroactively validate the paper's literal `η'=0.1` claim, and it
 does not change the strict-reproduction default in `fedgraa/` — the mandate
 there remains to implement Algorithm 2 exactly as printed
-(`strict_reproduction_report.md`). `ProjectedFedGRAA` with reduced `η'`
+(`../archive/strict_reproduction_report.md`). `ProjectedFedGRAA` with reduced `η'`
 remains a diagnostic-only class in `scripts/diagnose_fedgraa.py`, not a
 change to `fedgraa/aggregation.py`.
 
@@ -352,7 +352,7 @@ CIC-specific or general.
 | 0.5 | ❌ No | **round 1** | 1.24× | **−0.731** | −0.443 | 48.4% | 29.6% |
 | 1.0 | ❌ No | **round 1** | 7.6× | 1.960 | −0.280 | 49.9% | 0.7% |
 
-![Composite loss, UNSW-NB15 literal Algorithm 2 — milder excursions than CIC's γ=1 spike, but still non-monotone at every γ](../results/figures/diagnosis_unsw_literal_composite_loss.png)
+![Composite loss, UNSW-NB15 literal Algorithm 2 — milder excursions than CIC's γ=1 spike, but still non-monotone at every γ](../../results/figures/diagnosis_unsw_literal_composite_loss.png)
 
 **The mechanism generalizes exactly:** the weight vector leaves the simplex
 in round 1 at every `γ`, with genuinely negative components (`min(w)` as low
@@ -401,7 +401,7 @@ a real effect and not a lucky draw (72-94% mean rare-acc across `γ`, blowup
 exactly `1.0×` with zero variance on all 9 seed×γ runs, §8 Step 3). None of
 this licenses changing the
 strict-reproduction default; the paper states `η'=0.1`, `E'=5` explicitly in
-§5, and this codebase's mandate (`strict_reproduction_report.md`) is to
+§5, and this codebase's mandate (`../archive/strict_reproduction_report.md`) is to
 implement Algorithm 2 exactly as printed, not a corrected version of it. The
 honest reproduction verdict is:
 
