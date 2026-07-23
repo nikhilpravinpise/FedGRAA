@@ -1,8 +1,8 @@
 # Stage A Execution Plan — Close Out the Faithful Reproduction
 
 **Parent:** [`publication_roadmap.md`](publication_roadmap.md) §2 (Stage A).
-**Status:** ready to execute. All open questions in the roadmap's Stage A bullets are resolved below against the actual code — no design decisions remain.
-**Baseline commit:** `9f78529` (this plan was written against this tree).
+**Status:** ✅ **complete.** All four missing artifacts (A1, B1, B2, B3) generated, the §4 plot defect fixed and regression-tested, the round-0 convention resolved to strict/ditto (§3) with the CIC γ-sweep re-run under it, the manifest written ([`../../results/README.md`](../../results/README.md)), and `python scripts/check_stage_a_complete.py` exits `0`. See that manifest for exact commands, seeds, and honest-divergence notes per artifact.
+**Baseline commit:** `9f78529` (this plan was written against this tree). **Completed against commit:** `be4ef03`.
 
 ---
 

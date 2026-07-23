@@ -154,8 +154,9 @@ def plot_n_sweep(
     if len(ns) == 1:
         axes = [axes]
 
+    order = ["fedavg", "static", "fedgraa_g0.0", "fedgraa_g0.5", "fedgraa_g1.0"]
     for ax, n in zip(axes, ns):
-        for key in ("fedavg", "static", "fedgraa"):
+        for key in order:
             if key not in results[n]:
                 continue
             label, color, ls, marker = _METHOD_STYLE[key]

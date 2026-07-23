@@ -93,6 +93,15 @@ def main() -> None:
         help="Run sweep configurations in parallel using ProcessPoolExecutor (Phase 9).",
     )
     parser.add_argument(
+        "--workers", type=int, default=None,
+        help="Cap the number of parallel worker processes (RAM-constrained machines; "
+             "stage_a_plan.md §6.6). Only used with --parallel.",
+    )
+    parser.add_argument(
+        "--ns", nargs="+", type=int, default=[3, 5, 7],
+        help="Values of n to sweep in the n-sweep (default: 3 5 7; stage_a_plan.md §6.6).",
+    )
+    parser.add_argument(
         "--checkpoint-dir",
         default=None,
         help="Directory to save/load training checkpoints for resume on crash (Phase 14).",
@@ -128,6 +137,7 @@ def main() -> None:
                     seed=args.seed,
                     cache_dir=args.cache_dir,
                     cfg=base_cfg,
+                    workers=args.workers,
                     checkpoint_dir=args.checkpoint_dir,
                 )
             else:
@@ -182,7 +192,7 @@ def main() -> None:
             if args.parallel:
                 n_results = run_n_sweep_parallel(
                     dataset,
-                    ns=(3, 5, 7),
+                    ns=tuple(args.ns),
                     gammas=(0.0, 0.5, 1.0),
                     rounds=args.rounds,
                     data_dir=args.data_dir,
@@ -190,12 +200,13 @@ def main() -> None:
                     seed=args.seed,
                     cache_dir=args.cache_dir,
                     cfg=base_cfg,
+                    workers=args.workers,
                     checkpoint_dir=args.checkpoint_dir,
                 )
             else:
                 n_results = run_n_sweep(
                     dataset,
-                    ns=(3, 5, 7),
+                    ns=tuple(args.ns),
                     gammas=(0.0, 0.5, 1.0),
                     rounds=args.rounds,
                     data_dir=args.data_dir,

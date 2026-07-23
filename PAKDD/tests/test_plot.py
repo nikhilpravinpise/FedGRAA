@@ -101,6 +101,23 @@ def test_plot_composite_loss(tiny_gamma_results):
     assert fig is not None
 
 
+def test_plot_n_sweep_includes_fedgraa_curves():
+    """Regression guard for the plot_n_sweep bug (stage_a_plan.md §4/§6.1/§6.2):
+    the loop used to look for a bare "fedgraa" key that run_n_sweep never
+    produces, so all three FedGRAA curves were silently dropped. This fails
+    on the pre-fix code (2 lines/panel) and passes after the fix (5 lines/panel).
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    results = run_n_sweep(
+        "CIC-IDS-2017", ns=(3,), gammas=(0.0, 0.5, 1.0),
+        rounds=2, eval_every=1, seed=0,
+    )
+    fig = plot_n_sweep(results, metric="last_n")
+    ax = fig.axes[0]
+    assert len(ax.get_lines()) == 5
+
+
 def test_plot_without_matplotlib(monkeypatch):
     """plot functions must raise ImportError when matplotlib is missing."""
     import fedgraa.plot as plot_mod
