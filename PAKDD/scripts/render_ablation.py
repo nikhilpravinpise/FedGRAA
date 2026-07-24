@@ -98,6 +98,29 @@ def _fmt_ci(cell: Optional[dict]) -> str:
     return f"[{lo * 100:.1f}, {hi * 100:.1f}]"
 
 
+def _fmt_num(x: float) -> str:
+    """Compact fixed/scientific rendering for a blowup ratio."""
+    return f"{x:.3g}" if (abs(x) >= 1000 or 0 < abs(x) < 0.01) else f"{x:.2f}"
+
+
+def _fmt_blowup(cell: dict) -> str:
+    """Blowup is a heavy-tailed ratio, so report median (max), not the mean.
+
+    On CIC-IDS-2017's literal arm at gamma=0 a single seed blows up by
+    1.86e6x while the other nine sit near 3x: the mean (185764x) describes
+    no run that happened, the median (3.70x) describes most of them, and the
+    max is the striking part worth surfacing explicitly rather than
+    averaging away. ``max`` is shown only when it differs materially from
+    the median.
+    """
+    med, mx = cell.get("median"), cell.get("max")
+    if med is None:
+        return "—"
+    if mx is None or mx <= med * 1.05:
+        return f"{_fmt_num(med)}× (med)"
+    return f"{_fmt_num(med)}× med, {_fmt_num(mx)}× max"
+
+
 # --------------------------------------------------------------------------- #
 # Markdown rendering
 # --------------------------------------------------------------------------- #
@@ -115,6 +138,12 @@ def render_markdown(table: dict) -> str:
         "mean [95% bootstrap CI] over the per-seed values persisted in this "
         "same JSON. All-class accuracy and composite-loss blowup are shown "
         "as secondary/diagnostic columns per cell.",
+        "",
+        "**Blowup is reported as median (and max), not mean**, because it is "
+        "a heavy-tailed ratio rather than a bounded score: a single diverging "
+        "seed can exceed the other nine by six orders of magnitude, making a "
+        "mean describe no run that actually occurred. Per-seed blowup arrays "
+        "and the mean are both retained in the JSON.",
         "",
         "Significance markers on a reference-arm cell denote the paired, "
         "Holm-Bonferroni-corrected comparison of **both** vs. that arm at "
@@ -151,7 +180,10 @@ def render_markdown(table: dict) -> str:
             parts = [f"{_fmt_pct(rare['mean'])} {_fmt_ci(rare)}{marker}"]
             if all_acc is not None and all_acc.get("mean") is not None:
                 parts.append(f"all {_fmt_pct(all_acc['mean'])}")
-            if blowup is not None and blowup.get("mean") is not None:
+            if blowup is not None and blowup.get("median") is not None:
+                parts.append(f"blowup {_fmt_blowup(blowup)}")
+            elif blowup is not None and blowup.get("mean") is not None:
+                # pre-median tables (built before median/min/max were added)
                 parts.append(f"blowup {blowup['mean']:.2f}×")
             cells.append(" · ".join(parts))
         lines.append(f"| {ARM_LABELS[row]} | " + " | ".join(cells) + " |")

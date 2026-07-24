@@ -95,12 +95,34 @@ def load_baseline_per_seed(dataset: str, method: str, ablation_dir: str = ABLATI
 # Cell construction
 # --------------------------------------------------------------------------- #
 def _cell(values: Sequence[float], seeds: Sequence[int]) -> dict:
+    """Summarize one metric across seeds.
+
+    Carries ``median``/``min``/``max`` alongside the mean because one of the
+    three metrics -- composite-loss blowup -- is a heavy-tailed *ratio*: on
+    CIC-IDS-2017 the literal arm at gamma=0 has per-seed blowups of
+    [3.78, 7.59, 29.76, 2.58, 3.62, 3.59, 2.47, 3.14, 1857580.09, 3.87], so
+    its mean (185764x) describes no run that actually happened while its
+    median (3.70x) describes eight of ten. Consumers should report the mean
+    for the bounded accuracy metrics and the median+max for blowup; see
+    ``render_ablation.py``.
+    """
     values = list(values)
     lo, hi = bootstrap_ci(values) if values else (None, None)
+    ordered = sorted(values)
+    n = len(ordered)
+    if n == 0:
+        median = None
+    elif n % 2:
+        median = float(ordered[n // 2])
+    else:
+        median = float((ordered[n // 2 - 1] + ordered[n // 2]) / 2)
     return {
         "seeds": list(seeds),
         "per_seed": values,
         "mean": float(sum(values) / len(values)) if values else None,
+        "median": median,
+        "min": float(ordered[0]) if values else None,
+        "max": float(ordered[-1]) if values else None,
         "ci_95": [lo, hi] if values else None,
     }
 

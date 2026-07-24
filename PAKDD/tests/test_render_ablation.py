@@ -82,6 +82,26 @@ def test_render_markdown_includes_significance_markers_where_expected(toy_table)
     assert "*" in md
 
 
+def test_render_reports_blowup_as_median_not_mean(toy_table):
+    """Guards the real audit finding: a mean blowup of 185764x (one diverging
+    seed out of ten) misrepresents the cell. The rendered table must show the
+    median, and surface the max explicitly rather than averaging it in."""
+    from scripts.render_ablation import _fmt_blowup
+
+    heavy = {"median": 3.70, "min": 2.47, "max": 1857580.09, "mean": 185764.05}
+    out = _fmt_blowup(heavy)
+    assert "3.70" in out
+    assert "med" in out
+    assert "1.86e+06" in out or "1.86e6" in out or "max" in out
+    assert "185764" not in out          # the misleading mean must not appear
+
+    flat = {"median": 1.0, "min": 1.0, "max": 1.0, "mean": 1.0}
+    assert _fmt_blowup(flat) == "1.00× (med)"
+
+    md = render_markdown(toy_table)
+    assert "median (and max)" in md     # the choice is documented in the table
+
+
 def test_render_figure_produces_nonempty_png(tmp_path, toy_table):
     import matplotlib
     matplotlib.use("Agg")

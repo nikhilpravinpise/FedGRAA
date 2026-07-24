@@ -105,6 +105,36 @@ def test_arm_cell_constant_arm_has_point_ci_not_nan(toy_table):
     assert hi == pytest.approx(0.917)
 
 
+def test_arm_cell_carries_median_min_max(toy_table):
+    """Blowup is a heavy-tailed ratio, so every cell must expose median/min/max
+    alongside the mean -- reporting only the mean lets one diverging seed
+    describe a cell no run actually landed in."""
+    for arm in RARE_ACC:
+        for gamma in GAMMAS:
+            for metric in ("rare_acc", "all_acc", "blowup"):
+                cell = toy_table["arms"][arm][f"g{gamma}"][metric]
+                values = sorted(cell["per_seed"])
+                assert cell["min"] == pytest.approx(values[0])
+                assert cell["max"] == pytest.approx(values[-1])
+                n = len(values)
+                expected_median = (values[n // 2] if n % 2
+                                   else (values[n // 2 - 1] + values[n // 2]) / 2)
+                assert cell["median"] == pytest.approx(expected_median)
+
+
+def test_median_is_robust_to_a_single_diverging_seed():
+    """The real defect this guards against: CIC-IDS-2017's literal arm at
+    gamma=0 has one seed at 1.86e6x and nine near 3x, so mean=185764x while
+    median=3.70x. The median must track the nine, not the one."""
+    from scripts.build_ablation_table import _cell
+    values = [3.78, 7.59, 29.76, 2.58, 3.62, 3.59, 2.47, 3.14, 1857580.09, 3.87]
+    cell = _cell(values, list(range(10)))
+    assert cell["mean"] > 100_000            # mean is dominated by the outlier
+    assert cell["median"] == pytest.approx(3.70, abs=0.01)
+    assert cell["max"] == pytest.approx(1857580.09)
+    assert cell["min"] == pytest.approx(2.47)
+
+
 def test_baseline_cells_present_and_correct(toy_table):
     for method, values in BASELINE_RARE_ACC.items():
         cell = toy_table["baselines"][method]["rare_acc"]
