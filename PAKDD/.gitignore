@@ -27,3 +27,6 @@ kaggle.json
 # Only checkpoints and .npy caches are excluded as large/regeneratable.
 .checkpoint/
 *.npy
+# Campaign driver logs -- verbose per-round training output, regeneratable
+# by re-running the driver; the persisted JSON results are what matter.
+results/ablation/_logs/

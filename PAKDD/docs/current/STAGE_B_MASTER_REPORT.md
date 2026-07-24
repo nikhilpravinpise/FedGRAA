@@ -26,7 +26,7 @@
 
 Stage A ([`STAGE_A_MASTER_REPORT.md`](STAGE_A_MASTER_REPORT.md)) established, empirically, that the FedGRAA paper's Algorithm 2 lets its aggregation-weight vector `w` leave the probability simplex in round 1 of training, at every tested `γ`, on both datasets — a direct, measured violation of the paper's own Lemma 1 convergence guarantee. Stage B's job was to turn that empirical diagnosis into a **citable, self-contained paper section**: formal theory (why the defect happens, why the paper's own proof doesn't catch it, and a corrected guarantee for a fixed algorithm) plus a statistically rigorous ablation (bootstrap CIs, paired significance tests, a 2×2 factorial) quantifying the fix — the "fallback/anchor contribution, real even if Stage C stalls or runs long" per [`publication_roadmap.md`](publication_roadmap.md) §2.
 
-That goal is now fully met. [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) states the feasibility-set defect (§2), a three-part proof sketch of why Appendix A.1 doesn't cover it (§3), and a corrected convergence proposition — projected (sub)gradient descent on the simplex, converging to a stationary/KKT point rather than the paper's claimed global minimum (§4). The empirical half is a **complete 10-seed × 4-arm × 2-dataset factorial campaign**: 80 fresh diagnostic runs plus 4 baseline seed-sweeps, consolidated through a new statistics module ([`../../fedgraa/stats.py`](../../fedgraa/stats.py)) into bootstrap-CI'd tables with 5 pre-registered pairwise significance tests and a factorial main-effect/interaction read, per dataset per γ (§5 of the theory doc; §3–6 below).
+That goal is now fully met. [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) states the feasibility-set defect (§2), a three-part proof sketch of why Appendix A.1 doesn't cover it (§3), and a corrected convergence proposition — projected (sub)gradient descent on the simplex, converging to a stationary/KKT point rather than the paper's claimed global minimum (§4). The empirical half is a **complete 10-seed × 4-arm × 2-dataset factorial campaign**: 80 (arm, seed) diagnostic runs — 71 newly executed for Stage B, 9 reused from Stage-A-era files whose arm/config/seed already matched — plus 4 baseline seed-sweeps, consolidated through a new statistics module ([`../../fedgraa/stats.py`](../../fedgraa/stats.py)) into bootstrap-CI'd tables with 5 pre-registered pairwise significance tests and a factorial main-effect/interaction read, per dataset per γ (§5 of the theory doc; §3–6 below).
 
 **The campaign's central structural finding held with zero exceptions at full scale:** across all 60 `both`-arm cells (10 seeds × 3 γ × 2 datasets), the projected fix's weight vector satisfies `Σw = 1.0000` (to float32 precision) and `min(w) ≥ 0` on **every single cell** — the round-1 blowup is not merely rare under the fix, it is structurally impossible, exactly as §4's proposition predicts.
 
@@ -77,7 +77,7 @@ Per [`stage_b_plan.md`](stage_b_plan.md) §3 and the runbook in (formerly) [`STA
 | FedAvg (reference) | data-size-weighted average, γ-independent | 10 seeds | 10 seeds |
 | Static Reparam. (reference) | inverse-size weighting, γ-independent | 10 seeds | 10 seeds |
 
-**Totals:** 80 fresh (arm, seed) diagnostic runs (4 arms × 10 seeds × 2 datasets, each covering all 3 γ in one run) minus 9 reused from earlier Stage-A-era single/few-seed data, plus 40 baseline seed-runs (2 methods × 2 datasets × 10 seeds). Every diagnostic JSON carries the `diagnosis` block (`final_weight_sum`, `final_weight_min`, `composite_loss_blowup_ratio`, `first_simplex_violation_round`, `monotone_lemma1`, `final_all_acc`, `final_last_n_acc`) that the table builder and completeness checker both consume directly.
+**Totals:** 80 (arm, seed) diagnostic runs (4 arms × 10 seeds × 2 datasets, each covering all 3 γ in one run), of which **71 were newly executed** for Stage B and **9 were reused** from Stage-A-era files whose arm, config, and seed already matched the factorial (the driver's resumability check recognizes them by filename convention and verifies the persisted config); plus 40 baseline seed-runs (2 methods × 2 datasets × 10 seeds). Every diagnostic JSON carries the `diagnosis` block (`final_weight_sum`, `final_weight_min`, `composite_loss_blowup_ratio`, `first_simplex_violation_round`, `monotone_lemma1`, `final_all_acc`, `final_last_n_acc`) that the table builder and completeness checker both consume directly.
 
 **Consolidation.** [`../../scripts/build_ablation_table.py`](../../scripts/build_ablation_table.py) reads every per-seed JSON and the 4 baseline files, and — via [`../../fedgraa/stats.py`](../../fedgraa/stats.py) — computes, per (dataset, arm, γ): the mean and percentile-bootstrap 95% CI (B=10,000, fixed RNG seed) of rare-class accuracy, all-class accuracy, and composite-loss blowup; and, per (dataset, γ), the 5 pre-registered pairwise comparisons (**both** vs. each of literal / projection-alone / η′-alone / FedAvg / Static — paired *t*-test, Wilcoxon signed-rank, Cohen's *d*, all paired by seed, Holm–Bonferroni-corrected across the 5) plus the 2×2 factorial main-effect/interaction read. [`../../scripts/render_ablation.py`](../../scripts/render_ablation.py) renders the markdown table and a grouped-bar-chart figure per dataset. Full outputs are embedded in [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) §5.1–5.2 and reproduced in §4–5 below.
 
@@ -96,7 +96,9 @@ Per [`stage_b_plan.md`](stage_b_plan.md) §3 and the runbook in (formerly) [`STA
 | η′-alone (canonical) | 27.5% [12.5, 43.3] | 78.5% [62.6, 92.2] | 88.9% [68.9, 100.0] |
 | **Both (the fix)** | **69.7% [61.1, 78.9]** | **81.1% [66.4, 92.2]** | **89.3% [83.6, 94.6]** |
 
-`Both` beats every reference arm significantly (Holm p < 0.008) at γ=0.0; at γ=0.5–1.0 it still beats literal/FedAvg significantly, but is statistically indistinguishable from `η′-alone` (Holm p = 1.0 and 0.97) — the η′ cut is doing most of the work on this dataset. Feasibility (`Σw=1.0000`, `min(w)≥0`) and blowup (exactly 1.0× on 29/30 `both`-arm cells) hold with the predicted zero exceptions.
+`Both` beats every reference arm significantly (Holm p < 0.008) at γ=0.0; at γ=0.5–1.0 it still beats literal/FedAvg significantly, but is statistically indistinguishable from `η′-alone` (Holm p = 1.0 and 0.97) — the η′ cut is doing most of the accuracy work on this dataset. Feasibility (`Σw=1.0000`, `min(w)≥0`) holds on all 30 cells, and blowup is exactly 1.0× on 29/30 (the exception at 1.016×).
+
+**The blowup column carries a finding the accuracy columns cannot.** The literal arm's blowup is heavy-tailed: at γ=0 its per-seed values are `[3.78, 7.59, 29.76, 2.58, 3.62, 3.59, 2.47, 3.14, 1857580.09, 3.87]` — median 3.70×, but **1.86×10⁶× on seed 8**. Stage B therefore reports blowup as median (and max) rather than mean throughout, since the mean (185,764×) describes no run that actually occurred. Only the `both` arm is flat at *every* seed and γ (median 1.00×, max 1.00×); `projection-alone` still reaches 5.60× and `η′-alone` still reaches 30.02× somewhere in the γ range. Feasibility is what makes the *unbounded* 1.86×10⁶ excursion structurally impossible; the η′ cut is what flattens the bounded residual.
 
 ---
 
@@ -113,7 +115,7 @@ Per [`stage_b_plan.md`](stage_b_plan.md) §3 and the runbook in (formerly) [`STA
 | η′-alone (canonical) | 3.4% [0.4, 7.8] | 12.1% [5.2, 19.6] | 36.4% [33.7, 39.8] |
 | **Both (the fix)** | 1.7% [0.0, 4.6] | **37.1% [28.4, 45.7]** | **69.2% [63.4, 73.8]** |
 
-`Both` beats literal, FedAvg, and Static significantly at γ=1.0, and beats η′-alone significantly at γ=0.5 and γ=1.0 — but is statistically indistinguishable from `projection-alone` at **every** γ (Holm p = 0.61, 0.42, 0.54). On this dataset, projection is doing the great majority of the accuracy-recovery work; the η′ cut's main effect is negative or negligible throughout. Feasibility again holds with zero exceptions across all 30 `both`-arm cells; composite-loss blowup is reduced (never exceeding 1.87×) but not flattened to exactly 1.0× the way CIC's is — consistent with the proposition's boundedness-not-flatness prediction (§4 of the theory doc).
+`Both` beats literal, FedAvg, and Static significantly at γ=1.0, and beats η′-alone significantly at γ=0.5 and γ=1.0 — but is statistically indistinguishable from `projection-alone` at **every** γ (Holm p = 0.61, 0.42, 0.54). On this dataset, projection is doing the great majority of the accuracy-recovery work; the η′ cut's main effect is negative or negligible throughout. Feasibility again holds with zero exceptions across all 30 `both`-arm cells; composite-loss blowup is reduced (median 1.00–1.32×, never exceeding 1.87× on any seed) but not flattened to exactly 1.0× the way CIC's is — consistent with the proposition's boundedness-not-flatness prediction (§4 of the theory doc). Checked per-seed rather than only on means, the fix's blowup is strictly below the literal algorithm's on the same seed at the same γ in **all 30 of 30** UNSW cells (literal reaches 46.85× at γ=1).
 
 ---
 
@@ -145,11 +147,33 @@ This module exists specifically because the ablation's real data has cells with 
 ## 8. Test suite & completeness verification
 
 ```
-.venv313/Scripts/python.exe -m pytest tests --tb=short     → 139 passed
-.venv313/Scripts/python.exe scripts/check_stage_b_complete.py → exit 0
+.venv313/Scripts/python.exe -m pytest tests --tb=short        → 142 passed
+.venv313/Scripts/python.exe scripts/check_stage_b_complete.py → exit 0   (completeness)
+.venv313/Scripts/python.exe scripts/audit_stage_b.py          → exit 0   (correctness)
 ```
 
-`check_stage_b_complete.py` independently verifies, on this exact tree: all 4 arms × 10 seeds × 2 datasets of per-seed diagnostic JSONs carry complete `diagnosis` blocks; both consolidated `*_ablation_table.json` files load with every arm×γ cell, all 5 comparisons, and the factorial read; both rendered `.md`/`.png` pairs exist and are non-empty; the theory doc contains every required section; and every `results/...` path referenced in [`../../results/ablation/README.md`](../../results/ablation/README.md) exists on disk and is git-tracked.
+`check_stage_b_complete.py` verifies **presence and shape**: all 4 arms × 10 seeds × 2 datasets of per-seed diagnostic JSONs carry complete `diagnosis` blocks; both consolidated `*_ablation_table.json` files load with every arm×γ cell, all 5 comparisons, and the factorial read; both rendered `.md`/`.png` pairs exist and are non-empty; the theory doc contains every required section; and every `results/...` path referenced in [`../../results/ablation/README.md`](../../results/ablation/README.md) exists on disk and is git-tracked.
+
+[`../../scripts/audit_stage_b.py`](../../scripts/audit_stage_b.py) verifies **correctness** — the harder question, and a check a passing completeness script cannot answer:
+
+- **Raw-run integrity.** All 80 diagnostic JSONs are byte-distinct (no run duplicated and filed as two seeds) and each one's *persisted config* matches the arm it is filed under — projection flag, η′, E′, seed, rounds, γ, across all 240 cells.
+- **Table-vs-raw fidelity.** The consolidated table's `per_seed` arrays are re-read from the raw JSONs and compared exactly, catching any globbing or seed-mapping error in the builder.
+- **Independent statistics.** Every p-value, Cohen's *d*, Holm adjustment, and factorial effect is recomputed from scratch against SciPy, deliberately *not* through `fedgraa/stats.py`, so the module is checked against an independent implementation rather than itself.
+- **Doc transcription.** All **232** numbers hand-typed into the theory doc's tables are parsed back out and re-derived from the JSON, including that every significance star agrees with its own numeric p-value.
+- **Presentation soundness.** Flags any cell where a mean is a misleading summary of a heavy-tailed ratio.
+
+**This audit was run adversarially against the first committed version of Stage B and found three real defects, all since fixed** (§7.1). It is negative-control tested: deliberately injected errors — a wrong transcribed number, a corrupted p-value, a duplicated run file — are each caught and named precisely.
+
+### 7.1 What the audit caught, and what changed
+
+| Defect found | Why it mattered | Fix |
+|---|---|---|
+| **Blowup reported as a heavy-tailed mean.** CIC γ=0 literal per-seed blowups are `[3.78, 7.59, 29.76, 2.58, 3.62, 3.59, 2.47, 3.14, 1857580.09, 3.87]`; the table showed the mean, **185,764×** | The mean described no run that actually happened — one diverging seed set it. A reviewer checking the per-seed array would have caught it | Blowup is now reported as **median (and max)** everywhere; `_cell()` carries `median`/`min`/`max`; two regression tests lock it in. The corrected presentation is also *more* striking: "3.70× med, 1.86×10⁶× max" |
+| **Stale seed-0 worst-case figures presented as the campaign's.** §6 cited "CIC 193× vs UNSW 7.6×, an order of magnitude apart" — both seed-0 values | With 10 seeds the true maxima are 1.86×10⁶× and 46.85× — about *four* orders apart. The qualitative claim held but the numbers understated it | §6 now reports the 10-seed maxima and medians separately, and distinguishes "typical run" from "tail severity" |
+| **Run-count overstatement.** The report said "80 fresh diagnostic runs" | 71 were newly executed; 9 were reused Stage-A-era files. Overstating fresh compute is a reproducibility claim, not a rounding error | Corrected to "80 (arm, seed) runs — 71 newly executed, 9 reused" with the reuse mechanism explained |
+| *(found by negative control)* **The audit script itself crashed while reporting a failure** — `UnicodeEncodeError` on `η′` under a cp1252 console | An auditor that dies while naming a defect is worse than none: it exits non-zero with no readable reason | `sys.stdout` reconfigured to UTF-8 with `errors="replace"` |
+
+Two things the audit **confirmed rather than corrected**, worth recording because they were the claims most at risk: the feasibility result (`Σw=1`, `min(w)≥0` on all 60 `both`-arm cells) is exactly as stated, and `first_simplex_violation_round = 1` holds on **all 60 literal-arm cells** — the round-1 defect is unconditional at n=10, not a seed-0 artifact.
 
 ---
 
