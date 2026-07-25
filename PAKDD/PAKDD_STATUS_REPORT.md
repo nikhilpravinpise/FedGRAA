@@ -1,5 +1,20 @@
 # PAKDD / FedGRAA — Project Status Report
 
+> **⚠️ SUPERSEDED — historical snapshot, not current state (2026-07-25).** Dated
+> 2026-07-23, this document predates the Stage A and Stage B campaigns and is
+> now two stages stale: it cites **79/79 tests** (now **142/142**), presents
+> the `η′=0.001` over-correction as the headline intervention (superseded by
+> the validated projection + η′=0.01 combined fix), and frames the divergence
+> diagnosis as the project frontier. **For current state, read:**
+> [`docs/current/STAGE_A_MASTER_REPORT.md`](docs/current/STAGE_A_MASTER_REPORT.md)
+> and [`docs/current/STAGE_B_MASTER_REPORT.md`](docs/current/STAGE_B_MASTER_REPORT.md),
+> or [`docs/current/publication_roadmap.md`](docs/current/publication_roadmap.md)
+> for the single entry point. Kept for historical record. See
+> [`docs/audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md`](docs/audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md)
+> (R7).
+
+---
+
 **Date:** 2026-07-23 (Divergence diagnosis complete — see update below)
 
 ---
@@ -8,7 +23,7 @@
 
 The "reproduction gap" noted below (FedGRAA getting 0% rare-class accuracy)
 has been root-caused. Full writeup:
-[`docs/fedgraa_divergence_diagnosis.md`](docs/fedgraa_divergence_diagnosis.md).
+[`docs/fedgraa_divergence_diagnosis.md`](docs/current/fedgraa_divergence_diagnosis.md).
 
 **Short version:** the aggregation-weight vector `w^t` leaves the probability
 simplex in round 1, at every `γ`, because Algorithm 2 as printed has no
@@ -53,7 +68,7 @@ Completed 2026-07-22. **Sequential: 68 min. Parallel (5 workers): 20 min (3.3×)
 | FedGRAA γ=0.5 | 18.56% | **0.00%** |
 | FedGRAA γ=1.0 | 17.38% | **0.00%** |
 
-**Key finding:** FedGRAA weight learning does not converge on CIC-IDS-2017 with default hyperparameters (eta_prime=0.1, weight_epochs=5). The algorithm oscillates and composite loss diverges. This is a reproduction gap, not a code bug. Static Reparam (inverse-size weighting) achieves 91.67% rare-class accuracy without any learning. **This is now fully root-caused, not just observed — see [`docs/fedgraa_divergence_diagnosis.md`](docs/fedgraa_divergence_diagnosis.md).** The aggregation weights leave the probability simplex in round 1 at every γ (measured directly), the composite loss blows up 2.7×-193× as a direct result, and a diagnostic ablation + a real-data hyperparameter intervention both confirm the mechanism.
+**Key finding:** FedGRAA weight learning does not converge on CIC-IDS-2017 with default hyperparameters (eta_prime=0.1, weight_epochs=5). The algorithm oscillates and composite loss diverges. This is a reproduction gap, not a code bug. Static Reparam (inverse-size weighting) achieves 91.67% rare-class accuracy without any learning. **This is now fully root-caused, not just observed — see [`docs/fedgraa_divergence_diagnosis.md`](docs/current/fedgraa_divergence_diagnosis.md).** The aggregation weights leave the probability simplex in round 1 at every γ (measured directly), the composite loss blows up 2.7×-193× as a direct result, and a diagnostic ablation + a real-data hyperparameter intervention both confirm the mechanism.
 
 ## GPU Report: RTX 5050 via WSL2
 
