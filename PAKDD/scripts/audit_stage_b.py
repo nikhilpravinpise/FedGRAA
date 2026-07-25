@@ -29,6 +29,13 @@ D. **Doc transcription** -- every number hand-typed into the markdown tables
 E. **Presentation soundness** -- flags any cell where the mean is a
    misleading summary (heavy-tailed ratio), and verifies the rendered tables
    report median+max for blowup rather than the mean.
+F. **Metric-divergence disclosure** -- re-derives the all-class-accuracy
+   comparison family and requires that any comparison which *ties* on the
+   metric of record while differing materially on all-class accuracy is
+   actually disclosed. Catches the subtlest defect of the set: a true
+   "statistically indistinguishable" that is nonetheless misleading, which
+   on this data let an arm sitting at 15.2% all-class accuracy read as
+   equivalent to one at 44.3%.
 
 Usage::
 
@@ -309,6 +316,16 @@ def _cell_for(T: dict, kind: str, name: str, gamma: str, metric: str) -> dict:
             else T["arms"][name][gamma][metric])
 
 
+def _strip_bold(text: str) -> str:
+    """Remove markdown bold delimiters wrapping a cell half, without eating a
+    significance run. ``**0.04 \\* (d=-0.9)**`` -> ``0.04 \\* (d=-0.9)``; a
+    plain ``1.5e-4 ***`` is returned untouched."""
+    t = text.strip()
+    while t.startswith("**") and t.endswith("**") and len(t) > 4:
+        t = t[2:-2].strip()
+    return t
+
+
 def check_doc_transcription() -> None:
     print("\n-- D. Doc transcription: every hand-typed number re-derived --")
     if not os.path.exists(THEORY_DOC):
@@ -391,27 +408,49 @@ def check_doc_transcription() -> None:
                                  f"(median {bc['median']:.2f} but max {bc['max']:.2f})")
                             clean = False
 
-            # Holm p-value rows: value and star must agree
+            # Holm p-value rows. Cells are dual-metric: "rare_p ** / all_p n.s."
+            # Each half is validated against its own comparison family, and
+            # each half's star run must match its own p-value.
             elif cols[0] in COMPARISON_LABEL:
                 key = COMPARISON_LABEL[cols[0]]
                 for gi, g in enumerate(GAMMAS):
-                    txt = cols[1 + gi]
-                    m = re.search(r"([\d.]+(?:e[-+]?\d+)?)", txt)
-                    if not m:
+                    halves = [h.strip() for h in cols[1 + gi].split("/")]
+                    families = [("comparisons", "rare-acc")]
+                    if len(halves) == 2 and "comparisons_all_acc" in T:
+                        families.append(("comparisons_all_acc", "all-acc"))
+                    elif len(halves) != 1:
+                        fail(f"D: unparsed dual-metric cell {ds_tag} {cols[0]} {g}: "
+                             f"{cols[1 + gi]!r}")
+                        clean = False
                         continue
-                    checked += 1
-                    want = T["comparisons"][g][key]["p_holm"]
-                    got = float(m.group(1))
-                    if want and abs(got - want) > max(abs(want) * 0.02, 1e-12):
-                        fail(f"D: p_holm {ds_tag} {cols[0]} {g}: doc {got} vs json {want}")
-                        clean = False
-                    stars = txt.count("*")
-                    exp = 0 if "n.s." in txt else (
-                        3 if want < .001 else 2 if want < .01 else 1 if want < .05 else 0)
-                    if stars != exp:
-                        fail(f"D: stars {ds_tag} {cols[0]} {g}: {stars} shown, "
-                             f"{exp} warranted by p={want}")
-                        clean = False
+                    for half, (block, metric) in zip(halves, families):
+                        stripped = _strip_bold(half)
+                        # A significance run may be escaped for markdown
+                        # (``\*\*\*``), so match a run of optionally-escaped
+                        # stars as one token -- matching a bare ``\*`` first
+                        # would silently read 3 stars as 1.
+                        m = re.match(r"([\d.]+(?:e[-+]?\d+)?)\s*((?:\\?\*)+|n\.s\.)?",
+                                     stripped)
+                        if not m:
+                            fail(f"D: unparsed {metric} p {ds_tag} {cols[0]} {g}: "
+                                 f"{half!r}")
+                            clean = False
+                            continue
+                        checked += 1
+                        want = T[block][g][key]["p_holm"]
+                        got = float(m.group(1))
+                        if want and abs(got - want) > max(abs(want) * 0.02, 1e-12):
+                            fail(f"D: {metric} p_holm {ds_tag} {cols[0]} {g}: "
+                                 f"doc {got} vs json {want}")
+                            clean = False
+                        marker = (m.group(2) or "").strip()
+                        shown = 0 if marker in ("", "n.s.") else marker.replace("\\", "").count("*")
+                        exp = (3 if want < .001 else 2 if want < .01
+                               else 1 if want < .05 else 0)
+                        if shown != exp:
+                            fail(f"D: {metric} stars {ds_tag} {cols[0]} {g}: "
+                                 f"{shown} shown, {exp} warranted by p={want:.4g}")
+                            clean = False
 
             # factorial rows
             elif cols[0] in ("0.0", "0.5", "1.0"):
@@ -438,6 +477,60 @@ def check_doc_transcription() -> None:
 # --------------------------------------------------------------------------- #
 # E. Presentation soundness
 # --------------------------------------------------------------------------- #
+def check_metric_divergence() -> None:
+    """F. A tie on the metric of record can hide a large difference on overall
+    accuracy. Re-derives both metric families and requires that any comparison
+    which ties on rare-acc but differs significantly on all-acc is actually
+    disclosed -- the exact defect that let 'eta'-alone is indistinguishable
+    from both' stand while that arm sat at 15.2% all-class accuracy against
+    44.3%."""
+    print("\n-- F. Metric-divergence disclosure (rare-acc ties hiding all-acc gaps) --")
+    clean = True
+    doc = open(THEORY_DOC, encoding="utf-8").read() if os.path.exists(THEORY_DOC) else ""
+    for ds_tag, ds_name in DATASETS.items():
+        path = f"{ABLATION_DIR}/{ds_tag}_ablation_table.json"
+        if not os.path.exists(path):
+            continue
+        with open(path) as fh:
+            T = json.load(fh)
+        if "comparisons_all_acc" not in T:
+            fail(f"F: {ds_name} table has no comparisons_all_acc block "
+                 "(rebuild: the all-acc family is required)")
+            clean = False
+            continue
+        for g in GAMMAS:
+            rare = T["comparisons"][g]
+            allc = T["comparisons_all_acc"][g]
+            for name, rc in rare.items():
+                ac = allc.get(name)
+                if rc is None or ac is None:
+                    continue
+                # recompute the all-acc test independently
+                both = raw_series(ds_tag, "both", g, "all_acc")
+                if name in ARM_SPEC:
+                    ref = raw_series(ds_tag, name, g, "all_acc")
+                else:
+                    ref = np.asarray(T["baselines"][name]["all_acc"]["per_seed"], float)
+                d = both - ref
+                exp_p = 1.0 if np.ptp(d) == 0 else float(sps.ttest_rel(both, ref)[1])
+                if abs(ac["p_ttest"] - exp_p) > 1e-9:
+                    fail(f"F: {ds_name}/{g}/{name} all-acc p_ttest "
+                         f"{ac['p_ttest']} vs scipy {exp_p}")
+                    clean = False
+                # a hidden divergence must be disclosed somewhere in the doc
+                if rc["p_holm"] >= 0.05 and ac["p_holm"] < 0.05:
+                    gap = abs(float(np.mean(both) - np.mean(ref))) * 100
+                    if gap >= 5.0 and "diverge" not in doc.lower():
+                        fail(f"F: {ds_name}/{g}/{name} ties on rare-acc "
+                             f"(p={rc['p_holm']:.3g}) but differs on all-acc "
+                             f"(p={ac['p_holm']:.3g}, {gap:.1f}pp gap) and the "
+                             "theory doc never discloses a metric divergence")
+                        clean = False
+    if clean:
+        ok("F: all-acc comparison family present and independently reproduced; "
+           "every rare-acc tie that hides a material all-acc gap is disclosed")
+
+
 def check_presentation() -> None:
     print("\n-- E. Presentation soundness (heavy-tailed summaries) --")
     clean = True
@@ -480,6 +573,7 @@ def main() -> int:
     check_table_and_stats()
     check_doc_transcription()
     check_presentation()
+    check_metric_divergence()
     print()
     print("=" * 78)
     if FAILURES:

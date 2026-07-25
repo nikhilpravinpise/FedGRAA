@@ -189,21 +189,55 @@ def render_markdown(table: dict) -> str:
         lines.append(f"| {ARM_LABELS[row]} | " + " | ".join(cells) + " |")
 
     lines += ["", "## Pre-registered pairwise comparisons (both vs. reference arm)", ""]
+    comparisons_all = table.get("comparisons_all_acc", {})
+    if comparisons_all:
+        lines += [
+            "The **all-acc** column is not decoration. A tie on the metric of "
+            "record can hide a large difference on overall accuracy, and on "
+            "this data it does — an arm that matches `both` on rare-class "
+            "accuracy while collapsing all-class accuracy has not matched "
+            "`both`. Both metric families are tested on the same seeds and "
+            "corrected within their own family; rows where the two disagree "
+            "are flagged **(diverges)**.",
+            "",
+        ]
     for gamma, gkey in zip(gammas, gamma_keys):
         lines.append(f"**γ={gamma}**")
         lines.append("")
-        lines.append("| vs. | p (paired t) | p (Wilcoxon) | Cohen's d | p (Holm) |")
-        lines.append("|---|---|---|---|---|")
+        lines.append("| vs. | rare-acc p (Holm) | rare-acc Cohen's d | all-acc p (Holm) "
+                     "| all-acc Cohen's d | agreement |")
+        lines.append("|---|---|---|---|---|---|")
         gamma_comps = comparisons.get(gkey) or {}
+        gamma_comps_all = comparisons_all.get(gkey) or {}
         for ref_name, comp in gamma_comps.items():
+            label = ARM_LABELS.get(ref_name, ref_name)
             if comp is None:
-                lines.append(f"| {ARM_LABELS.get(ref_name, ref_name)} | (no data yet) | | | |")
+                lines.append(f"| {label} | (no data yet) | | | | |")
                 continue
+            comp_all = gamma_comps_all.get(ref_name)
+            if comp_all is None:
+                lines.append(
+                    f"| {label} | {comp['p_holm']:.4g} | {comp['cohens_d']:.3g} "
+                    "| — | — | — |")
+                continue
+            rare_sig = comp["p_holm"] < 0.05
+            all_sig = comp_all["p_holm"] < 0.05
+            if rare_sig == all_sig:
+                agreement = "consistent"
+            elif all_sig:
+                agreement = "**(diverges)** ties on rare, differs on all-acc"
+            else:
+                agreement = "**(diverges)** differs on rare, ties on all-acc"
             lines.append(
-                f"| {ARM_LABELS.get(ref_name, ref_name)} "
-                f"| {comp['p_ttest']:.4g} | {comp['p_wilcoxon']:.4g} "
-                f"| {comp['cohens_d']:.3g} | {comp['p_holm']:.4g} |"
+                f"| {label} | {comp['p_holm']:.4g} | {comp['cohens_d']:.3g} "
+                f"| {comp_all['p_holm']:.4g} | {comp_all['cohens_d']:.3g} "
+                f"| {agreement} |"
             )
+        lines.append("")
+        lines.append("*(Exact uncorrected p-values from both the paired t and "
+                     "Wilcoxon tests, plus statistics and paired seed sets, are "
+                     "in the JSON's `comparisons` and `comparisons_all_acc` "
+                     "blocks.)*")
         lines.append("")
 
     lines += ["## 2x2 factorial read (rare-class accuracy)", ""]
