@@ -17,35 +17,43 @@ Significance markers on a reference-arm cell denote the paired, Holm-Bonferroni-
 
 ## Pre-registered pairwise comparisons (both vs. reference arm)
 
+The **all-acc** column is not decoration. A tie on the metric of record can hide a large difference on overall accuracy, and on this data it does — an arm that matches `both` on rare-class accuracy while collapsing all-class accuracy has not matched `both`. Both metric families are tested on the same seeds and corrected within their own family; rows where the two disagree are flagged **(diverges)**.
+
 **γ=0.0**
 
-| vs. | p (paired t) | p (Wilcoxon) | Cohen's d | p (Holm) |
-|---|---|---|---|---|
-| Literal (η′=0.1, no proj.) | 0.3008 | 0.625 | 0.347 | 0.6061 |
-| Projection-alone (η′=0.1) | 0.202 | 0.5 | -0.435 | 0.6061 |
-| η′-alone (η′=0.01, no proj.) | 0.09282 | 0.25 | -0.594 | 0.3713 |
-| FedAvg (baseline) | 0.2869 | 0.5 | 0.358 | 0.6061 |
-| Static Reparam. (baseline) | 6.431e-07 | 0.001953 | -3.88 | 3.215e-06 |
+| vs. | rare-acc p (Holm) | rare-acc Cohen's d | all-acc p (Holm) | all-acc Cohen's d | agreement |
+|---|---|---|---|---|---|
+| Literal (η′=0.1, no proj.) | 0.6061 | 0.347 | 0.4479 | 0.557 | consistent |
+| Projection-alone (η′=0.1) | 0.6061 | -0.435 | 0.4479 | -0.289 | consistent |
+| η′-alone (η′=0.01, no proj.) | 0.3713 | -0.594 | 0.4479 | -0.464 | consistent |
+| FedAvg (baseline) | 0.6061 | 0.358 | 0.4479 | 0.527 | consistent |
+| Static Reparam. (baseline) | 3.215e-06 | -3.88 | 0.1681 | 0.792 | **(diverges)** differs on rare, ties on all-acc |
+
+*(Exact uncorrected p-values from both the paired t and Wilcoxon tests, plus statistics and paired seed sets, are in the JSON's `comparisons` and `comparisons_all_acc` blocks.)*
 
 **γ=0.5**
 
-| vs. | p (paired t) | p (Wilcoxon) | Cohen's d | p (Holm) |
-|---|---|---|---|---|
-| Literal (η′=0.1, no proj.) | 0.2197 | 0.1934 | 0.417 | 0.418 |
-| Projection-alone (η′=0.1) | 0.209 | 0.1602 | -0.428 | 0.418 |
-| η′-alone (η′=0.01, no proj.) | 0.004739 | 0.009766 | 1.18 | 0.01895 |
-| FedAvg (baseline) | 2.318e-05 | 0.001953 | 2.52 | 0.0001159 |
-| Static Reparam. (baseline) | 0.1037 | 0.1055 | -0.572 | 0.311 |
+| vs. | rare-acc p (Holm) | rare-acc Cohen's d | all-acc p (Holm) | all-acc Cohen's d | agreement |
+|---|---|---|---|---|---|
+| Literal (η′=0.1, no proj.) | 0.418 | 0.417 | 0.1207 | 0.813 | consistent |
+| Projection-alone (η′=0.1) | 0.418 | -0.428 | 1 | -0.0941 | consistent |
+| η′-alone (η′=0.01, no proj.) | 0.01895 | 1.18 | 0.07344 | 0.952 | **(diverges)** differs on rare, ties on all-acc |
+| FedAvg (baseline) | 0.0001159 | 2.52 | 0.2174 | -0.643 | **(diverges)** differs on rare, ties on all-acc |
+| Static Reparam. (baseline) | 0.311 | -0.572 | 1 | 0.157 | consistent |
+
+*(Exact uncorrected p-values from both the paired t and Wilcoxon tests, plus statistics and paired seed sets, are in the JSON's `comparisons` and `comparisons_all_acc` blocks.)*
 
 **γ=1.0**
 
-| vs. | p (paired t) | p (Wilcoxon) | Cohen's d | p (Holm) |
-|---|---|---|---|---|
-| Literal (η′=0.1, no proj.) | 0.000738 | 0.001953 | 1.58 | 0.002214 |
-| Projection-alone (η′=0.1) | 0.5443 | 0.5566 | 0.199 | 0.5443 |
-| η′-alone (η′=0.01, no proj.) | 2.647e-05 | 0.003906 | 2.47 | 0.0001059 |
-| FedAvg (baseline) | 1.775e-09 | 0.001953 | 7.61 | 8.873e-09 |
-| Static Reparam. (baseline) | 0.003149 | 0.001953 | 1.26 | 0.006298 |
+| vs. | rare-acc p (Holm) | rare-acc Cohen's d | all-acc p (Holm) | all-acc Cohen's d | agreement |
+|---|---|---|---|---|---|
+| Literal (η′=0.1, no proj.) | 0.002214 | 1.58 | 0.01847 | 1.18 | consistent |
+| Projection-alone (η′=0.1) | 0.5443 | 0.199 | 0.0188 | 1.12 | **(diverges)** ties on rare, differs on all-acc |
+| η′-alone (η′=0.01, no proj.) | 0.0001059 | 2.47 | 1.61e-05 | 3.2 | consistent |
+| FedAvg (baseline) | 8.873e-09 | 7.61 | 0.0188 | -1.1 | consistent |
+| Static Reparam. (baseline) | 0.006298 | 1.26 | 0.5549 | -0.194 | **(diverges)** differs on rare, ties on all-acc |
+
+*(Exact uncorrected p-values from both the paired t and Wilcoxon tests, plus statistics and paired seed sets, are in the JSON's `comparisons` and `comparisons_all_acc` blocks.)*
 
 ## 2x2 factorial read (rare-class accuracy)
 

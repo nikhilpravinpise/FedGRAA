@@ -162,9 +162,11 @@ def build_baseline_table(dataset: str, method: str, ablation_dir: str = ABLATION
 # Pairwise significance comparisons
 # --------------------------------------------------------------------------- #
 def paired_comparison(cell_a: dict, cell_b: dict) -> Optional[dict]:
-    """Paired significance test between two cells' rare-acc ``per_seed``
-    arrays, matched by the intersection of their seed sets (stable, sorted).
-    Returns ``None`` if the two cells share no common seed."""
+    """Paired significance test between two cells' ``per_seed`` arrays,
+    matched by the intersection of their seed sets (stable, sorted). Metric-
+    agnostic -- used for both the rare-acc family (``comparisons``) and the
+    all-acc family (``comparisons_all_acc``). Returns ``None`` if the two
+    cells share no common seed."""
     seeds_a = {s: v for s, v in zip(cell_a["seeds"], cell_a["per_seed"])}
     seeds_b = {s: v for s, v in zip(cell_b["seeds"], cell_b["per_seed"])}
     common = sorted(set(seeds_a) & set(seeds_b))
@@ -278,18 +280,31 @@ def build_table(
     }
 
     comparisons = {}
+    comparisons_all_acc = {}
     factorial = {}
     for gamma in gammas:
         key = f"g{gamma}"
-        both_cell = arm_tables["both"][key]["rare_acc"]
-        reference_cells = {
-            "literal": arm_tables["literal"][key]["rare_acc"],
-            "projection_alone": arm_tables["projection_alone"][key]["rare_acc"],
-            "eta_alone": arm_tables["eta_alone"][key]["rare_acc"],
-            "fedavg": baselines["fedavg"]["rare_acc"] if baselines["fedavg"] else None,
-            "static": baselines["static"]["rare_acc"] if baselines["static"] else None,
-        }
-        comparisons[key] = build_comparisons_for_gamma(both_cell, reference_cells)
+
+        def refs(metric: str) -> Dict[str, Optional[dict]]:
+            return {
+                "literal": arm_tables["literal"][key][metric],
+                "projection_alone": arm_tables["projection_alone"][key][metric],
+                "eta_alone": arm_tables["eta_alone"][key][metric],
+                "fedavg": baselines["fedavg"][metric] if baselines["fedavg"] else None,
+                "static": baselines["static"][metric] if baselines["static"] else None,
+            }
+
+        comparisons[key] = build_comparisons_for_gamma(
+            arm_tables["both"][key]["rare_acc"], refs("rare_acc"))
+        # The same 5 comparisons on ALL-class accuracy. Not decoration: a
+        # rare-acc tie can hide a large all-acc difference, and on this data it
+        # does -- at CIC gamma=1, eta'-alone matches `both` on rare-acc
+        # (p=0.97, 88.9% vs 89.3%) while sitting at 15.2% vs 44.3% all-class
+        # accuracy (p=1.4e-4). Reporting only the metric of record would make
+        # "statistically indistinguishable" true but badly misleading, so both
+        # metric families are persisted and both are reported.
+        comparisons_all_acc[key] = build_comparisons_for_gamma(
+            arm_tables["both"][key]["all_acc"], refs("all_acc"))
         factorial[key] = factorial_effects_for_gamma(arm_tables, gamma)
 
     return {
@@ -301,6 +316,7 @@ def build_table(
         "arms": arm_tables,
         "baselines": baselines,
         "comparisons": comparisons,
+        "comparisons_all_acc": comparisons_all_acc,
         "factorial": factorial,
     }
 

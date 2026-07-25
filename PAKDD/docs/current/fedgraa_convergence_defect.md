@@ -155,15 +155,15 @@ Rounds = 60. Metric of record = rare-class accuracy (mean per-class recall over 
 
 The blowup column carries an independent finding the accuracy columns cannot show: **only the `both` arm has a flat loss trajectory at every γ** (median 1.00× and max 1.00× — i.e. *every* seed flat), while `projection-alone` and `η′-alone` each still admit substantial excursions somewhere in the γ range (up to 5.60× and 30.02× respectively). Feasibility is what makes the *unbounded* 1.86×10⁶ excursion structurally impossible; the η′ cut is what additionally flattens the bounded residual fluctuation.
 
-**Pairwise comparisons (both vs. reference arm), Holm-corrected:**
+**Pairwise comparisons (both vs. reference arm), Holm-corrected within each metric family.** A tie on the metric of record can hide a large difference in *overall* accuracy — an arm that matches `both` on rare-class accuracy while collapsing all-class accuracy has not matched `both` — so both metric families are tested on the same seeds and rows where they disagree are flagged. Positive Cohen's *d* favours `both`; negative favours the reference arm.
 
-| vs. | γ=0.0 p (Holm) | γ=0.5 p (Holm) | γ=1.0 p (Holm) |
+| vs. | γ=0.0 rare / all | γ=0.5 rare / all | γ=1.0 rare / all |
 |---|---|---|---|
-| Literal | 7.97e-07 *** | 6.17e-06 *** | 1.54e-04 *** |
-| Projection-alone | 7.97e-07 *** | 6.17e-06 *** | 0.0628 (n.s.) |
-| η′-alone | 0.00775 ** | 1.0 (n.s.) | 0.9696 (n.s.) |
-| FedAvg | 7.97e-07 *** | 6.17e-06 *** | 1.28e-09 *** |
-| Static Reparam. | 0.00775 ** | 1.0 (n.s.) | 0.0890 (n.s.) |
+| Literal | 7.97e-07 *** / 0.142 n.s. | 6.17e-06 *** / 0.0031 ** | 1.54e-04 *** / 0.101 n.s. |
+| Projection-alone | 7.97e-07 *** / 0.146 n.s. | 6.17e-06 *** / 0.555 n.s. | 0.0628 n.s. / **0.0424 \* (d=−0.88)** |
+| η′-alone | 0.00775 ** / 0.0521 n.s. | 1.0 n.s. / 0.285 n.s. | 0.9696 n.s. / **5.62e-04 \*\*\* (d=+1.99)** |
+| FedAvg | 7.97e-07 *** / 0.0178 * | 6.17e-06 *** / 0.378 n.s. | 1.28e-09 *** / 1.26e-04 *** |
+| Static Reparam. | 0.00775 ** (d=−1.22) / 1.26e-06 *** | 1.0 n.s. / 5.61e-06 *** | 0.0890 n.s. / 0.0163 * (d=−1.15) |
 
 **2×2 factorial read (rare-class accuracy, pp = percentage points):**
 
@@ -173,7 +173,9 @@ The blowup column carries an independent finding the accuracy columns cannot sho
 | 0.5 | +1.3pp [−9.6, 10.9] (n.s.) | **+79.8pp [70.1, 89.3]** | +2.6pp [−19.2, 21.8] (n.s.) |
 | 1.0 | +20.7pp [5.3, 35.7] | **+58.6pp [41.5, 75.0]** | −40.6pp [−75.8, −0.5] |
 
-**On CIC-IDS-2017, the η′ cut does the great majority of the work.** Its main effect (+48.6 to +79.8pp) dwarfs projection's (+1.3 to +21.1pp, not significant at γ=0.5) at every γ, and `η′-alone` is statistically indistinguishable from `both` at γ=0.5 and γ=1.0 (Holm p = 1.0 and 0.97). The projection lever is still necessary — `both` beats `projection-alone` significantly at γ=0.0 and γ=0.5, and the difference at γ=1.0, while not significant after correction (p_holm=0.063, n=10), still shows a large effect size (Cohen's d=0.88) in the same direction — but on this dataset it is the smaller of the two contributions, not an equal partner.
+**On CIC-IDS-2017 the η′ cut dominates the rare-class-accuracy factorial — but reading only that metric would badly mislead.** The η′ main effect on rare-acc (+48.6 to +79.8pp) does dwarf projection's (+1.3 to +21.1pp, n.s. at γ=0.5), and `η′-alone` ties `both` on rare-acc at γ=0.5 and γ=1.0 (Holm p = 1.0 and 0.97). At γ=0.5 that tie is genuine on *both* metrics (all-acc Holm p = 0.285) — there, the η′ cut really does carry the arm. **At γ=1.0 it is not**: `η′-alone` matches `both` on rare-acc (88.9% vs 89.3%) while sitting at **15.2% all-class accuracy against `both`'s 44.3%** — Holm p = 5.6×10⁻⁴, Cohen's *d* = +1.99 in `both`'s favour. That is the same over-correction pathology §6 documents for η′=0.001, appearing at η′=0.01 once γ=1 removes any counterweight from `L_a`: the arm buys rare-class recall by starving every frequent class. An ablation reporting only the metric of record would have scored that arm as equivalent to the fix.
+
+The trade-off runs the other way too, and is worth stating plainly rather than buried: at γ=1.0 `projection-alone` is *significantly better than `both` on all-class accuracy* (48.4% vs 44.3%, Holm p = 0.042, *d* = −0.88) while being far worse on rare-acc (51.0% vs 89.3%, though only marginally significant after correction at n=10). **No single arm dominates on both metrics at every γ.** What distinguishes `both` is that it is never *catastrophically* wrong on either metric anywhere — the trade-offs against it are single-digit percentage points on all-acc, while the trade-offs against the single-lever arms reach 29pp (η′-alone's all-acc at γ=1) and 38pp (projection-alone's rare-acc at γ=1).
 
 ### 5.2 UNSW-NB15
 
@@ -188,15 +190,15 @@ The blowup column carries an independent finding the accuracy columns cannot sho
 | η′-alone (η′=0.01, no proj.) | 3.4% [0.4, 7.8] · all 59.7% · blowup 1.00× (med) | 12.1% [5.2, 19.6]* · all 49.2% · blowup 1.00× med, 1.06× max | 36.4% [33.7, 39.8]*** · all 13.3% · blowup 1.19× med, 1.48× max |
 | **Both** (proj. + η′=0.01) — the fix | 1.7% [0.0, 4.6] · all 58.8% · blowup 1.00× (med) | **37.1% [28.4, 45.7]** · all 53.2% · blowup 1.03× med, 1.39× max | **69.2% [63.4, 73.8]** · all 52.2% · blowup 1.32× med, 1.87× max |
 
-**Pairwise comparisons (both vs. reference arm), Holm-corrected:**
+**Pairwise comparisons (both vs. reference arm), Holm-corrected within each metric family** (same dual-metric convention as §5.1; positive *d* favours `both`):
 
-| vs. | γ=0.0 p (Holm) | γ=0.5 p (Holm) | γ=1.0 p (Holm) |
+| vs. | γ=0.0 rare / all | γ=0.5 rare / all | γ=1.0 rare / all |
 |---|---|---|---|
-| Literal | 0.606 (n.s.) | 0.418 (n.s.) | 0.00221 ** |
-| Projection-alone | 0.606 (n.s.) | 0.418 (n.s.) | 0.544 (n.s.) |
-| η′-alone | 0.371 (n.s.) | 0.0190 * | 1.06e-04 *** |
-| FedAvg | 0.606 (n.s.) | 1.16e-04 *** | 8.87e-09 *** |
-| Static Reparam. | 3.22e-06 *** | 0.311 (n.s.) | 0.00630 ** |
+| Literal | 0.606 n.s. / 0.448 n.s. | 0.418 n.s. / 0.121 n.s. | 0.00221 ** / 0.0185 * |
+| Projection-alone | 0.606 n.s. / 0.448 n.s. | 0.418 n.s. / 1.0 n.s. | 0.544 n.s. / **0.0188 \* (d=+1.12)** |
+| η′-alone | 0.371 n.s. / 0.448 n.s. | 0.0190 * / 0.0734 n.s. | 1.06e-04 *** / 1.61e-05 *** |
+| FedAvg | 0.606 n.s. / 0.448 n.s. | 1.16e-04 *** / 0.217 n.s. | 8.87e-09 *** / 0.0188 * |
+| Static Reparam. | 3.22e-06 *** (d=−3.88) / 0.168 n.s. | 0.311 n.s. / 1.0 n.s. | 0.00630 ** / 0.555 n.s. |
 
 **2×2 factorial read (rare-class accuracy, pp):**
 
@@ -206,11 +208,21 @@ The blowup column carries an independent finding the accuracy columns cannot sho
 | 0.5 | **+22.9pp [12.6, 32.5]** | −12.7pp [−22.1, −1.1] | +4.3pp [−10.3, 18.1] (n.s.) |
 | 1.0 | **+36.2pp [25.3, 46.3]** | +5.4pp [−1.5, 12.5] (n.s.) | −6.8pp [−18.9, 6.4] (n.s.) |
 
-**On UNSW-NB15, the finding reverses: projection does the great majority of the work.** Its main effect (+22.9 to +36.2pp at γ≥0.5) dominates η′'s (which is *negative or negligible* at every γ — the η′ cut alone does not help this dataset). `projection-alone` is statistically indistinguishable from `both` at **every** γ (Holm p = 0.606, 0.418, 0.544) — on UNSW-NB15, adding the η′ cut on top of projection buys no significant additional rare-class accuracy, and at γ=0.0 the point estimate is even slightly lower (1.7% vs. 6.4%, though the CIs overlap heavily and the comparison is not significant, p_holm=0.606).
+**On UNSW-NB15, the finding reverses: projection does the great majority of the work.** Its main effect (+22.9 to +36.2pp at γ≥0.5) dominates η′'s (which is *negative or negligible* at every γ — the η′ cut alone does not help this dataset). `projection-alone` is statistically indistinguishable from `both` **on rare-class accuracy at every** γ (Holm p = 0.606, 0.418, 0.544) — adding the η′ cut on top of projection buys no significant additional rare-class accuracy here, and at γ=0.0 the point estimate is even slightly lower (1.7% vs. 6.4%, CIs overlapping heavily, p_holm=0.606).
+
+**The dual-metric check qualifies that at γ=1.0**, though far less dramatically than the mirror-image case on CIC: there `both` *is* significantly better than `projection-alone` on all-class accuracy (52.2% vs 51.8%, Holm p = 0.019, *d* = +1.12). The effect is statistically clean but only **0.4 percentage points** — a consistent per-seed edge rather than a materially different model, and nothing like the 29pp all-acc gap the same check exposes on CIC. The honest reading is that on UNSW the η′ cut is close to free: it neither helps rare-class accuracy nor hurts, and buys a small but reliable all-class improvement at γ=1.
 
 ### 5.3 Cross-dataset synthesis: which lever "does the work" is dataset-dependent
 
-The Stage B factorial replaces the earlier, weaker preview-data hypothesis ("both levers are always independently necessary") with a sharper and more honest finding: **the projection fix is the one structurally necessary lever on both datasets — feasibility is restored with zero exceptions across all 60 `both`-arm cells (§4) regardless of dataset — but which of the two levers drives the *rare-class accuracy recovery* differs by dataset.** On CIC-IDS-2017, the η′ cut alone (`η′-alone`, no projection) already recovers 27.5–88.9% rare-class accuracy across γ, statistically tying `both` at γ=0.5–1.0; projection contributes a smaller, still-significant boost mainly at low γ. On UNSW-NB15, the pattern flips: `projection-alone` statistically ties `both` at every γ, while the η′ cut contributes nothing significant (and trends slightly negative at γ=0.5). Neither single-lever arm dominates unconditionally — `η′-alone` is markedly worse than `both`/`projection-alone` on UNSW (3.4–36.4% vs. 67–69%), and `projection-alone` is markedly worse than `both`/`η′-alone` on CIC at γ≤0.5 (0.0% vs. 70–89%) — so **`both` remains the only arm that performs well across both datasets and all three γ**, which is the practically relevant conclusion for anyone applying this fix without per-dataset retuning, even though the factorial decomposition shows the two levers are not equally load-bearing everywhere.
+The Stage B factorial replaces the earlier, weaker preview-data hypothesis ("both levers are always independently necessary") with a sharper and more honest finding, in three parts.
+
+**(1) The projection fix is the one structurally necessary lever, and it is dataset-independent.** Feasibility is restored with zero exceptions across all 60 `both`-arm cells (§4) on both datasets. This is the part that carries the theory.
+
+**(2) Which lever drives *rare-class accuracy* recovery is dataset-dependent, and the two datasets are near-mirror-images.** On CIC-IDS-2017 the η′ cut alone recovers 27.5–88.9% rare-class accuracy, tying `both` at γ=0.5–1.0; projection contributes a smaller boost, mainly at low γ. On UNSW-NB15 the pattern flips: `projection-alone` ties `both` on rare-acc at every γ while the η′ cut contributes nothing significant (trending negative at γ=0.5). Neither single-lever arm transfers: `η′-alone` is far worse than the alternatives on UNSW (3.4–36.4% vs. 67–69%), and `projection-alone` is far worse on CIC at γ≤0.5 (0.0% vs. 70–89%).
+
+**(3) Two of those "ties" dissolve once all-class accuracy is tested — and this is the finding that most changes the recommendation.** Reading only the metric of record, one could conclude that on CIC at γ=1 the projection lever is dispensable (`η′-alone` ties `both`, p=0.97). Testing the same seeds on all-class accuracy shows why that conclusion would be wrong: `η′-alone` reaches its rare-class parity while sitting at **15.2% all-class accuracy against `both`'s 44.3%** (Holm p = 5.6×10⁻⁴, *d* = +1.99). The arm is not equivalent to the fix; it has traded the majority classes away to buy rare-class recall — the same pathology §6 documents for the η′=0.001 over-correction, reappearing at η′=0.01 when γ=1 removes `L_a`'s counterweight. The mirror check on UNSW at γ=1 flags the same *kind* of divergence in `both`'s favour but at a trivial magnitude (0.4pp), which is itself informative: the dual-metric test is not simply generating flags everywhere, it is isolating the one place where a headline tie is hollow.
+
+**What this licenses, and what it does not.** No arm dominates on both metrics at every γ — at CIC γ=1 `projection-alone` is genuinely better than `both` on all-class accuracy (48.4% vs 44.3%, Holm p = 0.042), and Static Reparam. beats `both` on rare-acc at γ=0 on both datasets. The defensible claim is narrower and, stated precisely, more useful: **`both` is the only factorial arm that is never *catastrophically* wrong on either metric, on either dataset, at any γ.** Every deficit against it is a few percentage points; the deficits against the single-lever arms reach 29pp (η′-alone's all-acc, CIC γ=1) and 38pp (projection-alone's rare-acc, CIC γ=1). For anyone applying this correction without per-dataset, per-γ retuning, that worst-case profile — not a win on any single metric — is the reason to use both levers.
 
 ---
 

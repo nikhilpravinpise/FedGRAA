@@ -17,35 +17,43 @@ Significance markers on a reference-arm cell denote the paired, Holm-Bonferroni-
 
 ## Pre-registered pairwise comparisons (both vs. reference arm)
 
+The **all-acc** column is not decoration. A tie on the metric of record can hide a large difference on overall accuracy, and on this data it does — an arm that matches `both` on rare-class accuracy while collapsing all-class accuracy has not matched `both`. Both metric families are tested on the same seeds and corrected within their own family; rows where the two disagree are flagged **(diverges)**.
+
 **γ=0.0**
 
-| vs. | p (paired t) | p (Wilcoxon) | Cohen's d | p (Holm) |
-|---|---|---|---|---|
-| Literal (η′=0.1, no proj.) | 1.594e-07 | 0.001953 | 4.56 | 7.968e-07 |
-| Projection-alone (η′=0.1) | 1.594e-07 | 0.001953 | 4.56 | 7.968e-07 |
-| η′-alone (η′=0.01, no proj.) | 0.004197 | 0.001953 | 1.2 | 0.007751 |
-| FedAvg (baseline) | 1.594e-07 | 0.001953 | 4.56 | 7.968e-07 |
-| Static Reparam. (baseline) | 0.003875 | 0.01562 | -1.22 | 0.007751 |
+| vs. | rare-acc p (Holm) | rare-acc Cohen's d | all-acc p (Holm) | all-acc Cohen's d | agreement |
+|---|---|---|---|---|---|
+| Literal (η′=0.1, no proj.) | 7.968e-07 | 4.56 | 0.1424 | 0.647 | **(diverges)** differs on rare, ties on all-acc |
+| Projection-alone (η′=0.1) | 7.968e-07 | 4.56 | 0.1459 | 0.503 | **(diverges)** differs on rare, ties on all-acc |
+| η′-alone (η′=0.01, no proj.) | 0.007751 | 1.2 | 0.05211 | -0.92 | **(diverges)** differs on rare, ties on all-acc |
+| FedAvg (baseline) | 7.968e-07 | 4.56 | 0.01776 | 1.19 | consistent |
+| Static Reparam. (baseline) | 0.007751 | -1.22 | 1.256e-06 | 4.32 | consistent |
+
+*(Exact uncorrected p-values from both the paired t and Wilcoxon tests, plus statistics and paired seed sets, are in the JSON's `comparisons` and `comparisons_all_acc` blocks.)*
 
 **γ=0.5**
 
-| vs. | p (paired t) | p (Wilcoxon) | Cohen's d | p (Holm) |
-|---|---|---|---|---|
-| Literal (η′=0.1, no proj.) | 1.235e-06 | 0.001953 | 3.59 | 6.174e-06 |
-| Projection-alone (η′=0.1) | 1.235e-06 | 0.001953 | 3.59 | 6.174e-06 |
-| η′-alone (η′=0.01, no proj.) | 0.8155 | 0.8438 | 0.076 | 1 |
-| FedAvg (baseline) | 1.235e-06 | 0.001953 | 3.59 | 6.174e-06 |
-| Static Reparam. (baseline) | 0.5554 | 1 | -0.194 | 1 |
+| vs. | rare-acc p (Holm) | rare-acc Cohen's d | all-acc p (Holm) | all-acc Cohen's d | agreement |
+|---|---|---|---|---|---|
+| Literal (η′=0.1, no proj.) | 6.174e-06 | 3.59 | 0.003088 | 1.57 | consistent |
+| Projection-alone (η′=0.1) | 6.174e-06 | 3.59 | 0.5547 | -0.194 | **(diverges)** differs on rare, ties on all-acc |
+| η′-alone (η′=0.01, no proj.) | 1 | 0.076 | 0.285 | 0.59 | consistent |
+| FedAvg (baseline) | 6.174e-06 | 3.59 | 0.3784 | -0.449 | **(diverges)** differs on rare, ties on all-acc |
+| Static Reparam. (baseline) | 1 | -0.194 | 5.613e-06 | 3.63 | **(diverges)** ties on rare, differs on all-acc |
+
+*(Exact uncorrected p-values from both the paired t and Wilcoxon tests, plus statistics and paired seed sets, are in the JSON's `comparisons` and `comparisons_all_acc` blocks.)*
 
 **γ=1.0**
 
-| vs. | p (paired t) | p (Wilcoxon) | Cohen's d | p (Holm) |
-|---|---|---|---|---|
-| Literal (η′=0.1, no proj.) | 3.84e-05 | 0.003906 | 2.36 | 0.0001536 |
-| Projection-alone (η′=0.1) | 0.02092 | 0.03125 | 0.884 | 0.06275 |
-| η′-alone (η′=0.01, no proj.) | 0.9696 | 0.4062 | 0.0124 | 0.9696 |
-| FedAvg (baseline) | 2.556e-10 | 0.001953 | 9.46 | 1.278e-09 |
-| Static Reparam. (baseline) | 0.0445 | 0.125 | 0.738 | 0.08901 |
+| vs. | rare-acc p (Holm) | rare-acc Cohen's d | all-acc p (Holm) | all-acc Cohen's d | agreement |
+|---|---|---|---|---|---|
+| Literal (η′=0.1, no proj.) | 0.0001536 | 2.36 | 0.1014 | 0.577 | **(diverges)** differs on rare, ties on all-acc |
+| Projection-alone (η′=0.1) | 0.06275 | 0.884 | 0.04243 | -0.881 | **(diverges)** ties on rare, differs on all-acc |
+| η′-alone (η′=0.01, no proj.) | 0.9696 | 0.0124 | 0.0005624 | 1.99 | **(diverges)** ties on rare, differs on all-acc |
+| FedAvg (baseline) | 1.278e-09 | 9.46 | 0.0001258 | -2.49 | consistent |
+| Static Reparam. (baseline) | 0.08901 | 0.738 | 0.01625 | -1.15 | **(diverges)** ties on rare, differs on all-acc |
+
+*(Exact uncorrected p-values from both the paired t and Wilcoxon tests, plus statistics and paired seed sets, are in the JSON's `comparisons` and `comparisons_all_acc` blocks.)*
 
 ## 2x2 factorial read (rare-class accuracy)
 
