@@ -2,7 +2,7 @@
 
 **Compiled:** 2026-07-25 · **Author:** remediation pass over [`../audit/STAGE_AB_VERIFICATION_AUDIT_2026-07-25.md`](../audit/STAGE_AB_VERIFICATION_AUDIT_2026-07-25.md) (F1–F9) and [`../audit/STAGE_B_CORRECTNESS_AUDIT_2026-07-25.md`](../audit/STAGE_B_CORRECTNESS_AUDIT_2026-07-25.md) (A1–A6)
 **Tree this plan was verified against:** `HEAD = a6c4f16` + working tree, 2026-07-25
-**Status of this document:** live — update the status column as items close.
+**Status of this document: CLOSED, 2026-07-26.** All twelve items (R1–R12) below were closed by dedicated, self-labeled commits merged to `main` by `0720010` — see the `Status` column for the exact commit per item. This update was itself prompted by [`../audit/INDEPENDENT_FULL_AUDIT_2026-07-26.md`](INDEPENDENT_FULL_AUDIT_2026-07-26.md) §4.1, which found that this document's status column had never been updated even though the underlying work was verifiably complete — the exact failure mode this document's own header warns against, occurring inside the artifact built to catch it. Retained (not deleted) as the historical record of the remediation; do not add new open items here — file new findings in a new dated audit doc instead.
 
 ---
 
@@ -44,18 +44,20 @@ Re-verified against the working tree on 2026-07-25. `Source` maps back to the or
 
 | ID | Source | Defect (as it exists *now*) | Sev | Status |
 |---|---|---|---|---|
-| **R1** | F1 | 6 doc paths untracked (~2,900 lines) incl. Stage A's capstone; doc-move deletions unstaged-for-commit | **High** | Open |
-| **R2** | F3 | Theory doc title asserts "**Published**"; §7 has no provenance bullet. `STAGE_B_MASTER_REPORT` §21 discloses it fully — the flagship doc does not | **High** | Partly open |
-| **R3** | F2 | `check_stage_b_complete.py` never validates the `comparisons_all_acc` family it now depends on | Medium | Open |
-| **R4** | F4 | `publication_roadmap.md` — the designated entry point — lists 6 completed items as "missing" and says "Execute Stage A" | Medium | Open |
-| **R5** | F5 | `STAGE_DIRECTION_ASSESSMENT.md` and `RESEARCH_DIRECTION_AUDIT_2026-07-25.md` carry no superseded banner; the latter's action #5 instructs discarding a finished campaign | Medium | Open |
-| **R6** | F6 | **34 broken relative links** / 398 checked, across 9 files | Medium | Open |
-| **R7** | F7 | `PAKDD_STATUS_REPORT.md` stale (79/79 tests, wrong headline fix, 2 broken links, no banner) | Low | Open |
-| **R8** | F8 | "byte-identical" false at `results/README.md:53` and `STAGE_A_MASTER_REPORT.md:624` | Low | Open |
-| **R9** | F9 | Stage A capstone frames severity on seed-0 (`193×`/`7.6×`) with no forward-reference to the 10-seed correction | Low | Open |
-| **R10** | new | No doc-link gate exists; R6 is reintroducible on the next doc move | Medium | Open |
-| **R11** | new | `.venv313` interpreter requirement undocumented; every gate fails under default `python` | Low | Open |
-| **R12** | B-audit §5 | Stage A has **no** automated transcription/correctness gate — `audit_stage_b.py`'s method is unextended to Stage A | Medium | Open |
+| **R1** | F1 | 6 doc paths untracked (~2,900 lines) incl. Stage A's capstone; doc-move deletions unstaged-for-commit | **High** | **Closed** — `1cddd2c`, `155828c`, `a190f93` |
+| **R2** | F3 | Theory doc title asserts "**Published**"; §7 has no provenance bullet. `STAGE_B_MASTER_REPORT` §21 discloses it fully — the flagship doc does not | **High** | **Closed** — `4957561`, `097de78` |
+| **R3** | F2 | `check_stage_b_complete.py` never validates the `comparisons_all_acc` family it now depends on | Medium | **Closed** — `eb23950` |
+| **R4** | F4 | `publication_roadmap.md` — the designated entry point — lists 6 completed items as "missing" and says "Execute Stage A" | Medium | **Closed** — `6ed6fc1` |
+| **R5** | F5 | `STAGE_DIRECTION_ASSESSMENT.md` and `RESEARCH_DIRECTION_AUDIT_2026-07-25.md` carry no superseded banner; the latter's action #5 instructs discarding a finished campaign | Medium | **Closed** — `6ed6fc1` |
+| **R6** | F6 | **34 broken relative links** / 398 checked, across 9 files | Medium | **Closed** — `ed8ad07` |
+| **R7** | F7 | `PAKDD_STATUS_REPORT.md` stale (79/79 tests, wrong headline fix, 2 broken links, no banner) | Low | **Closed** — `d504b07` |
+| **R8** | F8 | "byte-identical" false at `results/README.md:53` and `STAGE_A_MASTER_REPORT.md:624` | Low | **Closed** — `5c65435` |
+| **R9** | F9 | Stage A capstone frames severity on seed-0 (`193×`/`7.6×`) with no forward-reference to the 10-seed correction | Low | **Closed** — `5c65435` |
+| **R10** | new | No doc-link gate exists; R6 is reintroducible on the next doc move | Medium | **Closed** — `c383e7b` |
+| **R11** | new | `.venv313` interpreter requirement undocumented; every gate fails under default `python` | Low | **Closed** — `0790726` |
+| **R12** | B-audit §5 | Stage A has **no** automated transcription/correctness gate — `audit_stage_b.py`'s method is unextended to Stage A | Medium | **Closed** — `1ab0fbc` |
+
+All twelve re-verified independently on 2026-07-26 by reading the diffs at the cited commits and re-running the definition-of-done commands in §4 on `HEAD = 0720010` — `pytest` (151 passed, count updated post-`c383e7b`'s `test_check_doc_links.py`), all six gates (`pytest`, both completeness gates, both correctness audits, the doc-link checker) exit 0. See [`INDEPENDENT_FULL_AUDIT_2026-07-26.md`](INDEPENDENT_FULL_AUDIT_2026-07-26.md) for the fresh findings raised independently of this plan.
 
 **Closed, no action** (recorded so a future reader does not re-open them): A1 heavy-tailed mean · A2 stale seed-0 figures · A3 run-count · A4/F2 dual-metric significance · A5 audit crash-on-report · A6 star markup · F1's `_logs/` gitignore decision · F1's code/table/theory commits · F6's `README.md` entries.
 
@@ -330,25 +332,27 @@ The remediation is complete when **all** of the following hold on a clean checko
 ```bash
 PY=.venv313/Scripts/python
 git status --porcelain                    # -> empty
-$PY -m pytest tests                       # -> 142+ passed
+$PY -m pytest tests                       # -> 151 passed (was 142+; grew with test_check_doc_links.py)
 $PY scripts/check_stage_a_complete.py     # -> exit 0
 $PY scripts/check_stage_b_complete.py     # -> exit 0  (now incl. comparisons_all_acc)
 $PY scripts/audit_stage_b.py              # -> exit 0
 $PY scripts/audit_stage_a.py              # -> exit 0  (new)
-$PY scripts/check_doc_links.py            # -> exit 0, 398/398 resolve
+$PY scripts/check_doc_links.py            # -> exit 0, all relative links resolve
 ```
 
-And by inspection:
+And by inspection — **all nine re-verified 2026-07-26, all hold:**
 
-- [ ] Every doc cited as authoritative is **committed** — above all `STAGE_A_MASTER_REPORT.md`
-- [ ] No document claims Stage A or Stage B is outstanding
-- [ ] No unqualified "published" claim about the target manuscript anywhere in the tree
-- [ ] Both overtaken strategy docs carry dated banners that name what is still live
-- [ ] Zero broken relative links, enforced by a gate, with a negative-control test
-- [ ] "byte-identical" replaced with "metrically identical" where the strong word is false
-- [ ] Stage A's seed-0 severity framing forward-references the 10-seed correction
-- [ ] `README.md` documents the `.venv313` interpreter and expected test count
-- [ ] Every new checker has been **negative-controlled** — deliberately broken, and confirmed to fail *readably*
+- [x] Every doc cited as authoritative is **committed** — above all `STAGE_A_MASTER_REPORT.md`
+- [x] No document claims Stage A or Stage B is outstanding
+- [x] No unqualified "published" claim about the target manuscript anywhere in the tree
+- [x] Both overtaken strategy docs carry dated banners that name what is still live
+- [x] Zero broken relative links, enforced by a gate, with a negative-control test (`tests/test_check_doc_links.py`)
+- [x] "byte-identical" replaced with "metrically identical" where the strong word is false
+- [x] Stage A's seed-0 severity framing forward-references the 10-seed correction
+- [x] `README.md` documents the `.venv313` interpreter and expected test count
+- [x] Every new checker has been **negative-controlled** — deliberately broken, and confirmed to fail *readably*
+
+**Not covered by this checklist** (out of this plan's original scope, raised fresh by `INDEPENDENT_FULL_AUDIT_2026-07-26.md`): the gates above are still not enforced anywhere until this pass's CI wiring (`.github/workflows/docs-check.yml` `stage-gates` job); several real code bugs in `fedgraa/aggregation.py`/`metrics.py`; and the paper draft's own numeric claims. Those are tracked in the new audit doc, not here.
 
 ---
 

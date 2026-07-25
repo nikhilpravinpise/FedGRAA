@@ -16,6 +16,7 @@ verification of the paper's class-level accuracy claims.
 
 from __future__ import annotations
 
+import warnings
 from typing import Dict, List, Optional, Sequence
 
 import numpy as np
@@ -114,10 +115,22 @@ def last_n_class_accuracy(
     preds = model.predict(params, X)
 
     recalls = []
+    missing = []
     for class_id in rare:
         mask = y == class_id
         if mask.any():
             recalls.append(float((preds[mask] == class_id).mean()))
+        else:
+            missing.append(class_id)
+    if missing:
+        warnings.warn(
+            f"last_n_class_accuracy: rare class id(s) {missing} have zero "
+            f"samples in this evaluation split and are excluded from the "
+            f"mean, which is now averaged over {len(recalls)}/{len(rare)} "
+            "classes instead of the full protected set.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     if not recalls:
         return 0.0
     return float(np.mean(recalls))

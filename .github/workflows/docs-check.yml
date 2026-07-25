@@ -21,3 +21,33 @@ jobs:
 
       - name: Byte-compile all Python sources (syntax check)
         run: python -m compileall -q PAKDD/fedgraa PAKDD/scripts PAKDD/tests
+
+  stage-gates:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: PAKDD
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run test suite
+        run: python -m pytest tests --tb=short
+
+      - name: Stage A completeness gate
+        run: python scripts/check_stage_a_complete.py
+
+      - name: Stage B completeness gate
+        run: python scripts/check_stage_b_complete.py
+
+      - name: Stage A correctness audit (recomputes every transcribed number from raw JSON)
+        run: python scripts/audit_stage_a.py
+
+      - name: Stage B correctness audit (recomputes every transcribed number from raw JSON)
+        run: python scripts/audit_stage_b.py

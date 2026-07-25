@@ -10,6 +10,15 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers",
+        "slow: real end-to-end test (process spawn and/or real training), "
+        "not just structure/signature checks -- runs by default, "
+        "deselect with -m 'not slow' for a fast inner loop.",
+    )
+
+
 @pytest.fixture
 def rng():
     return np.random.default_rng(1234)

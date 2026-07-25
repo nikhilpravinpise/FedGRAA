@@ -20,6 +20,17 @@ import re
 import subprocess
 import sys
 
+# Failure/success banners use an em-dash. On a Windows console defaulting to
+# cp1252 that raises UnicodeEncodeError (or silently mojibakes to U+FFFD)
+# instead of printing the banner -- same defect class fixed in
+# audit_stage_b.py; applied here too since this is the gate every doc points
+# to as the authoritative green signal.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError):  # pragma: no cover - non-reconfigurable stream
+        pass
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts.check_doc_links import find_broken_links  # noqa: E402

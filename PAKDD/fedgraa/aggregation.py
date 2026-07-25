@@ -56,6 +56,57 @@ def _loss_and_grad_P(
     return model.loss_and_grad(params, X, y)
 
 
+def _composite_min_arm(L_h: float, L_m: float) -> Tuple[float, Optional[str]]:
+    """NaN-symmetric selection of the ``min(L_h, L_m)`` arm (eq. 8-9).
+
+    Plain ``min()``/``<=`` comparisons against NaN are not symmetric in which
+    operand they silently drop, so the same arm-selection logic is shared
+    between :meth:`FedGRAA.composite_loss` and
+    :meth:`FedGRAA._composite_grad_P` to guarantee they agree on which
+    non-finite case they catch. A non-finite value in exactly one arm is
+    treated as a numerical blow-up in that arm and excluded in favour of the
+    finite one. Returns ``(value, source)`` where ``source`` is ``"h"``,
+    ``"m"``, or ``None`` if both arms are non-finite.
+    """
+    h_ok, m_ok = np.isfinite(L_h), np.isfinite(L_m)
+    if h_ok and m_ok:
+        return (L_h, "h") if L_h <= L_m else (L_m, "m")
+    if h_ok:
+        return L_h, "h"
+    if m_ok:
+        return L_m, "m"
+    return float("nan"), None
+
+
+def _warn_on_nonfinite_arm(
+    L_h: float, L_m: float, source: Optional[str], L_u: float, fallback_desc: str
+) -> None:
+    """Emit a warning that distinguishes an empty split from a blow-up.
+
+    ``source is None`` means both ``L_h`` and ``L_m`` are non-finite, which is
+    the genuine "D_V^h and D_V^m both empty" case the original message named.
+    A non-``None`` source with only one of the two finite means the *other*
+    arm hit a numerical blow-up, not an empty split -- a distinct failure mode
+    that the original single warning text conflated.
+    """
+    if source is None:
+        if np.isfinite(L_u):
+            warnings.warn(
+                "D_V^h and D_V^m are both empty or both non-finite "
+                f"(numerical blow-up); {fallback_desc}.",
+                RuntimeWarning,
+                stacklevel=3,
+            )
+    elif not (np.isfinite(L_h) and np.isfinite(L_m)):
+        bad = "L_m" if source == "h" else "L_h"
+        warnings.warn(
+            f"{bad} is non-finite (numerical blow-up, not an empty split); "
+            "L_a falls back to the finite arm.",
+            RuntimeWarning,
+            stacklevel=3,
+        )
+
+
 def _grad_wrt_weights(
     grad_P: Sequence[np.ndarray], client_params: Sequence[Params]
 ) -> np.ndarray:
@@ -108,16 +159,9 @@ class FedGRAA:
         L_h, _ = _loss_and_grad_P(model, params, val.X_h, val.y_h)
         L_m, _ = _loss_and_grad_P(model, params, val.X_m, val.y_m)
         L_u, _ = _loss_and_grad_P(model, params, val.X_n, val.y_n)
-        L_a = min(L_h, L_m)
-        # Both D_V^h and D_V^m empty — warn and fall back to L_u only.
-        if not np.isfinite(L_a):
-            if np.isfinite(L_u):
-                warnings.warn(
-                    "D_V^h and D_V^m are both empty; L_a falls back to 0. "
-                    "The (1-gamma)*L_a term is zeroed regardless of gamma.",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
+        L_a, source = _composite_min_arm(L_h, L_m)
+        _warn_on_nonfinite_arm(L_h, L_m, source, L_u, "L_a falls back to 0")
+        if source is None:
             L_a = 0.0
         if not np.isfinite(L_u):
             L_u = 0.0
@@ -134,19 +178,16 @@ class FedGRAA:
 
         # Standard sub-gradient of L_a = min(L_h, L_m): gradient of the
         # smaller branch. This is the only reading used for strict reproduction.
-        if L_h <= L_m:
-            L_a, g_a = L_h, g_h
+        # Uses the same NaN-symmetric arm selection as composite_loss() so the
+        # two "parallel" computations of L_a can never disagree on which
+        # non-finite case they catch.
+        L_a, source = _composite_min_arm(L_h, L_m)
+        _warn_on_nonfinite_arm(L_h, L_m, source, L_u, "gradient of L_a zeroed")
+        if source == "h":
+            g_a = g_h
+        elif source == "m":
+            g_a = g_m
         else:
-            L_a, g_a = L_m, g_m
-
-        # Both empty — warn and zero out (same as composite_loss).
-        if not np.isfinite(L_a):
-            if np.isfinite(L_u):
-                warnings.warn(
-                    "D_V^h and D_V^m are both empty; gradient of L_a zeroed.",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
             L_a, g_a = 0.0, [np.zeros_like(p) for p in params]
         if not np.isfinite(L_u):
             L_u, g_u = 0.0, [np.zeros_like(p) for p in params]

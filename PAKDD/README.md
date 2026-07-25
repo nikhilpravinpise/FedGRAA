@@ -43,6 +43,11 @@ true?" — every reported value is re-derived from the raw persisted JSON and
 independently recomputed, never read back from the document asserting it.
 See [`docs/audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md`](docs/audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md).
 
+**All six commands above run on every push/PR to `main`** in the `stage-gates`
+job of [`.github/workflows/docs-check.yml`](../.github/workflows/docs-check.yml)
+— they are no longer only-a-human-remembers-to-run-them scripts (see
+[`docs/audit/INDEPENDENT_FULL_AUDIT_2026-07-26.md`](docs/audit/INDEPENDENT_FULL_AUDIT_2026-07-26.md) §3.1).
+
 ---
 
 ## Environment
@@ -354,7 +359,7 @@ results/
     seed_sweep_{DS}_{fedavg,static}_r60.json
     README.md                          # Stage B manifest (27 checked paths)
     _logs/                             # raw campaign stdout
-tests/             # 142 unit + gradient + e2e + diagnostic + statistics tests
+tests/             # 151 unit + gradient + e2e + diagnostic + statistics + doc-link tests
 docs/
   current/         # the live documents
     STAGE_A_MASTER_REPORT.md           # Stage A capstone (exhaustive)
