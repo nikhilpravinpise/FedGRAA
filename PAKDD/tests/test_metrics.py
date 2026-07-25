@@ -45,6 +45,43 @@ def test_last_n_class_accuracy_is_mean_recall(monkeypatch):
     assert acc == pytest.approx(2 / 3)
 
 
+def test_accuracy_and_last_n_class_accuracy_with_real_forward_pass():
+    """Exercise the real MLP.predict() forward pass, no monkeypatch.
+
+    Every other test in this file replaces ``MLP.predict`` with a fixed
+    lambda (flagged in
+    ``docs/audit/INDEPENDENT_FULL_AUDIT_2026-07-26.md`` SS3.2) -- a real bug
+    in ``predict()`` (wrong axis, stale weights after ``set_params``, an
+    off-by-one in the argmax) would be caught by none of them. Here the
+    weights are chosen, not the prediction: a zeroed first layer collapses
+    every input to the same hidden activation (0), so the real Keras forward
+    pass is forced through ``set_params`` -> dense -> tanh -> dense -> argmax
+    and still lands on a single, exactly-predictable class for every row,
+    regardless of X.
+    """
+    layer_sizes = (3, 4, 3)
+    W1 = np.zeros((3, 4), dtype=np.float32)
+    b1 = np.zeros(4, dtype=np.float32)
+    W2 = np.zeros((4, 3), dtype=np.float32)
+    b2 = np.array([0.0, 0.0, 5.0], dtype=np.float32)  # forces argmax -> class 2
+    params = [W1, b1, W2, b2]
+
+    rng = np.random.default_rng(0)
+    X = rng.normal(size=(9, 3)).astype(np.float32)  # arbitrary, real input
+    y = np.array([2, 2, 2, 0, 0, 1, 1, 2, 0])
+
+    from fedgraa.model import MLP
+
+    preds = MLP(layer_sizes, seed=0).predict(params, X)
+    np.testing.assert_array_equal(preds, np.full(9, 2))
+
+    assert accuracy(params, X, y) == pytest.approx((y == 2).mean())
+
+    acc = last_n_class_accuracy(params, X, y, rare_class_ids=[0, 1, 2])
+    # recall: class0=0.0, class1=0.0, class2=1.0 (all predicted 2) -> mean=1/3
+    assert acc == pytest.approx(1 / 3)
+
+
 def test_empty_inputs_return_zero():
     params = init_params((3, 4, 3), seed=0)
     X = np.zeros((0, 3))

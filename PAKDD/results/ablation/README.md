@@ -25,10 +25,10 @@ below (formerly "PENDING") now lists the real, git-tracked paths.
 |---|---|---|
 | [`../../fedgraa/stats.py`](../../fedgraa/stats.py) | T4 | `tests/test_stats.py` (19 cases: bootstrap CI, paired t, Wilcoxon, Cohen's d, Holm-Bonferroni, all degenerate-cell edges) |
 | [`../../scripts/run_ablation_seed_sweep.py`](../../scripts/run_ablation_seed_sweep.py) | T3 driver, §6.2 | `tests/test_run_ablation_seed_sweep.py` (17 cases: filename convention, enumeration, resumability, seed-range parsing) |
-| [`../../scripts/build_ablation_table.py`](../../scripts/build_ablation_table.py) | T5, §6.3 | `tests/test_build_ablation_table.py` (13 cases: cell/CI wiring, degenerate comparisons, Holm wiring, factorial effects) |
-| [`../../scripts/render_ablation.py`](../../scripts/render_ablation.py) | T6, §6.4 | `tests/test_render_ablation.py` (5 cases: markdown + figure smoke tests) |
+| [`../../scripts/build_ablation_table.py`](../../scripts/build_ablation_table.py) | T5, §6.3 | `tests/test_build_ablation_table.py` (15 cases: cell/CI wiring, degenerate comparisons, Holm wiring, factorial effects) |
+| [`../../scripts/render_ablation.py`](../../scripts/render_ablation.py) | T6, §6.4 | `tests/test_render_ablation.py` (6 cases: markdown + figure smoke tests) |
 | [`../../scripts/check_stage_b_complete.py`](../../scripts/check_stage_b_complete.py) | §7 | run directly (standalone, like Stage A's checker); not part of `pytest tests` — checks artifact *presence and shape* |
-| [`../../scripts/audit_stage_b.py`](../../scripts/audit_stage_b.py) | verification | run directly — checks artifact *correctness*: config-vs-arm fidelity on all 80 runs, table-vs-raw per-seed equality, every p-value/effect-size/Holm/factorial figure recomputed against SciPy independently of `fedgraa/stats.py`, all 232 doc-transcribed numbers re-derived, and heavy-tailed-summary detection. Negative-control tested (deliberately injected errors are caught and named) |
+| [`../../scripts/audit_stage_b.py`](../../scripts/audit_stage_b.py) | verification | run directly — checks artifact *correctness*: config-vs-arm fidelity on all 80 runs, table-vs-raw per-seed equality, every p-value/effect-size/Holm/factorial figure recomputed against SciPy independently of `fedgraa/stats.py`, all 262 doc-transcribed numbers re-derived, and heavy-tailed-summary detection. Negative-control tested (deliberately injected errors are caught and named) |
 | [`../../docs/current/fedgraa_convergence_defect.md`](../../docs/current/fedgraa_convergence_defect.md) | T1/T2/T8 | theory doc; §1-7 all complete, §5 embeds the tables/figures below |
 
 ## 2. Existing (Stage A-era) diagnostic JSONs reused as Stage B seed-0/1/2 data

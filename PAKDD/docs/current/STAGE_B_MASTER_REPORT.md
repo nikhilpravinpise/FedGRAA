@@ -791,7 +791,7 @@ Deliberately kept outside `pytest tests` (the unit suite stays decoupled from la
 |---|---|---|
 | **A** Raw-run integrity | SHA-256 of all 80 JSONs; every cell's persisted `config` vs. its filed arm | A run duplicated as two seeds; an arm generated with the wrong flags — an ablation that isn't ablating |
 | **B** Table-vs-raw | Every `per_seed` array re-read from raw JSONs and compared exactly | A globbing/seed-mapping bug in the builder |
-| **C** Independent statistics | All 90 comparisons + factorial effects recomputed via **SciPy, not `fedgraa/stats.py`** | A bug in the project's own statistics module — which testing it against itself cannot find |
+| **C** Independent statistics | All 78 comparisons + factorial effects (30 rare-acc + 30 all-acc + 18 factorial, both datasets) recomputed via **SciPy, not `fedgraa/stats.py`** | A bug in the project's own statistics module — which testing it against itself cannot find |
 | **D** Doc transcription | All **262** numbers hand-typed into the theory doc, plus every significance star vs. its own *p*-value | Copy-paste drift between data and the prose citing it |
 | **E** Presentation soundness | Cells where mean/median diverge >3× | A correct number that is a *misleading summary* |
 | **F** Metric divergence | The full all-class-accuracy comparison family | A **true** "not significant" that is nonetheless misleading |

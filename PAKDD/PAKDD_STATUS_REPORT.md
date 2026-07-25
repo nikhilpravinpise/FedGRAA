@@ -35,7 +35,23 @@ the mechanism (blowup collapses to 1.0×–4.3×) and a real-data hyperparameter
 intervention (`η'=0.001` vs. the paper's `0.1`) eliminates the blowup entirely
 and recovers 75-100% rare-class accuracy for most of a 60-round run — at the
 cost of collapsing overall accuracy instead, since `γ=1`'s objective has
-nothing pushing back against overweighting the rare clients. UNSW-NB15's and
+nothing pushing back against overweighting the rare clients.
+>
+> **Correction, added 2026-07-26 (this sentence is preserved verbatim above as
+> the historical record; do not edit it further):**
+> [`docs/current/STAGE_A_MASTER_REPORT.md` §11.1](docs/current/STAGE_A_MASTER_REPORT.md)
+> identified that this sentence conflates two distinct, later-disambiguated
+> experiments: the single-lever `η′=0.001` intervention *alone* (real, but
+> collapses overall accuracy toward 0.8%), and the **validated combined fix**
+> — simplex projection *and* moderate `η′=0.01` together — which recovers
+> 72–94% mean rare-accuracy *without* collapsing overall accuracy
+> (`fedgraa_convergence_defect.md` §5.7 Step 3). The combined fix, not the
+> `η′=0.001`-alone reading above, is the project's current recommendation.
+> This correction was itself flagged by three prior audit passes and not
+> applied until now — see
+> [`docs/audit/INDEPENDENT_FULL_AUDIT_2026-07-26.md`](docs/audit/INDEPENDENT_FULL_AUDIT_2026-07-26.md) §4.3.
+
+UNSW-NB15's and
 CIC-IDS-2017's cached datasets were also independently verified to be
 genuine CSV-derived data, not synthetic. Also new: canonical sweep results
 are now persisted to [`results/`](results/) instead of existing only as
