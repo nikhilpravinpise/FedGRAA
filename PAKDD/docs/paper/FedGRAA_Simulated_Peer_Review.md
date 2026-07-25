@@ -1,7 +1,7 @@
 # Simulated Peer Review Panel Report
 
 **Manuscript**: *Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems* (FedGRAA)
-**Source file**: [`PAKDD_Final_Version_Submit (3).pdf`](../paper/PAKDD_Final_Version_Submit%20(3).pdf)
+**Source file**: [`PAKDD_Final_Version_Submit_v3.pdf`](PAKDD_Final_Version_Submit_v3.pdf)
 **Review conducted**: 2026-07-25, via a 5-agent simulated review panel (EIC + 3 peer reviewers + Devil's Advocate)
 **Review mode**: `full`
 
@@ -11,8 +11,8 @@
 
 This is a **simulated** peer review, not a submission to a real venue. Two things follow from that, stated plainly rather than left implicit:
 
-1. **This review is informed by more than a blind read.** This repository already contains an independent, code-level reproduction and audit of FedGRAA — [`PAPER_AMBIGUITY_REPORT.md`](PAPER_AMBIGUITY_REPORT.md) (17 cataloged text-only ambiguities/contradictions) and [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) (a formal statement, with measured evidence, of a missing simplex-projection defect in Algorithm 2). Where a finding below is something *any* careful reviewer could catch from the manuscript text alone — a missing line in an algorithm box, two equations with the same name and different formulas, an assumption that contradicts a stated architecture — it is presented as an ordinary reviewer finding. Where a finding additionally draws on this project's empirical reproduction (e.g., the exact round at which the weight vector leaves the simplex, or measured loss-blowup ratios), it is labeled **[Corroborated by independent reproduction]** so the distinction between "visible on the page" and "confirmed by rerunning the algorithm" stays honest.
-2. **Purpose.** This doc is meant to serve the project's own Stage B goal (see [`publication_roadmap.md`](publication_roadmap.md) §2, Stage B: "package the critique as a rigorous, citable component"). A reviewer-panel framing is a useful, independent cross-check on whether the existing audit findings would actually move an editorial decision — they do, decisively, per the analysis below.
+1. **This review is informed by more than a blind read.** This repository already contains an independent, code-level reproduction and audit of FedGRAA — [`PAPER_AMBIGUITY_REPORT.md`](../current/PAPER_AMBIGUITY_REPORT.md) (17 cataloged text-only ambiguities/contradictions) and [`fedgraa_convergence_defect.md`](../current/fedgraa_convergence_defect.md) (a formal statement, with measured evidence, of a missing simplex-projection defect in Algorithm 2). Where a finding below is something *any* careful reviewer could catch from the manuscript text alone — a missing line in an algorithm box, two equations with the same name and different formulas, an assumption that contradicts a stated architecture — it is presented as an ordinary reviewer finding. Where a finding additionally draws on this project's empirical reproduction (e.g., the exact round at which the weight vector leaves the simplex, or measured loss-blowup ratios), it is labeled **[Corroborated by independent reproduction]** so the distinction between "visible on the page" and "confirmed by rerunning the algorithm" stays honest.
+2. **Purpose.** This doc is meant to serve the project's own Stage B goal (see [`publication_roadmap.md`](../current/publication_roadmap.md) §2, Stage B: "package the critique as a rigorous, citable component"). A reviewer-panel framing is a useful, independent cross-check on whether the existing audit findings would actually move an editorial decision — they do, decisively, per the analysis below.
 
 ---
 
@@ -507,14 +507,14 @@ This simulated review's CRITICAL findings are each independently corroborated by
 
 | Review finding | Corroborating document |
 |---|---|
-| Missing simplex projection (R1-W1, DA #1) | [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) §2 — measured: `w` leaves the simplex at round 1, every γ, both datasets, zero exceptions |
-| Convexity assumption contradicts stated architecture (R1-W2, EIC-W2, DA #3) | [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) §3(i); [`PAPER_AMBIGUITY_REPORT.md`](PAPER_AMBIGUITY_REPORT.md) #13 |
-| Repeating-decimal summary values (DA #2) | [`PAPER_AMBIGUITY_REPORT.md`](PAPER_AMBIGUITY_REPORT.md) #8 |
-| Flat multi-round plateaus (DA MINOR) | [`PAPER_AMBIGUITY_REPORT.md`](PAPER_AMBIGUITY_REPORT.md) #9 |
-| Two contradictory FedAvg formulas (R1-W3, DA MAJOR) | [`PAPER_AMBIGUITY_REPORT.md`](PAPER_AMBIGUITY_REPORT.md) #3 |
-| UNSW n=7 infeasibility (R2-W3, DA MAJOR) | [`PAPER_AMBIGUITY_REPORT.md`](PAPER_AMBIGUITY_REPORT.md) #10 |
-| Undefined "last n classes" metric (R1-W6, EIC-W1) | [`PAPER_AMBIGUITY_REPORT.md`](PAPER_AMBIGUITY_REPORT.md) #4 |
-| No seeds/variance (R1-W4, R2, R3) | [`PAPER_AMBIGUITY_REPORT.md`](PAPER_AMBIGUITY_REPORT.md) #16 |
-| Adam-vs-GD notation contradiction (R1-W5) | [`PAPER_AMBIGUITY_REPORT.md`](PAPER_AMBIGUITY_REPORT.md) #1, #2 |
+| Missing simplex projection (R1-W1, DA #1) | [`fedgraa_convergence_defect.md`](../current/fedgraa_convergence_defect.md) §2 — measured: `w` leaves the simplex at round 1, every γ, both datasets, zero exceptions |
+| Convexity assumption contradicts stated architecture (R1-W2, EIC-W2, DA #3) | [`fedgraa_convergence_defect.md`](../current/fedgraa_convergence_defect.md) §3(i); [`PAPER_AMBIGUITY_REPORT.md`](../current/PAPER_AMBIGUITY_REPORT.md) #13 |
+| Repeating-decimal summary values (DA #2) | [`PAPER_AMBIGUITY_REPORT.md`](../current/PAPER_AMBIGUITY_REPORT.md) #8 |
+| Flat multi-round plateaus (DA MINOR) | [`PAPER_AMBIGUITY_REPORT.md`](../current/PAPER_AMBIGUITY_REPORT.md) #9 |
+| Two contradictory FedAvg formulas (R1-W3, DA MAJOR) | [`PAPER_AMBIGUITY_REPORT.md`](../current/PAPER_AMBIGUITY_REPORT.md) #3 |
+| UNSW n=7 infeasibility (R2-W3, DA MAJOR) | [`PAPER_AMBIGUITY_REPORT.md`](../current/PAPER_AMBIGUITY_REPORT.md) #10 |
+| Undefined "last n classes" metric (R1-W6, EIC-W1) | [`PAPER_AMBIGUITY_REPORT.md`](../current/PAPER_AMBIGUITY_REPORT.md) #4 |
+| No seeds/variance (R1-W4, R2, R3) | [`PAPER_AMBIGUITY_REPORT.md`](../current/PAPER_AMBIGUITY_REPORT.md) #16 |
+| Adam-vs-GD notation contradiction (R1-W5) | [`PAPER_AMBIGUITY_REPORT.md`](../current/PAPER_AMBIGUITY_REPORT.md) #1, #2 |
 
-The convergence of an independent, "blind" simulated peer-review panel with this project's own from-scratch empirical/theoretical audit is itself worth noting to the mentor discussion referenced in [`publication_roadmap.md`](publication_roadmap.md) §3: it is a second, differently-derived signal that the Stage B critique packaging is aimed at real, reviewer-legible defects rather than idiosyncrasies of this project's own reproduction choices.
+The convergence of an independent, "blind" simulated peer-review panel with this project's own from-scratch empirical/theoretical audit is itself worth noting to the mentor discussion referenced in [`publication_roadmap.md`](../current/publication_roadmap.md) §3: it is a second, differently-derived signal that the Stage B critique packaging is aimed at real, reviewer-legible defects rather than idiosyncrasies of this project's own reproduction choices.

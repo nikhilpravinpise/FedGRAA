@@ -1,7 +1,7 @@
 # FedGRAA — Ruthless Reproduction Audit (Current Code State)
 
 **Paper:** *"Federated Gradient-Refined Adaptive Averaging for Intrusion
-Detection Systems"* — [`PAKDD_Final_Version_Submit (3).md`](../paper/PAKDD_Final_Version_Submit%20(3).md).
+Detection Systems"* — [`PAKDD_Final_Version_Submit_v3.md`](../paper/PAKDD_Final_Version_Submit_v3.md).
 
 **Codebase audited:** `PAKDD/fedgraa/` **as it exists right now** (Keras/TensorFlow
 backend, `model.py`/`aggregation.py`/`trainer.py`/`partition.py`/`data.py`/`metrics.py`/`experiment.py`).

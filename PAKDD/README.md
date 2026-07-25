@@ -347,7 +347,7 @@ docs/
     literature_review_and_publication_strategy.md, research_followup.md,
     FedGRAA_Deep_Research_Compendium.md, sagitra_report.md
   paper/           # the target manuscript + a simulated peer-review panel
-    PAKDD_Final_Version_Submit (3).md / .pdf
+    PAKDD_Final_Version_Submit_v3.md / .pdf
     FedGRAA_Simulated_Peer_Review.md
   archive/         # superseded/historical docs — see archive/README.md, do not treat as current
 understanding/     # didactic walkthrough series (00_START_HERE.md ... 10_SOTA...)

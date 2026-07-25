@@ -1,6 +1,6 @@
 # Making FedGRAA FL-Compliant: A Complete Redesign Blueprint
 
-**Purpose of this document.** The current FedGRAA paper ([PAKDD_Final_Version_Submit (3).md](../paper/PAKDD_Final_Version_Submit%20(3).md)) has two assumptions that a competent reviewer *will* flag, and that already contradict federated learning's own founding privacy premise:
+**Purpose of this document.** The current FedGRAA paper ([PAKDD_Final_Version_Submit_v3.md](../paper/PAKDD_Final_Version_Submit_v3.md)) has two assumptions that a competent reviewer *will* flag, and that already contradict federated learning's own founding privacy premise:
 
 1. **Oracle knowledge of which classes/clients are rare.** The server hard-codes "the last `n` underrepresented classes" (Heartbleed, SQL Injection, Infiltration, ...) and partitions clients "one attack type per client," implicitly assuming the server (or the experiment designer) knows each client's label distribution. In real FL, the server never sees client labels — assuming this a priori is a privacy violation and also an unrealistic experimental setup (real clients don't hold one attack type each).
 2. **A server-held, fully-labelled validation set `D_V`.** Algorithm 2 requires the server to evaluate `L_h`, `L_m`, `L_u` on `D_V` — i.e., the server holds real labelled data. This is precisely the thing FL exists to avoid.

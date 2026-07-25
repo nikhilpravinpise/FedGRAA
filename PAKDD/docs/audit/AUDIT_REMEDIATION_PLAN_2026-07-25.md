@@ -106,7 +106,7 @@ Plus staged deletions for 5 docs moved `docs/current/` → `docs/research_c/`, a
 
 **State.** `STAGE_B_MASTER_REPORT.md` §21 is a genuinely excellent treatment — it lays out both branches, refuses to assert non-publication on two zero-result searches, and names the word "published" as the one unbacked claim in the package. **That honesty has not propagated to the document that actually makes the claim.**
 
-- [`fedgraa_convergence_defect.md:1`](fedgraa_convergence_defect.md) — *"Why a **Published** FL-IDS Aggregation Algorithm Doesn't Converge, and How to Fix It"*
+- [`fedgraa_convergence_defect.md:1`](../current/fedgraa_convergence_defect.md) — *"Why a **Published** FL-IDS Aggregation Algorithm Doesn't Converge, and How to Fix It"*
 - Its §7 "Honest limitations" — 8 bullets, **none** on provenance.
 
 A title is the most-quoted line in any document. An unverified factual assertion should not live there.
@@ -115,7 +115,7 @@ A title is the most-quoted line in any document. An unverified factual assertion
 
 1. **Retitle** to drop the unbacked word while keeping the claim's force. Recommended: *"Why an FL-IDS Aggregation Algorithm Doesn't Converge, and How to Fix It"* — the critique does not depend on publication status.
 2. **Add a §7 bullet** cross-referencing `STAGE_B_MASTER_REPORT` §21 rather than restating it, e.g.:
-   > **The target manuscript's publication status is unresolved.** Two zero-result searches are a strong negative, not a confirmed one; the escalation path this project's own literature docs mandate (DBLP, Semantic Scholar) has not been run. Nothing in §1–§6 depends on the answer — the algorithm's behaviour on real data is what it is. What does depend on it is whether this section can stand as a standalone citable critique. See [`STAGE_B_MASTER_REPORT.md` §21](STAGE_B_MASTER_REPORT.md#21-the-open-framing-risk--provenance-of-the-target-manuscript).
+   > **The target manuscript's publication status is unresolved.** Two zero-result searches are a strong negative, not a confirmed one; the escalation path this project's own literature docs mandate (DBLP, Semantic Scholar) has not been run. Nothing in §1–§6 depends on the answer — the algorithm's behaviour on real data is what it is. What does depend on it is whether this section can stand as a standalone citable critique. See [`STAGE_B_MASTER_REPORT.md` §21](../current/STAGE_B_MASTER_REPORT.md#21-the-open-framing-risk--provenance-of-the-target-manuscript).
 3. **Run the mandated escalation** — DBLP and Semantic Scholar title/acronym searches. Cheap, and it converts a strong negative into a confirmed one either way. Record the result (including a null result, with date and query strings) in §21.
 4. **Raise it with the mentor.** This is the single highest-leverage open question in the project and it resolves in one conversation. Fold in the three companion questions from `RESEARCH_DIRECTION_AUDIT` §5: the Stage C angle decision, the compute question, and authorship.
 
@@ -162,7 +162,7 @@ Acting on that today means **discarding a completed 10-seed campaign to rebuild 
 
 **Task.** Add a dated **partially-superseded** banner to each, in the style `STAGE_B_REMAINING_TASKS.md` already uses correctly. The banner must be surgical — say precisely what is dead and what is live:
 
-> **⚠️ Partially superseded, 2026-07-25.** Written at 01:04, before the Stage B campaign completed at 03:01 (`4459f53`). **Superseded:** every statement that the Stage B campaign is unrun, and §5 action 5 (cut to 5 seeds) — the 10-seed campaign is complete, verified, and committed. **Still live:** findings D1 (provenance), D2, D3, D4, D6, and the Stage C sequencing argument. See [`AUDIT_REMEDIATION_PLAN_2026-07-25.md`](../current/AUDIT_REMEDIATION_PLAN_2026-07-25.md).
+> **⚠️ Partially superseded, 2026-07-25.** Written at 01:04, before the Stage B campaign completed at 03:01 (`4459f53`). **Superseded:** every statement that the Stage B campaign is unrun, and §5 action 5 (cut to 5 seeds) — the 10-seed campaign is complete, verified, and committed. **Still live:** findings D1 (provenance), D2, D3, D4, D6, and the Stage C sequencing argument. See [`AUDIT_REMEDIATION_PLAN_2026-07-25.md`](AUDIT_REMEDIATION_PLAN_2026-07-25.md).
 
 The precision matters: a blanket "superseded" would discard D1, which is still the project's most important open question.
 
@@ -250,7 +250,7 @@ Both are small, both are in Stage A's capstone, and both are the kind of thing a
 
 #### W6a — "byte-identical" (R8)
 
-At [`results/README.md:53`](../../results/README.md) and [`STAGE_A_MASTER_REPORT.md:624`](STAGE_A_MASTER_REPORT.md).
+At [`results/README.md:53`](../../results/README.md) and [`STAGE_A_MASTER_REPORT.md:624`](../current/STAGE_A_MASTER_REPORT.md).
 
 The **scientific claim is correct and important** — every metric curve is exactly identical, all 5 methods, max elementwise difference exactly `0`, because `rare_client_ids(7)` truncates to the same 5 classes `rare_client_ids(5)` returns. Only the word is over-strong: the JSON objects differ in `history.n_rare` (`5` vs `7`), which is correct metadata behaviour.
 
@@ -270,7 +270,7 @@ A reader going A → B hits two different headline framings of the same phenomen
 
 **Task.** Add one forward-reference line at §5.8 and the executive summary (line 34):
 
-> *Seed-0 figures, scoped to Stage A's 3-seed regime. Superseded at N=10 by [`fedgraa_convergence_defect.md` §6](fedgraa_convergence_defect.md): the tail is far worse (1.86×10⁶× vs 46.85×) while the medians are close, and at γ=0 CIC's median is lower than UNSW's.*
+> *Seed-0 figures, scoped to Stage A's 3-seed regime. Superseded at N=10 by [`fedgraa_convergence_defect.md` §6](../current/fedgraa_convergence_defect.md): the tail is far worse (1.86×10⁶× vs 46.85×) while the medians are close, and at γ=0 CIC's median is lower than UNSW's.*
 
 Do **not** rewrite Stage A's numbers — they are correct for their stated regime, and rewriting them would destroy the honest 3-seed→10-seed provenance trail.
 
