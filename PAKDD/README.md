@@ -29,10 +29,19 @@ and [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_REPORT
 Verification signals on the current tree:
 
 ```powershell
-.venv313\Scripts\python.exe -m pytest tests --tb=short      # 142 passed
-.venv313\Scripts\python.exe scripts\check_stage_a_complete.py   # exit 0
-.venv313\Scripts\python.exe scripts\check_stage_b_complete.py   # exit 0
+.venv313\Scripts\python.exe -m pytest tests --tb=short          # 151 passed
+.venv313\Scripts\python.exe scripts\check_stage_a_complete.py   # exit 0 (completeness)
+.venv313\Scripts\python.exe scripts\check_stage_b_complete.py   # exit 0 (completeness)
+.venv313\Scripts\python.exe scripts\audit_stage_a.py            # exit 0 (correctness)
+.venv313\Scripts\python.exe scripts\audit_stage_b.py            # exit 0 (correctness)
+.venv313\Scripts\python.exe scripts\check_doc_links.py          # exit 0 (doc-link integrity)
 ```
+
+The completeness gates ask "is every artifact present and shaped right?";
+the correctness audits ask the harder question, "are the numbers actually
+true?" — every reported value is re-derived from the raw persisted JSON and
+independently recomputed, never read back from the document asserting it.
+See [`docs/audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md`](docs/audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md).
 
 ---
 
@@ -231,7 +240,7 @@ mandate.
 Run the full suite before pushing:
 
 ```powershell
-.venv313\Scripts\python.exe -m pytest tests --tb=short      # 142 passed
+.venv313\Scripts\python.exe -m pytest tests --tb=short      # 151 passed
 ```
 
 The suite covers:
@@ -251,10 +260,14 @@ The suite covers:
 - **Ablation pipeline** (Stage B) — driver enumeration/resumability, table
   builder wiring, renderer smoke tests.
 
-Two standalone completeness checks live outside `pytest` (so the unit suite
-stays decoupled from large committed binaries):
-`scripts/check_stage_a_complete.py` and `scripts/check_stage_b_complete.py`,
-both of which must exit `0`.
+Five standalone checks live outside `pytest` (so the unit suite stays
+decoupled from large committed binaries), all of which must exit `0`:
+`scripts/check_stage_a_complete.py` and `scripts/check_stage_b_complete.py`
+(completeness — is every artifact present and shaped right?);
+`scripts/audit_stage_a.py` and `scripts/audit_stage_b.py` (correctness — is
+every reported number independently re-derived from the raw persisted JSON,
+never just read back from the document asserting it?); and
+`scripts/check_doc_links.py` (every relative markdown link resolves).
 
 ---
 
