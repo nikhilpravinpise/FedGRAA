@@ -22,6 +22,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from scripts.check_doc_links import find_broken_links  # noqa: E402
 from scripts.run_ablation_seed_sweep import ALL_ARM_NAMES, output_path  # noqa: E402
 
 DIAG_DIR = "results/diagnostics"
@@ -262,6 +263,16 @@ def check_manifest_paths() -> None:
         ok(f"manifest: all {len(referenced_paths)} referenced results/ paths exist on disk and are git-tracked")
 
 
+def check_doc_links() -> None:
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    broken = find_broken_links(repo_root)
+    if broken:
+        for md_file, target in broken:
+            fail(f"doc link: {md_file} -> {target} does not resolve")
+    else:
+        ok("doc links: all relative markdown links resolve")
+
+
 # --------------------------------------------------------------------------- #
 def main() -> int:
     print("=" * 80)
@@ -286,6 +297,9 @@ def main() -> int:
 
     print("\n-- Manifest --")
     check_manifest_paths()
+
+    print("\n-- Documentation links --")
+    check_doc_links()
 
     print("\n" + "=" * 80)
     if FAILURES:
