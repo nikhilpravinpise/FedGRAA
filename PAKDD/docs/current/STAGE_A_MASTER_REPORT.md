@@ -873,7 +873,7 @@ Goal: turn the diagnosis (§5) from "internal audit trail" into a paper section 
 
 - Write a precise, formal statement of the defect (no simplex projection → weight vector exits the feasible set → Lemma 1's non-increasing-loss guarantee no longer holds) with a short proof sketch of why the paper's own convergence proof doesn't cover this case (convexity assumption violated by the tanh-MLP — §4.2 #13).
 - Build a proper ablation table: projection alone vs. η′ reduction alone vs. both (currently scattered across §5.4/§5.6.1/§5.7 of this report) — consolidate into one table with more than 3 seeds and real significance testing (bootstrap confidence intervals or paired t-tests) rather than variance bands.
-- This section should stand alone as "Why a published FL-IDS aggregation algorithm doesn't converge, and how to fix it" — worth testing with the mentor even before Stage C is scoped.
+- This section should stand alone as "Why an FL-IDS aggregation algorithm doesn't converge, and how to fix it" — worth testing with the mentor even before Stage C is scoped. *(Written before the target manuscript's publication status was questioned; see [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md) §21 — the retitling shown here reflects that.)*
 
 ### 12.3 Stage C — build the A/A* extension
 
