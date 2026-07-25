@@ -174,6 +174,25 @@ def check_ablation_table_json(dataset: str) -> None:
             if missing_fields:
                 fail(f"{label}: comparisons[{gkey}][{ref_arm}] missing fields {sorted(missing_fields)}")
 
+        # comparisons_all_acc mirrors comparisons exactly (F2/A4 -- reporting
+        # only rare-class accuracy let a starvation pathology read as parity
+        # with the fix; without this check a builder regression that dropped
+        # the all-acc family would leave the completeness gate green).
+        gamma_comps_all_acc = table.get("comparisons_all_acc", {}).get(gkey)
+        if gamma_comps_all_acc is None:
+            fail(f"{label}: missing comparisons_all_acc[{gkey}]")
+        else:
+            missing_arms_all_acc = REQUIRED_COMPARISON_ARMS - set(gamma_comps_all_acc.keys())
+            if missing_arms_all_acc:
+                fail(f"{label}: comparisons_all_acc[{gkey}] missing comparison arms {sorted(missing_arms_all_acc)}")
+            for ref_arm, comp in gamma_comps_all_acc.items():
+                if comp is None:
+                    fail(f"{label}: comparisons_all_acc[{gkey}][{ref_arm}] is null (data not yet generated)")
+                    continue
+                missing_fields = REQUIRED_COMPARISON_FIELDS - set(comp.keys())
+                if missing_fields:
+                    fail(f"{label}: comparisons_all_acc[{gkey}][{ref_arm}] missing fields {sorted(missing_fields)}")
+
         fx = table.get("factorial", {}).get(gkey)
         if fx is None:
             fail(f"{label}: missing factorial[{gkey}]")
@@ -183,7 +202,8 @@ def check_ablation_table_json(dataset: str) -> None:
                 fail(f"{label}: factorial[{gkey}] missing {sorted(missing_fx)}")
 
     if len(FAILURES) == n_failures_before:
-        ok(f"{label}: {path} loads with every arm x gamma cell, all 5 comparisons, and the factorial read")
+        ok(f"{label}: {path} loads with every arm x gamma cell, all 5 comparisons "
+           f"(rare-acc and all-acc families), and the factorial read")
 
 
 # --------------------------------------------------------------------------- #
