@@ -405,7 +405,7 @@ strict-reproduction default; the paper states `η'=0.1`, `E'=5` explicitly in
 implement Algorithm 2 exactly as printed, not a corrected version of it. The
 honest reproduction verdict is:
 
-**The published Algorithm 2, implemented exactly as printed, does not
+**Algorithm 2, implemented exactly as printed, does not
 reliably converge on real network-intrusion data — the failure is worst
 (clean 0% rare-class accuracy at every γ) on CIC-IDS-2017 and milder but still
 present on UNSW-NB15. The cause is a measured, mechanistically understood
@@ -417,7 +417,7 @@ of 0.1), nothing else changed — recovers 72-94% rare-class accuracy (mean
 across 3 seeds, `γ`-dependent) at every γ on CIC-IDS-2017 with the loss now
 provably stable (blowup exactly 1.0× on all 9 seed×γ runs, zero variance),
 closely matching both the paper's own claimed ballpark and this repository's
-Static Reparam baseline at `γ≥0.5`. The published algorithm's central idea —
+Static Reparam baseline at `γ≥0.5`. The algorithm's central idea —
 gradient-refined adaptive weighting to protect rare classes — is
 directionally sound and empirically recoverable; what the paper omits is the
 one constraint (`w` on the simplex) and the one hyperparameter sensitivity

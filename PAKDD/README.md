@@ -3,8 +3,10 @@
 A complete, from-scratch Keras reproduction of the paper **"Federated
 Gradient-Refined Adaptive Averaging for Intrusion Detection Systems"
 (FedGRAA)** — plus a measured, statistically-tested account of *why the
-published algorithm does not converge on real intrusion-detection data, and
-what minimal correction fixes it*.
+algorithm as specified does not converge on real intrusion-detection data,
+and what minimal correction fixes it*. (The manuscript's publication status
+is itself unresolved — see [`docs/current/STAGE_B_MASTER_REPORT.md`](docs/current/STAGE_B_MASTER_REPORT.md)
+§21.)
 
 The implementation uses **TensorFlow/Keras** for the network described in
 Section 5: `input → Dense(200, tanh) → Dense(100, tanh) → Dense(50, tanh) →
