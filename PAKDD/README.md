@@ -54,6 +54,15 @@ pip install -r requirements.txt
 Dependencies: `tensorflow`, `numpy`, `pandas`, `scikit-learn`, `scipy`
 (significance testing), `pytest`, and optional `matplotlib` for plotting.
 
+> **This repository's own environment lives at `.venv313/`**, built from
+> `requirements.txt` above. The commands in this README (`Verification
+> signals`, `Tests`, below) all invoke `.venv313\Scripts\python.exe`
+> explicitly, on purpose: neither the system `python` on `PATH` nor the
+> Windows Store shim has these dependencies installed, so running any gate
+> or the test suite under a different interpreter fails immediately with
+> `ModuleNotFoundError: No module named 'numpy'`. If you create your own
+> environment elsewhere, substitute its interpreter path consistently.
+
 ### Datasets
 
 | Dataset | Status | Location |
