@@ -1,7 +1,7 @@
 # FedGRAA — Paper Ambiguity Report
 
 **Paper:** *"Federated Gradient-Refined Adaptive Averaging for Intrusion
-Detection Systems"* — [`PAKDD_Final_Version_Submit (3).md`](../paper/PAKDD_Final_Version_Submit%20(3).md).
+Detection Systems"* — [`PAKDD_Final_Version_Submit_v3.md`](../paper/PAKDD_Final_Version_Submit_v3.md).
 
 **Purpose of this document.** This is a **paper-only** critique. It does not
 discuss the code, does not reference `fedgraa/`, and does not propose fixes to

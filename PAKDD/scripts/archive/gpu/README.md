@@ -26,5 +26,5 @@ would make the "we tried GPU, it was slower" finding unreproducible.
 | `setup_gpu_wsl.sh` | In-WSL2 setup: uv + Python 3.13 + `tensorflow[and-cuda]` + the preload fix |
 
 **Canonical write-up of the measurement and decision:**
-[`../../../docs/speedup_plan_v2.md`](../../../docs/speedup_plan_v2.md) (GPU Report section) and
-[`../../../docs/GPU_DECISION_AND_NEXT_STEPS.md`](../../../docs/GPU_DECISION_AND_NEXT_STEPS.md).
+[`../../../docs/archive/speedup_plan_v2.md`](../../../docs/archive/speedup_plan_v2.md) (GPU Report section) and
+[`../../../docs/archive/GPU_DECISION_AND_NEXT_STEPS.md`](../../../docs/archive/GPU_DECISION_AND_NEXT_STEPS.md).

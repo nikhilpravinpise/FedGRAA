@@ -48,7 +48,7 @@ Stage A does not include statistical significance testing, a consolidated ablati
 
 ## 2. What is FedGRAA
 
-**Target paper:** *"Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems"* (PAKDD submission, source: `docs/paper/PAKDD_Final_Version_Submit (3).md`). The paper is itself anonymized ("No Author Given").
+**Target paper:** *"Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems"* (PAKDD submission, source: `docs/paper/PAKDD_Final_Version_Submit_v3.md`). The paper is itself anonymized ("No Author Given").
 
 **Problem addressed:** In federated intrusion detection, each client typically holds one attack type (plus benign traffic). Standard FedAvg-style aggregation, weighted by client dataset size, systematically drowns out clients with few samples (rare attack types) — exactly the classes a real IDS most needs to detect. FedGRAA proposes to *learn* the aggregation weights `w` each round via gradient descent on a composite validation objective that explicitly balances frequent-class performance against rare-class performance.
 
@@ -942,7 +942,7 @@ Bring the completed Stage A (this document) + Stage B critique package to the me
 | Historical NaN-regression snapshot | `latest_baseline.md` ⚠️ superseded, retained as historical record |
 | Top-level project README | `README.md` |
 | Results manifest | `results/README.md` |
-| The paper itself | `docs/paper/PAKDD_Final_Version_Submit (3).md` |
+| The paper itself | `docs/paper/PAKDD_Final_Version_Submit_v3.md` |
 | Literature review & publication strategy | `docs/current/literature_review_and_publication_strategy.md` |
 | Privacy-compliant redesign (unbuilt Stage C candidate) | `docs/current/privacy_compliant_fedgraa_redesign.md` |
 | Didactic walkthrough series (feeds Stage B/C) | `understanding/00_START_HERE.md` … `understanding/10_SOTA_adaptive_aggregation.md` |

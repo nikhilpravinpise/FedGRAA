@@ -96,7 +96,7 @@ Corrections required in the original literature review and/or the FedGRAA paper.
 
 ## 3. FedGRAA Itself — What the Paper Actually Proposes
 
-**Title:** *Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems* (PAKDD submission draft, see [PAKDD_Final_Version_Submit (3).md](../paper/PAKDD_Final_Version_Submit%20(3).md)).
+**Title:** *Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems* (PAKDD submission draft, see [PAKDD_Final_Version_Submit_v3.md](../paper/PAKDD_Final_Version_Submit_v3.md)).
 
 **Core problem.** Standard **FedAvg** aggregates client models in proportion to dataset size ($\theta_g^{t+1} = \sum_{k\in S_t}\frac{|D_k|}{|D|}\theta_k^{t+1}$). Under non-IID intrusion-detection data, clients holding **rare attack classes** (Heartbleed, SQL Injection, Infiltration in CIC-IDS-2017) usually also hold **little data**, so the $\frac{|D_k|}{|D|}$ weight crushes their contribution and the global model fails to detect exactly the attacks that matter most.
 

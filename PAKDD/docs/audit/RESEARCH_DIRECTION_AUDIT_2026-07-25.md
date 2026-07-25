@@ -1,5 +1,24 @@
 # Research Direction Audit — Are We Going the Right Way?
 
+> ### ⚠️ Partially superseded — 2026-07-25
+>
+> **Written at 01:04, before the Stage B campaign completed at 03:01 (`4459f53`).** This document's premise that the Stage B campaign is *unrun* was overtaken within ninety minutes of writing. Read it with that correction applied.
+>
+> **Superseded — do not act on:**
+> - Every statement that the Stage B compute campaign is pending or unrun. **It is complete**: 10 seeds × 4 arms × 2 datasets × 3 γ, both metrics, committed and gated (`check_stage_b_complete.py` and `audit_stage_b.py` both exit 0).
+> - **§5 action 5** — *"cut to 5 seeds, not 10."* Acting on this today would mean **discarding a finished 10-seed campaign to rebuild it smaller.** The compute is spent; the resulting factorial is more defensible than an n=5 version; and under both branches of D1 the ablation retains its value. See [`../current/STAGE_B_MASTER_REPORT.md`](../current/STAGE_B_MASTER_REPORT.md) §21.
+> - §5 action 1's *"do not run compute… until it is answered"* clause — moot for Stage B specifically, since that compute had already completed. It **remains live for Stage C**, which is exactly where it now bites.
+>
+> **Still live — this is the valuable part of this document:**
+> - **D1 (CRITICAL — provenance).** Still the highest-leverage open question in the project. Partially actioned: now fully disclosed in [`../current/STAGE_B_MASTER_REPORT.md`](../current/STAGE_B_MASTER_REPORT.md) §21 and [`../current/fedgraa_convergence_defect.md`](../current/fedgraa_convergence_defect.md) §7, and the unbacked word "published" has been removed from the theory doc's title. **The question itself is still unanswered** and still needs the mentor.
+> - **D2, D3, D4, D5, D6** — all unaffected by the campaign completing. D3 (the Stage C decision is the bottleneck) and D4 (baseline debt) are, if anything, *more* acute now that Stages A and B are both closed.
+> - **§5 actions 1–4, 6, 7, 8** and the entire **"Stop doing"** list.
+>
+> **Tracked by:** [`AUDIT_REMEDIATION_PLAN_2026-07-25.md`](AUDIT_REMEDIATION_PLAN_2026-07-25.md) (R5). Current project state: [`../current/publication_roadmap.md`](../current/publication_roadmap.md).
+
+---
+
+
 **Compiled:** 2026-07-25 · **Method:** ARS `deep-research` skill, `review` mode (editor-in-chief + devil's-advocate + ethics lenses) applied to the *research programme*, not to a manuscript · **Scope:** the whole FedGRAA reproduction → critique → extension strategy as recorded in `publication_roadmap.md`, `STAGE_A_MASTER_REPORT.md`, `stage_b_plan.md` / `STAGE_B_REMAINING_TASKS.md`, `fedgraa_convergence_defect.md`, `docs/research_c/STAGE_C_LITERATURE_MASTER.md`, and `docs/paper/FedGRAA_Simulated_Peer_Review.md`.
 
 **Bottom line up front.** The *quality* of the work is well above field norm and the *kind* of contribution being aimed at is right. The **sequencing and the framing are wrong**, and one load-bearing assumption underneath Stage B has never been checked and does not survive checking: **FedGRAA is not a published paper.** Stage B is currently scoped as a standalone, citable critique of a published algorithm; that object cannot exist. Everything else in this document follows from that, plus a second problem the first one aggravates — Stage C, the only stage that produces a paper, is at 0% and has been "the next decision" for three consecutive passes.
@@ -36,7 +55,7 @@ Severity uses the ARS convention: **CRITICAL** = invalidates a core plan assumpt
 FedGRAA is not published.
 
 **Evidence gathered this pass (2026-07-25):**
-- The manuscript in `docs/paper/` is `PAKDD_Final_Version_Submit (3).pdf` — an anonymized submission draft ("No Author Given," "No Institute Given").
+- The manuscript in `docs/paper/` is `PAKDD_Final_Version_Submit_v3.pdf` — an anonymized submission draft ("No Author Given," "No Institute Given").
 - Web search for `"FedGRAA" federated gradient-refined adaptive averaging intrusion detection` — **zero results naming FedGRAA.** Every returned link is a different, real, differently-named paper (NIDS-FGPA, EdgeDetect, FedWGCA, FedDef).
 - Web search for the exact title string `"Federated Gradient-Refined Adaptive Averaging" PAKDD` — **zero results.** Same failure signature the project's own literature docs use to declare CT-BRFL and FedSND non-existent.
 - No prior document in this repo — across ~9,600 lines — states the paper's publication status, DOI, venue outcome, or provenance. The project's own docs refer to "the original authors" as third parties (`REPRODUCTION_AUDIT.md`, `PAPER_AMBIGUITY_REPORT.md`) without ever recording who they are or where the manuscript came from.
@@ -175,4 +194,4 @@ So: the devil's advocate wins on framing and sequencing, loses on scrap-it. The 
 
 ---
 
-*Compiled 2026-07-25 via the ARS `deep-research` skill, `review` mode. Verification performed this pass: two web searches for the FedGRAA title and acronym (both zero-result, 2026-07-25); direct inspection of `docs/paper/PAKDD_Final_Version_Submit (3).md` §1 and reference [12]; a document/volume census of `PAKDD/docs/`. All other findings are read from existing project documents and cited to them inline.*
+*Compiled 2026-07-25 via the ARS `deep-research` skill, `review` mode. Verification performed this pass: two web searches for the FedGRAA title and acronym (both zero-result, 2026-07-25); direct inspection of `docs/paper/PAKDD_Final_Version_Submit_v3.md` §1 and reference [12]; a document/volume census of `PAKDD/docs/`. All other findings are read from existing project documents and cited to them inline.*

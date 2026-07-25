@@ -1,7 +1,7 @@
 # FedGRAA — Line-by-Line Paper ↔ Code Gap Analysis (Base Paper Only)
 
 **Paper:** *"Federated Gradient-Refined Adaptive Averaging for Intrusion Detection
-Systems"* — `PAKDD_Final_Version_Submit (3).md` **only**.
+Systems"* — `PAKDD_Final_Version_Submit_v3.md` **only**.
 
 > **⚠️ ARCHIVED — superseded by `../audit/REPRODUCTION_AUDIT.md`.** Written
 > 2026-07-09 against a codebase state that has since changed (e.g. the
