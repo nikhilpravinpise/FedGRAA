@@ -74,15 +74,22 @@ Dependencies: `tensorflow`, `numpy`, `pandas`, `scikit-learn`, `scipy`
 
 ### Datasets
 
-| Dataset | Status | Location |
-|---|---|---|
-| **CIC-IDS-2017** | ✅ Already in repo | `data/CIC-IDS-2017/` (8 CSV files) |
-| **UNSW-NB15** | ✅ Already in repo | `data/UNSW-NB15/` |
+Raw CSVs are **not tracked in git** (`*.csv` is gitignored to keep the repo
+lightweight — see [`.gitignore`](../.gitignore)). On a fresh clone, `data/`
+will be empty; you need to download the CSVs yourself and place them as
+below before running anything against real data.
 
-Both were forensically verified against raw CSV SHA-256s and canonical
-published distributions — see [docs/audit/data_provenance_audit.md](docs/audit/data_provenance_audit.md).
-**Verdict: genuine, complete, correctly labelled.**  The divergence documented
-below is algorithmic, not a data-quality artifact.
+| Dataset | Expected location | Source |
+|---|---|---|
+| **CIC-IDS-2017** | `data/CIC-IDS-2017/` (8 CSV files) | [official UNB CIC-IDS-2017 page](https://www.unb.ca/cic/datasets/ids-2017.html) |
+| **UNSW-NB15** | `data/UNSW-NB15/` | [official UNSW-NB15 page](https://research.unsw.edu.au/projects/unsw-nb15-dataset) |
+
+The copies used to produce every result in this repo were forensically
+verified against raw CSV SHA-256s and canonical published distributions —
+see [docs/audit/data_provenance_audit.md](docs/audit/data_provenance_audit.md).
+**Verdict: genuine, complete, correctly labelled.** The divergence documented
+below is algorithmic, not a data-quality artifact — but you must supply your
+own copy of the CSVs to reproduce it locally.
 
 ---
 
@@ -90,9 +97,10 @@ below is algorithmic, not a data-quality artifact.
 
 ### CIC-IDS-2017
 
-The 8 CSV files are already in `data/CIC-IDS-2017/`.  The first run reads all
-rows (~95 s) and saves an `.npy` cache; subsequent runs load the cache in under
-3 s.
+Download the 8 CSV files from the
+[official UNB CIC-IDS-2017 page](https://www.unb.ca/cic/datasets/ids-2017.html)
+and place them in `data/CIC-IDS-2017/`. The first run reads all rows (~95 s)
+and saves an `.npy` cache; subsequent runs load the cache in under 3 s.
 
 ```powershell
 # First run: reads CSVs, saves cache
@@ -104,9 +112,9 @@ python run_experiments.py --data-dir data/CIC-IDS-2017 --cache-dir .cache --data
 
 ### UNSW-NB15
 
-The official partitioned train/test CSVs are in `data/UNSW-NB15/`.  The loader
-auto-detects the label column.  If the directory is empty, the loader can
-attempt to download the files automatically from the
+Place the official partitioned train/test CSVs in `data/UNSW-NB15/`. The
+loader auto-detects the label column. If the directory is empty, the loader
+can attempt to download the files automatically from the
 [official UNSW page](https://research.unsw.edu.au/projects/unsw-nb15-dataset).
 
 ---
