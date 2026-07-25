@@ -1,5 +1,25 @@
 # Direction Assessment — Are Stage A/B/C On Track?
 
+> ### ⚠️ Partially superseded — 2026-07-25
+>
+> **Written at 01:00, before the Stage B campaign completed at 03:01 (`4459f53`).** Read it with that correction applied.
+>
+> **Superseded — do not act on:**
+> - **§2 "Stage B — Infrastructure complete; one compute task remaining."** That compute task **has been run.** Stage B is complete, committed, and gated; its capstone is [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md).
+> - The test count (139) — now **142**.
+> - **§3's finding** that `publication_roadmap.md` is stale, and **§4/§7's** framing of the Stage B campaign as the critical path. The roadmap was refreshed on 2026-07-25 (R4); the campaign is done.
+> - §4's "Recommended sequence" items 1–2.
+>
+> **Still live:**
+> - **§4 item 3 / §7's bottom line: the mentor conversation is the real blocker on Stage C**, and nothing in this repository can substitute for it. This is now *the* critical path, and it has only become more so.
+> - **§5's Socratic thesis check** — options A/B/C/D are still open and still undecided. Note that option A ("Stage B stands alone") is the one D1 of [`../audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md`](../audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md) puts at risk, pending provenance.
+> - **§6's provisional chapter-shape** and §1's ARS-pipeline placement.
+>
+> **Tracked by:** [`../audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md`](../audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md) (R5). Current project state: [`publication_roadmap.md`](publication_roadmap.md).
+
+---
+
+
 **Compiled**: 2026-07-25, using the ARS `academic-pipeline` skill (to place this project within the full research→write→review→revise→finalize workflow) and the ARS `academic-paper` `plan` mode / Socratic framework (to surface the open thesis/contribution questions that gate the next real milestone).
 
 **Short answer: yes, correctly positioned — with one stale document to fix and one sequencing risk worth naming explicitly before it compounds.**
