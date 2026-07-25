@@ -1,7 +1,7 @@
 # Stage B Execution Plan — Package the Critique as a Rigorous, Citable Component
 
 **Parent:** [`publication_roadmap.md`](publication_roadmap.md) §2 (Stage B).
-**Status:** ✅ **complete.** Builds directly on the completed Stage A artifacts (commit `be4ef03`): the persisted diagnostic JSONs, the combined-fix seed bands, and the `results/` manifest. This plan was written against commit `a17a443`. See [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md) for the capstone summary of the completed campaign and [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) for the full theory + populated ablation section this plan specifies.
+**Status:** ✅ **complete.** Builds directly on the completed Stage A artifacts (commit `be4ef03`): the persisted diagnostic JSONs, the combined-fix seed bands, and the `results/` manifest. This plan was written against commit `a17a443`. See [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md) for the capstone summary of the completed campaign and [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) for the full theory + populated ablation section this plan specifies. *(This plan's target framing below quotes the manuscript as "published" — that was the working assumption at the time this was written. It is now an open question; see [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md) §21. Retained verbatim as the historical record of what was planned and executed.)*
 **Scope decisions (locked):** **full theoretical closure** (defect theorem + corrected proposition, both with proof sketches) and **N = 10 seeds** for significance testing.
 **Baseline commit:** `a17a443`.
 
