@@ -319,7 +319,7 @@ To keep Stage A bounded, the following are **not** done here — they belong to 
 - **Statistical significance** (paired t-tests, bootstrap CIs) beyond the 3-seed mean±std bands → Stage B ([`publication_roadmap.md`](publication_roadmap.md) §2 Stage B).
 - **Consolidated ablation table** (projection-alone vs η′-alone vs both) → Stage B.
 - **Corrected convergence theory** for the fixed algorithm → Stage B.
-- **Baselines beyond FedAvg/Static** (FedProx/FedOpt/FedSND already implemented; AFL/q-FedAvg/FedAdp not) → Stage C.
+- **Baselines beyond FedAvg/Static** (FedProx/FedOpt already implemented; "FedSND" was a fabricated citation — the class is renamed `StaticDistributionAwareTrainer`, see `FEDGRAA_V2_MASTER_PLAN.md` F6; AFL/q-FedAvg/FedAdp not implemented) → Stage C.
 - **Scalability (50–200 clients) and extreme non-IID** experiments → Stage C.
 - **Changing the strict-reproduction default** in `fedgraa/` — the combined fix stays diagnostic-only (`ProjectedFedGRAA` lives only in `scripts/`), per the standing no-silent-patching mandate ([`../archive/strict_reproduction_report.md`](../archive/strict_reproduction_report.md)).
 

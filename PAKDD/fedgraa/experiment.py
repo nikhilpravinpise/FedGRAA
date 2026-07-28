@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import json
+import multiprocessing
 import os
 import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -21,11 +22,23 @@ from typing import Dict, List, Optional, Sequence
 
 import numpy as np
 
-from .baselines import FedOptServer, FedProxTrainer, FedSNDTrainer
+from .baselines import FedOptServer, FedProxTrainer, StaticDistributionAwareTrainer
 from .config import DatasetSpec, FedConfig
 from .data import load_dataset
 from .partition import partition_non_iid
-from .trainer import FederatedTrainer, TrainHistory
+from .trainer import FederatedTrainer, FederatedTrainerV2, TrainHistory
+
+# Force 'spawn' rather than inherit the platform default. This module's own
+# _run_single_config runs inside the pool workers and imports `fedgraa`
+# (hence TensorFlow) in-process; Linux's default 'fork' start method forks a
+# parent that has already imported TensorFlow, a well-known deadlock trigger
+# (TF's internal thread pools / gRPC state / absl logging threads end up in
+# inconsistent, copied-but-not-reinitialized state in the forked child). This
+# was measured hanging indefinitely on a Linux/Modal container -- see
+# docs/research_c/COMPUTE_INFRASTRUCTURE_2026-07-27.md §4.3. Windows' default
+# ('spawn') was never affected, which is why this went unnoticed until the
+# project's compute moved to Linux-based infrastructure.
+_MP_CONTEXT = multiprocessing.get_context("spawn")
 
 
 @dataclass
@@ -58,16 +71,25 @@ def run_experiment(
     cache_dir: Optional[str] = None,
     cfg: Optional[FedConfig] = None,
     checkpoint_dir: Optional[str] = None,
+    secagg_threshold: Optional[int] = None,
+    measure_zeta: bool = False,
 ) -> ExperimentResult:
     """Run one configuration end-to-end and return its history.
 
-    Supports the three main methods ("fedavg", "static", "fedgraa") and the
+    Supports the three main methods ("fedavg", "static", "fedgraa"), the
     additional baselines from :mod:`fedgraa.baselines` ("fedprox", "fedopt",
-    "fedsnd"), addressing gap m-3.
+    "static_dist_aware", addressing gap m-3), and **"fedgraa_v2"** -- the
+    privacy-compliant :class:`~fedgraa.trainer.FederatedTrainerV2`
+    (FEDGRAA_V2_MASTER_PLAN.md W2.4). ``cfg.grad_refresh_every``,
+    ``cfg.p_drop`` and ``cfg.dp_epsilon`` are consulted only by
+    ``"fedgraa_v2"``; ``secagg_threshold``/``measure_zeta`` are v2-only and
+    ignored by every other method.
 
     If ``checkpoint_dir`` is given, the trainer saves checkpoints after each
     eval round; if a checkpoint already exists, training resumes from the
-    saved round (Phase 14).
+    saved round (Phase 14). **Checkpointing is not yet implemented for
+    "fedgraa_v2"** -- ``checkpoint_dir`` is ignored for that method (see
+    ``docs/research_c/REMAINING_COMPUTE_WORK.md``).
     """
     dataset_data_dir = (
         os.path.join(data_dir, dataset) if data_dir and os.path.isdir(os.path.join(data_dir, dataset))
@@ -102,16 +124,23 @@ def run_experiment(
         trainer: object = FedProxTrainer(split, cfg)
     elif method == "fedopt":
         trainer = FedOptServer(split, cfg)
-    elif method == "fedsnd":
-        trainer = FedSNDTrainer(split, cfg)
+    elif method == "static_dist_aware":
+        trainer = StaticDistributionAwareTrainer(split, cfg)
+    elif method == "fedgraa_v2":
+        trainer = FederatedTrainerV2(
+            split, cfg, secagg_threshold=secagg_threshold, measure_zeta=measure_zeta,
+        )
     else:
         trainer = FederatedTrainer(split, cfg, method=method)
 
-    history = trainer.train(eval_every=eval_every, verbose=verbose, checkpoint_dir=checkpoint_dir)
+    if method == "fedgraa_v2":
+        history = trainer.train(eval_every=eval_every, verbose=verbose)
+    else:
+        history = trainer.train(eval_every=eval_every, verbose=verbose, checkpoint_dir=checkpoint_dir)
     return ExperimentResult(
         dataset=spec.name,
         method=method,
-        gamma=gamma if method == "fedgraa" else None,
+        gamma=gamma if method in ("fedgraa", "fedgraa_v2") else None,
         n_rare=n_rare,
         history=history,
     )
@@ -188,7 +217,7 @@ def run_gamma_sweep_parallel(
         )
 
     results: Dict[str, ExperimentResult] = {}
-    with ProcessPoolExecutor(max_workers=workers) as pool:
+    with ProcessPoolExecutor(max_workers=workers, mp_context=_MP_CONTEXT) as pool:
         futures = {pool.submit(_run_single_config, c): c[0] for c in configs}
         for future in as_completed(futures):
             key = futures[future]
@@ -260,7 +289,7 @@ def run_n_sweep_parallel(
             )
 
     raw: Dict[int, Dict[str, ExperimentResult]] = {}
-    with ProcessPoolExecutor(max_workers=workers) as pool:
+    with ProcessPoolExecutor(max_workers=workers, mp_context=_MP_CONTEXT) as pool:
         futures = {pool.submit(_run_single_config, c): c[0] for c in configs}
         for future in as_completed(futures):
             n_key, method_key = futures[future]

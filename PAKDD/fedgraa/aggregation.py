@@ -17,6 +17,7 @@ import numpy as np
 
 from .model import MLP, Adam, Params, aggregate
 from .partition import ValidationSplit
+from .secagg import SecAggChannel
 
 
 # --------------------------------------------------------------------------- #
@@ -118,6 +119,28 @@ def _grad_wrt_weights(
             acc += float(np.sum(g_arr * p_arr))
         grads[k] = acc
     return grads
+
+
+def project_to_simplex(w: np.ndarray) -> np.ndarray:
+    """Euclidean projection of ``w`` onto ``{x : x >= 0, sum(x) = 1}``.
+
+    Standard algorithm (Duchi et al., 2008, "Efficient Projections onto the
+    L1-Ball for Learning in High Dimensions", Fig. 1). Promoted here (F1,
+    FEDGRAA_V2_MASTER_PLAN.md W0.2) from the diagnostic-only copy in
+    ``scripts/diagnose_fedgraa.py``, which now imports this implementation
+    instead of maintaining its own.
+    """
+    w = np.asarray(w, dtype=np.float64)
+    n = len(w)
+    u = np.sort(w)[::-1]
+    css = np.cumsum(u) - 1.0
+    idx = np.arange(1, n + 1)
+    cond = u - css / idx > 0
+    if not np.any(cond):
+        return np.full(n, 1.0 / n, dtype=np.float32)
+    rho = idx[cond][-1]
+    theta = css[cond][-1] / rho
+    return np.maximum(w - theta, 0.0).astype(np.float32)
 
 
 class FedGRAA:
@@ -228,3 +251,218 @@ class FedGRAA:
             self.optimizer.step([w], [grad_w])           # Adam step on w (eq. 10)
 
         return w
+
+
+class ProjectedFedGRAA(FedGRAA):
+    """Non-default, non-strict-reproduction weight learner (F1, W0.2).
+
+    Identical to :class:`FedGRAA` except that the weight vector is
+    Euclidean-projected back onto the probability simplex (:func:`project_to_simplex`)
+    after every ``E'``-epoch Adam update. Promoted here from the
+    diagnostic-only ablation in ``scripts/diagnose_fedgraa.py`` so that
+    FedGRAA-v2 (F1) can subclass a first-class, importable, tested variant
+    instead of a scratch script.
+
+    **This is not the strict-reproduction default.** ``FederatedTrainer(method=
+    "fedgraa")`` and every other strict-reproduction entry point must keep
+    constructing the unprojected :class:`FedGRAA` (see
+    ``test_strict_reproduction_default_unchanged``, T-19). Only FedGRAA-v2 and
+    diagnostic tooling should ever instantiate this class directly.
+    """
+
+    def update(
+        self,
+        client_params: List[Params],
+        weights_prev: np.ndarray,
+        val: ValidationSplit,
+    ) -> np.ndarray:
+        w = super().update(client_params, weights_prev, val)
+        return project_to_simplex(w)
+
+
+# --------------------------------------------------------------------------- #
+# FedGRAA-v2: the two-phase, count-weighted, SecAgg-mediated exact protocol
+# (W2.3a, F12) -- corrects both obstructions the naive "SecAgg-sum of
+# per-client gradients" protocol has (measured wrong by 160-557%,
+# scripts/verify_v2_exactness.py).
+# --------------------------------------------------------------------------- #
+def two_phase_composite_grad(
+    model: MLP,
+    params: Params,
+    client_vals: Sequence[ValidationSplit],
+    gamma: float,
+    n_clients_total: Optional[int] = None,
+    threshold: Optional[int] = None,
+) -> Tuple[Params, dict]:
+    """Reproduce the pooled ``grad_P L'`` exactly from per-client validation
+    splits, via SecAgg, without ever exposing an individual client's loss or
+    gradient to the server (F4, F12; FEDGRAA_V2_MASTER_PLAN.md §3).
+
+    Each element of ``client_vals`` is one client's own :class:`ValidationSplit`
+    -- produced locally by that client applying the server-broadcast strata
+    tags (:func:`fedgraa.partition.apply_tags`) to its own rows. Two
+    SecAgg-mediated phases follow the plan's corrected pseudocode:
+
+    **Phase 1 (global arm selection, obstruction B).** Each client returns
+    three *unnormalized* loss sums (``sum_i loss_i`` over its own h/m/n rows)
+    and the three corresponding row counts -- six scalars, SecAgg-summed in
+    one channel. The server divides to recover the pooled ``L_h``, ``L_m``
+    (mapping a zero count to ``+inf`` *before* dividing, never ``0/0``) and
+    applies the **unmodified** :func:`_composite_min_arm` -- the same
+    function the pooled (v1) computation uses -- so the arm choice is
+    identical to what a server holding the real pooled ``D_V`` would pick.
+
+    **Phase 2 (count-weighted sum-form gradient, obstruction A).** The server
+    broadcasts ``arm`` and the two SecAgg-summed counts ``n_arm``, ``n_n``
+    alongside it -- safe to reveal (like ``arm`` itself, both are *pooled*
+    aggregates the server already learns from phase 1, not any individual
+    client's data). Each client can then pre-combine its own contribution
+    into a **single** model-shaped array using the *global* normalizers:
+
+    ``c_k = (1-gamma)/n_arm * n_{arm,k} * grad L_{arm,k}(theta')
+          +    gamma/n_n   * n_{n,k}   * grad L_{n,k}(theta')``
+
+    SecAgg-summing ``c_k`` over clients gives ``grad_P L'`` exactly in one
+    pass (no further division needed): ``sum_k c_k = (1-gamma)/n_arm * sum_k
+    n_{arm,k} grad L_{arm,k} + gamma/n_n * sum_k n_{n,k} grad L_{n,k} =
+    (1-gamma) * grad_a_pooled + gamma * grad_u_pooled``. This sends **one**
+    model-sized array per client per refresh (not two), which is what makes
+    the measured bytes match FEDGRAA_V2_MASTER_PLAN.md §4.1's
+    ``(1 + ceil(E'/m)) x baseline`` formula exactly (T-12) -- a naive
+    per-stratum-then-combine variant that instead returns two separate
+    arrays (``n_{arm,k} grad L_{arm,k}`` and ``n_{n,k} grad L_{n,k}``,
+    combined server-side) is equally exact but costs ~1.5x more bytes per
+    refresh, which is *not* what the plan's byte table describes.
+
+    Returns ``(grad_P, stats)``; ``stats`` records the per-call communication
+    shape (T-12: bytes and *rounds* must be billed separately) for the caller
+    (:class:`fedgraa.trainer.FederatedTrainerV2`) to instrument.
+    """
+    n = len(client_vals)
+    if n == 0:
+        raise ValueError("two_phase_composite_grad requires at least one client")
+    n_clients_total = n_clients_total if n_clients_total is not None else n
+    threshold = threshold if threshold is not None else n_clients_total
+
+    # ---- Phase 1: unnormalized scalar sums -> pooled L_h/L_m -> global arm --
+    ch1 = SecAggChannel(n_clients=n_clients_total, threshold=threshold)
+    for v in client_vals:
+        s_h = float(model.loss(params, v.X_h, v.y_h)) * len(v.y_h) if len(v.y_h) else 0.0
+        s_m = float(model.loss(params, v.X_m, v.y_m)) * len(v.y_m) if len(v.y_m) else 0.0
+        s_n = float(model.loss(params, v.X_n, v.y_n)) * len(v.y_n) if len(v.y_n) else 0.0
+        ch1.submit([
+            np.array(s_h), np.array(s_m), np.array(s_n),
+            np.array(len(v.y_h)), np.array(len(v.y_m)), np.array(len(v.y_n)),
+        ])
+    s_h_tot, s_m_tot, s_n_tot, n_h_arr, n_m_arr, n_n_arr = ch1.aggregate()
+    n_h, n_m, n_n = int(n_h_arr), int(n_m_arr), int(n_n_arr)
+    L_h = float(s_h_tot) / n_h if n_h > 0 else float("inf")
+    L_m = float(s_m_tot) / n_m if n_m > 0 else float("inf")
+    _, arm = _composite_min_arm(L_h, L_m)
+    n_arm = n_h if arm == "h" else n_m if arm == "m" else 0
+
+    # ---- Phase 2: count-weighted, client-pre-combined, single-array sum ----
+    zero_like = [np.zeros_like(p) for p in params]
+    coef_arm = (1.0 - gamma) / n_arm if n_arm > 0 else 0.0
+    coef_u = gamma / n_n if n_n > 0 else 0.0
+    ch2 = SecAggChannel(n_clients=n_clients_total, threshold=threshold)
+    for v in client_vals:
+        contribution = list(zero_like)
+        if arm == "h":
+            Xs, ys = v.X_h, v.y_h
+        elif arm == "m":
+            Xs, ys = v.X_m, v.y_m
+        else:
+            Xs, ys = v.X_h[:0], v.y_h[:0]
+        if coef_arm != 0.0 and len(ys):
+            _, g = _loss_and_grad_P(model, params, Xs, ys)
+            scale = coef_arm * len(ys)
+            contribution = [c + scale * gi for c, gi in zip(contribution, g)]
+        if coef_u != 0.0 and len(v.y_n):
+            _, g = _loss_and_grad_P(model, params, v.X_n, v.y_n)
+            scale = coef_u * len(v.y_n)
+            contribution = [c + scale * gi for c, gi in zip(contribution, g)]
+        ch2.submit(contribution)
+
+    grad_P = ch2.aggregate()  # already grad_P L' exactly -- no further division
+
+    stats = {
+        "n_h": n_h, "n_m": n_m, "n_n": n_n, "arm": arm,
+        "n_participating": n,
+        "n_clients_total": n_clients_total,
+        "phase1_scalars_per_client": 6,
+        "phase1_broadcast_scalars": 3,   # arm (1 byte) + n_arm + n_n
+        "phase2_arrays_per_client": len(params),
+        "rounds": 2,
+    }
+    return grad_P, stats
+
+
+class FedGRAAv2(ProjectedFedGRAA):
+    """FedGRAA-v2 weight learner (W2.3, F5).
+
+    Identical to :class:`ProjectedFedGRAA` -- Adam on ``w`` for ``E'`` epochs,
+    then a simplex projection -- except that ``grad_P L'`` is supplied by an
+    externally-injected callback rather than computed from a pooled
+    :class:`~fedgraa.partition.ValidationSplit`, because in the federated
+    setting no such pooled split exists on the server; F12's whole point is
+    that ``grad_P L'`` must instead be reconstructed via
+    :func:`two_phase_composite_grad`. Keeping this class protocol-agnostic
+    (it only calls ``grad_provider(theta_prime_g) -> grad_P``) lets the
+    refresh-interval logic below be unit-tested against a bare fake callback,
+    independent of SecAgg/data wiring (T-4a/T-4b test the callback's
+    correctness separately).
+
+    **Refresh interval `m` (F5, `grad_refresh_every`).** ``grad_provider`` is
+    invoked only every ``m`` inner epochs (``e % m == 0``); the Adam step on
+    ``w`` still runs every epoch, reusing the last-refreshed gradient in
+    between. The number of ``grad_provider`` calls this method makes per round
+    is exactly ``ceil(weight_epochs / m)`` -- the quantity T-12 checks against
+    the ``(1 + ceil(E'/m)) x baseline`` byte formula.
+    """
+
+    def __init__(
+        self,
+        gamma: float,
+        eta_prime: float = 0.1,
+        weight_epochs: int = 5,
+        layer_sizes: Optional[Sequence[int]] = None,
+        grad_refresh_every: int = 1,
+    ):
+        super().__init__(
+            gamma=gamma, eta_prime=eta_prime,
+            weight_epochs=weight_epochs, layer_sizes=layer_sizes,
+        )
+        if grad_refresh_every < 1:
+            raise ValueError(
+                f"grad_refresh_every must be >= 1, got {grad_refresh_every}"
+            )
+        self.grad_refresh_every = int(grad_refresh_every)
+        self.last_n_refreshes = 0  # T-12 instrumentation: refreshes in the last update() call
+
+    def update(  # type: ignore[override]
+        self,
+        client_params: List[Params],
+        weights_prev: np.ndarray,
+        grad_provider,
+    ) -> np.ndarray:
+        """``grad_provider(theta_prime_g: Params) -> Params`` returns
+        ``grad_P L'`` only (the loss/stats a real caller may also want are the
+        caller's own responsibility to record, e.g. via ``two_phase_composite_grad``'s
+        ``stats`` return, which this method never sees)."""
+        self.optimizer.reset()
+        w = np.array(weights_prev, dtype=np.float32).copy()
+
+        grad_P: Optional[Params] = None
+        n_refreshes = 0
+        for e in range(self.weight_epochs):
+            if e % self.grad_refresh_every == 0:
+                P = aggregate(client_params, w)
+                grad_P = grad_provider(P)
+                n_refreshes += 1
+            assert grad_P is not None
+            grad_w = _grad_wrt_weights(grad_P, client_params)
+            self.optimizer.step([w], [grad_w])
+
+        self.last_n_refreshes = n_refreshes
+        return project_to_simplex(w)

@@ -85,7 +85,8 @@ def main() -> None:
     parser.add_argument(
         "--baselines",
         action="store_true",
-        help="Include FedProx, FedOpt, and FedSND baselines in gamma sweep (gap m-3).",
+        help="Include FedProx, FedOpt, and the static distribution-aware "
+             "baseline in gamma sweep (gap m-3).",
     )
     parser.add_argument(
         "--parallel",
@@ -163,8 +164,8 @@ def main() -> None:
 
             if args.baselines:
                 from fedgraa.experiment import run_experiment
-                print("\n--- Baselines (FedProx, FedOpt, FedSND) ---")
-                for method in ("fedprox", "fedopt", "fedsnd"):
+                print("\n--- Baselines (FedProx, FedOpt, static-dist-aware) ---")
+                for method in ("fedprox", "fedopt", "static_dist_aware"):
                     res = run_experiment(
                         dataset, method=method, n_rare=3, rounds=args.rounds,
                         data_dir=args.data_dir, eval_every=args.eval_every,

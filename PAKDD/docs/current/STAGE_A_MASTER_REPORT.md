@@ -880,7 +880,7 @@ Goal: turn the diagnosis (§5) from "internal audit trail" into a paper section 
 Goal: the actual novel contribution.
 
 - **Decision point (bring to the prof/PhD mentor, don't decide alone):** few-shot/prototype-guided hybrid aggregation (the literature review's recommended angle, competitive with FedAPA/FedAWA-style 2025 papers) vs. the privacy-compliant redesign (`privacy_compliant_fedgraa_redesign.md`, ~730 lines, addresses the paper's own server-oracle-knowledge and server-held-labelled-validation-set privacy assumptions) — or both, time permitting.
-- Implement the chosen extension; run it against FedAvg, Static, the fixed-FedGRAA baseline, and currently-unrun baselines (AFL, q-FedAvg, FedAdp — flagged as "must-have" by `understanding/10_SOTA_adaptive_aggregation.md`; FedProx/FedOpt/FedSND are already implemented in `fedgraa/baselines.py` but never run head-to-head).
+- Implement the chosen extension; run it against FedAvg, Static, the fixed-FedGRAA baseline, and currently-unrun baselines (AFL, q-FedAvg, FedAdp — flagged as "must-have" by `understanding/10_SOTA_adaptive_aggregation.md`; FedProx/FedOpt/StaticDistributionAwareTrainer — the last formerly named "FedSND" after a fabricated citation, see `FEDGRAA_V2_MASTER_PLAN.md` F6 — are already implemented in `fedgraa/baselines.py` but never run head-to-head).
 - Add the corrected convergence theory the fix currently lacks (the diagnosis in §5 is empirical, not a new proof).
 - Add a scalability experiment (50–200 clients, vs. the current 9–14) and an extreme non-IID robustness experiment.
 - Re-run the snowball literature/scooping search closer to submission — the literature review already flags two recent adjacent papers (FedVG, Fed-LAA) worth re-checking.
@@ -962,7 +962,7 @@ Bring the completed Stage A (this document) + Stage B critique package to the me
 | `fedgraa/metrics.py` | All-class and last-n accuracy |
 | `fedgraa/experiment.py` | Figure 1/2/3 sweep runners (`run_gamma_sweep`, `run_n_sweep`) |
 | `fedgraa/plot.py` | Matplotlib figure generation |
-| `fedgraa/baselines.py` | FedProx / FedOpt / FedSND (related-work only, not run against FedGRAA in Stage A) |
+| `fedgraa/baselines.py` | FedProx / FedOpt / StaticDistributionAwareTrainer (formerly "FedSND" — fabricated citation, renamed per F6; related-work only, not run against FedGRAA in Stage A) |
 | `run_experiments.py` | Main CLI entry point |
 | `scripts/diagnose_fedgraa.py` | Per-round divergence instrumentation + `ProjectedFedGRAA` diagnostic ablation |
 | `scripts/seed_sweep_combined_fix.py` | Combined-fix seed-band aggregator (generalized to any dataset in Stage A) |

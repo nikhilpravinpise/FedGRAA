@@ -24,12 +24,12 @@ and [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_REPORT
 |---|---|---|---|
 | **A** | Faithful reproduction — every paper table/figure has a persisted, reproduced-or-honestly-diverging counterpart | ✅ **complete** | [docs/current/STAGE_A_MASTER_REPORT.md](docs/current/STAGE_A_MASTER_REPORT.md) |
 | **B** | Package the divergence critique as a rigorous, citable component — formal theory + statistically-tested 10-seed ablation | ✅ **complete** | [docs/current/STAGE_B_MASTER_REPORT.md](docs/current/STAGE_B_MASTER_REPORT.md) |
-| **C** | Build the novel extension for an A/A*-tier venue | ⏳ not started — gated on a mentor conversation | [docs/research_c/STAGE_C_LITERATURE_MASTER.md](docs/research_c/STAGE_C_LITERATURE_MASTER.md) |
+| **C** | Build the novel extension for an A/A*-tier venue: privacy-compliant redesign + dataset migration (`Final_Stage_C.md` §10's Options B+D) now, with the few-shot/prototype hybrid (Option A) sequenced in afterward as a follow-on (Option C, "both, sequenced") | B+D: ✅ **code/tests complete** · ⏳ compute campaign + baseline reproduction + mentor confirmation still open. A: ⏳ **deliberately deferred** to a later phase (committed 2026-07-28, not started) | [docs/research_c/FEDGRAA_V2_MASTER_PLAN.md](docs/research_c/FEDGRAA_V2_MASTER_PLAN.md), [docs/research_c/REMAINING_COMPUTE_WORK.md](docs/research_c/REMAINING_COMPUTE_WORK.md) |
 
 Verification signals on the current tree:
 
 ```powershell
-.venv313\Scripts\python.exe -m pytest tests --tb=short          # 151 passed
+.venv313\Scripts\python.exe -m pytest tests --tb=short          # 311 passed
 .venv313\Scripts\python.exe scripts\check_stage_a_complete.py   # exit 0 (completeness)
 .venv313\Scripts\python.exe scripts\check_stage_b_complete.py   # exit 0 (completeness)
 .venv313\Scripts\python.exe scripts\audit_stage_a.py            # exit 0 (correctness)
@@ -47,6 +47,30 @@ See [`docs/audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md`](docs/audit/AUDIT_REMEDIA
 job of [`.github/workflows/docs-check.yml`](../.github/workflows/docs-check.yml)
 — they are no longer only-a-human-remembers-to-run-them scripts (see
 [`docs/audit/INDEPENDENT_FULL_AUDIT_2026-07-26.md`](docs/audit/INDEPENDENT_FULL_AUDIT_2026-07-26.md) §3.1).
+
+Stage C's own completeness gate exists too, and **currently exits 1 by
+design** — the frontier campaign has not been run yet, so no cell result
+JSONs exist:
+
+```powershell
+.venv313\Scripts\python.exe scripts\check_stage_c_complete.py --tier T1   # exit 1 until T1 lands
+```
+
+> **⚠️ Read before running the compute campaign.**
+> [`docs/audit/PRE_COMPUTE_AUDIT_2026-07-28.md`](docs/audit/PRE_COMPUTE_AUDIT_2026-07-28.md)
+> is a whole-repository audit conducted immediately before launch. It found
+> six blocking defects in the *campaign path* (as distinct from the
+> mechanisms, which it re-verified as sound) — four of them silent. **All
+> six are now fixed**, including **B6** (the NF-UQ-NIDS-v2 loader, which
+> would have needed ~88 GB peak on the real file — a bounded-memory rewrite
+> now measures **2.65 GB** against the actual 12.79 GB release) and a second
+> defect the B6 fix itself surfaced: T6's Modal driver was first wired as a
+> second image on the T1/T2/T4 App, which made a plain `--tier T1` launch
+> build and upload the 12.79 GB file too (15+ min instead of ~1 min) — fixed
+> by giving T6 its own file/App,
+> [`scripts/modal_frontier_campaign_t6.py`](scripts/modal_frontier_campaign_t6.py).
+> That document also records the distinction the project now maintains
+> explicitly: **"mechanism verified" is not "campaign path verified."**
 
 ---
 
@@ -138,7 +162,7 @@ can attempt to download the files automatically from the
 | `--eval-every N` | Print metrics every N rounds. Default 20. |
 | `--cache-dir DIR` | Cache/reload preprocessed arrays here. |
 | `--round-zero-zero` | Force round-0 accuracies to 0.00 (default True). |
-| `--baselines` | Include FedProx / FedOpt / FedSND (related work only, never run head-to-head). |
+| `--baselines` | Include FedProx / FedOpt / the static distribution-aware baseline (related work only, never run head-to-head). |
 | `--parallel` | Run sweep configs concurrently via `ProcessPoolExecutor`. |
 | `--results-dir DIR` | Persist raw sweep results to `<DIR>/<dataset>_gamma_sweep.json` / `_n_sweep.json`. |
 | `--plot-dir DIR` | Save Figure 1 / 2-3 PNGs here. |
@@ -253,7 +277,7 @@ mandate.
 Run the full suite before pushing:
 
 ```powershell
-.venv313\Scripts\python.exe -m pytest tests --tb=short      # 151 passed
+.venv313\Scripts\python.exe -m pytest tests --tb=short      # 311 passed
 ```
 
 The suite covers:
@@ -323,11 +347,13 @@ fedgraa/
   keras_backend.py # compatibility alias re-exporting model.py
   data.py          # real CSV loader (with NPY cache) + synthetic generator
   partition.py     # non-IID partition + median-frequency split
-  aggregation.py   # FedAvg / Static / FedGRAA
-  trainer.py       # Algorithm 1 loop
-  metrics.py       # all-class / last-n accuracy
-  experiment.py    # Figure 1/2/3 sweeps
-  baselines.py     # FedProx / FedOpt / FedSND (related work, implemented but unrun)
+  aggregation.py   # FedAvg / Static / FedGRAA + FedGRAA-v2: ProjectedFedGRAA, FedGRAAv2, two_phase_composite_grad
+  trainer.py       # Algorithm 1 loop + FederatedTrainerV2 (privacy-compliant), zeta_probe
+  secagg.py        # NEW (Stage C): SecAggChannel -- structurally-unreachable individual contributions
+  privacy.py       # NEW (Stage C): Laplace mechanism + advanced-composition/RDP accountants
+  metrics.py       # all-class / last-n accuracy + confusion_matrix
+  experiment.py    # Figure 1/2/3 sweeps + fedgraa_v2 dispatch
+  baselines.py     # FedProx / FedOpt / StaticDistributionAwareTrainer (related work, implemented but unrun)
   stats.py         # NEW (Stage B): bootstrap CI, paired t, Wilcoxon, Cohen's d, Holm
   plot.py          # matplotlib figures
   __main__.py      # CLI: python -m fedgraa ...
@@ -347,6 +373,14 @@ scripts/
   render_ablation.py         # NEW: table JSON -> markdown + figure
   check_stage_a_complete.py  # Stage A completeness signal
   check_stage_b_complete.py  # NEW: Stage B completeness signal
+  verify_v2_plan_claims.py   # NEW (Stage C): re-derives every FEDGRAA_V2_MASTER_PLAN.md numeric claim
+  verify_v2_exactness.py     # NEW (Stage C): measures F12 -- naive-sum wrong, two-phase protocol exact
+  run_v2_frontier_sweep.py   # NEW (Stage C): T1/T2/T4/T6 frontier campaign driver -- cell enumeration + one-cell execution
+  modal_frontier_campaign.py # NEW (Stage C): the Modal app that fans run_one_cell out over T1/T2/T4 (pinned image, Volume-persisted, resumable)
+  modal_frontier_campaign_t6.py # NEW (Stage C): T6's OWN Modal app/file (real NF-UQ-NIDS-v2 file, 12.79 GB -- kept off the T1/T2/T4 app deliberately, see its docstring)
+  verify_nf_uq_nids_v2_memory.py # NEW (Stage C): measures load_nf_uq_nids_v2_silos's real peak working set against the actual 12.79 GB file (B6)
+  check_stage_c_complete.py  # NEW (Stage C): frontier-campaign completeness signal (exits 1 until T1 lands)
+  modal_calibration/         # NEW (Stage C): real Modal cost/concurrency/CPU/memory calibration (measured, not estimated)
   archive/gpu/               # explored-and-rejected GPU benchmark (25% slower than CPU)
 results/
   *_gamma_sweep.json, *_n_sweep.json   # persisted sweep results (--results-dir)
@@ -359,7 +393,7 @@ results/
     seed_sweep_{DS}_{fedavg,static}_r60.json
     README.md                          # Stage B manifest (27 checked paths)
     _logs/                             # raw campaign stdout
-tests/             # 151 unit + gradient + e2e + diagnostic + statistics + doc-link tests
+tests/             # 311 unit + gradient + e2e + diagnostic + statistics + doc-link + FedGRAA-v2 + pre-compute-audit tests
 docs/
   current/         # the live documents
     STAGE_A_MASTER_REPORT.md           # Stage A capstone (exhaustive)
@@ -377,10 +411,15 @@ docs/
     full_audit_2026-07-23.md           # from-scratch independent re-audit
     SPEEDUP_REPRODUCTION_AUDIT.md      # confirms speedup work didn't break fidelity
     RESEARCH_DIRECTION_AUDIT_2026-07-25.md  # strategy/direction review (raises the provenance question)
-  research_c/      # Stage C literature foundation
+  research_c/      # Stage C literature foundation + FedGRAA-v2 build/implementation record
+    Final_Stage_C.md                   # final literature entry point; novelty claim + do-not-write list
+    FEDGRAA_V2_MASTER_PLAN.md          # the FedGRAA-v2 build plan (Option B+D) -- W0-W3/W5/W6 now implemented
+    FEDGRAA_V2_THEORY.md               # NEW: theory workstream (W5) -- target theorem, zeta decomposition
+    REMAINING_COMPUTE_WORK.md          # NEW: exactly what's left (compute campaign, baselines, real data); §3a scopes Option A (few-shot/prototype hybrid) as a deferred follow-on, sequenced after B+D per Option C
+    COMPUTE_INFRASTRUCTURE_2026-07-27.md  # Modal platform selection + validated setup
     STAGE_C_LITERATURE_MASTER.md       # consolidated, verified literature master
     STAGE_C_DEEP_RESEARCH_2026-07-25.md, STAGE_C_LITERATURE_REAUDIT_2026-07-25.md
-    privacy_compliant_fedgraa_redesign.md   # unbuilt "FedGRAA-v2" redesign (Stage C candidate)
+    privacy_compliant_fedgraa_redesign.md   # original redesign proposal (superseded §13/§15 by the master plan)
     literature_review_and_publication_strategy.md, research_followup.md,
     FedGRAA_Deep_Research_Compendium.md, sagitra_report.md
   paper/           # the target manuscript + a simulated peer-review panel

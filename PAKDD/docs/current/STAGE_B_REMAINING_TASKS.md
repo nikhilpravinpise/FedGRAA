@@ -118,7 +118,7 @@ This writes `results/ablation/{CIC-IDS-2017,UNSW-NB15}_ablation_table.{json,md}`
 Restating `stage_b_plan.md` §9's own boundary, unchanged — none of this is Stage B scope regardless of compute availability:
 
 - A new method (few-shot/prototype hybrid, privacy redesign) → Stage C.
-- Baselines beyond FedAvg/Static (FedProx/FedOpt/FedSND implemented-but-unrun; AFL/q-FedAvg/FedAdp unimplemented) → Stage C.
+- Baselines beyond FedAvg/Static (FedProx/FedOpt/StaticDistributionAwareTrainer implemented-but-unrun — the last was formerly named "FedSND" after a fabricated citation, see `FEDGRAA_V2_MASTER_PLAN.md` F6; AFL/q-FedAvg/FedAdp unimplemented) → Stage C.
 - Scalability (50–200 clients) or extreme non-IID experiments → Stage C.
 - A fully machine-checked proof with exact β constants → flagged in `fedgraa_convergence_defect.md` §4's "rigor flag" for the PhD mentor.
 - Any change to the strict-reproduction default in `fedgraa/` — confirmed untouched; `ProjectedFedGRAA` remains diagnostic-only in `scripts/diagnose_fedgraa.py`.

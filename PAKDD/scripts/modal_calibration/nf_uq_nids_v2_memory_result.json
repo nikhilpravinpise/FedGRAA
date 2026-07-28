@@ -1,0 +1,39 @@
+{
+  "csv_path": "data/NF-UQ-NIDS-v2/NF-UQ-NIDS-v2.csv",
+  "max_per_class": 10000,
+  "seed": 0,
+  "chunksize": 2000000,
+  "elapsed_s": 1041.5362615585327,
+  "peak_working_set_mb": 2714.5,
+  "labels": [
+    "Analysis",
+    "Backdoor",
+    "Benign",
+    "Bot",
+    "Brute Force",
+    "DDoS",
+    "DoS",
+    "Exploits",
+    "Fuzzers",
+    "Generic",
+    "Infilteration",
+    "Reconnaissance",
+    "Shellcode",
+    "Theft",
+    "Worms",
+    "injection",
+    "mitm",
+    "password",
+    "ransomware",
+    "scanning",
+    "xss"
+  ],
+  "n_features": 41,
+  "total_selected_rows": 255864,
+  "per_silo_rows": {
+    "NF-BoT-IoT-v2": 42431,
+    "NF-ToN-IoT-v2": 91148,
+    "NF-UNSW-NB15-v2": 61853,
+    "NF-CSE-CIC-IDS2018-v2": 60432
+  }
+}

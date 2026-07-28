@@ -3,7 +3,8 @@
 * :class:`FedProxTrainer` — adds a proximal term to local training [5].
 * :class:`FedOptServer` — server-side adaptive optimizer over the aggregated
   client update [7].
-* :class:`FedSNDTrainer` — distribution-aware static reweighting baseline [12].
+* :class:`StaticDistributionAwareTrainer` — distribution-aware static
+  reweighting baseline, formerly named after ref [12] ("FedSND") -- see F6.
 
 These are provided so the reproduction can compare FedGRAA against the
 methods discussed in Section 2 (Related Work), addressing gap m-3.  They are
@@ -273,10 +274,23 @@ class FedOptServer:
 
 
 # --------------------------------------------------------------------------- #
-# FedSND: distribution-aware static reweighting
+# Distribution-aware static reweighting (formerly "FedSND")
 # --------------------------------------------------------------------------- #
-class FedSNDTrainer:
-    """FedSND baseline: simple distribution-aware static aggregation weights.
+class StaticDistributionAwareTrainer:
+    """Distribution-aware static aggregation-weight baseline.
+
+    ⚠️ **Naming history (F6, FEDGRAA_V2_MASTER_PLAN.md §2).** This class was
+    originally named ``FedSNDTrainer`` after FedGRAA's own reference [12],
+    "FedSND" (Zhang et al.). That citation is a **confirmed hallucination**:
+    zero hits across arXiv, web search, and DBLP (`Final_Stage_C.md` §3.2).
+    The class itself was never the problem -- it correctly implements static
+    reparameterization weights (``w_k ∝ 1/|D_k|``, identical to
+    :func:`fedgraa.aggregation.static_reparam_weights`) as a distribution-aware
+    control -- but its old name cited a paper that does not exist. Renamed so
+    no comparison table, plot legend, or results JSON key can ever read
+    "FedGRAA vs. FedSND" and cite a nonexistent method. Retained only as a
+    generic distribution-aware static-weight control, not a reproduction of
+    any specific published baseline.
 
     Note: this is Related Work (Section 2) and is not part of the base paper's
     Figures 1-3 reproduction.
@@ -307,7 +321,7 @@ class FedSNDTrainer:
 
         from .aggregation import static_reparam_weights
         w = static_reparam_weights(self.client_sizes)
-        history = TrainHistory(method="fedsnd", gamma=None, n_rare=cfg.n_rare)
+        history = TrainHistory(method="static_dist_aware", gamma=None, n_rare=cfg.n_rare)
         history.record(
             0,
             accuracy(self._model, global_params, self.split.X_val, self.split.y_val),
@@ -346,7 +360,7 @@ class FedSNDTrainer:
                 history.record(rnd, all_a, last_a, w)
                 if verbose:
                     print(
-                        f"  [fedsnd] round {rnd:3d}/{cfg.rounds}"
+                        f"  [static_dist_aware] round {rnd:3d}/{cfg.rounds}"
                         f"  all={all_a:.3f}  last-n={last_a:.3f}",
                         flush=True,
                     )
