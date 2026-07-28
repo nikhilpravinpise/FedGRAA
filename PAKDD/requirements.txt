@@ -7,3 +7,9 @@ scikit-learn>=1.3
 scipy>=1.10
 pytest>=7.0
 matplotlib>=3.7  # optional, only needed for plotting
+# Modal SDK/CLI: needed to import/launch the campaign drivers
+# (scripts/modal_frontier_campaign*.py) and to run
+# tests/test_modal_frontier_campaign.py. Not a dependency of the campaign
+# containers themselves -- those get PINNED's exact versions via
+# .pip_install() inside the Modal image (see scripts/modal_frontier_campaign.py).
+modal>=1.5

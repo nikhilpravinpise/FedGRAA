@@ -66,6 +66,16 @@ class FedConfig:
     # match the paper exactly. This is the default for strict reproduction.
     round_zero_zero: bool = True
 
+    # --- FedGRAA-v2 settings (W1.5, FEDGRAA_V2_MASTER_PLAN.md F5/F4/F3) ------
+    # Never consulted by the strict-reproduction FedGRAA/FederatedTrainer path
+    # -- only FedGRAAv2/FederatedTrainerV2 read them. Defaults reproduce v2's
+    # "exact" arm (m=1, no DP, no dropout) so constructing a v2 trainer with a
+    # bare ``FedConfig()`` never silently drops to an approximate variant.
+    grad_refresh_every: int = 1   # "m" in F5's frontier: refresh every m inner epochs
+    secagg: bool = True           # F4: SecAgg on the gradient/histogram channels is mandatory
+    dp_epsilon: Optional[float] = None  # F3/§5.2: Laplace-DP budget on the rarity histogram; None = no DP
+    p_drop: float = 0.0           # T-7/T-13: client dropout probability per SecAgg round
+
     def __post_init__(self) -> None:
         if not 0.0 <= self.gamma <= 1.0:
             raise ValueError(f"gamma must be in [0, 1], got {self.gamma}")
@@ -75,6 +85,32 @@ class FedConfig:
             )
         if self.n_rare < 1:
             raise ValueError(f"n_rare must be >= 1, got {self.n_rare}")
+        if self.grad_refresh_every < 1:
+            raise ValueError(
+                f"grad_refresh_every must be >= 1, got {self.grad_refresh_every}"
+            )
+        if self.dp_epsilon is not None and self.dp_epsilon <= 0.0:
+            raise ValueError(f"dp_epsilon must be > 0, got {self.dp_epsilon}")
+        if not 0.0 <= self.p_drop < 1.0:
+            raise ValueError(f"p_drop must be in [0, 1), got {self.p_drop}")
+        if not self.secagg:
+            # F4 is explicit that SecAgg on the gradient/histogram channels is
+            # mandatory, not optional: without it the server can test, in one
+            # dot product, whether a given client holds rare-class rows --
+            # recovering exactly the oracle knowledge FedGRAA-v2 exists to
+            # remove. FederatedTrainerV2 accordingly constructs a
+            # SecAggChannel unconditionally, so this flag had no effect at all
+            # and a reader could reasonably have believed otherwise
+            # (docs/audit/PRE_COMPUTE_AUDIT_2026-07-28.md M2). Rejecting the
+            # value is honest; silently ignoring it is not.
+            raise ValueError(
+                "secagg=False is not supported: FEDGRAA_V2_MASTER_PLAN.md F4 "
+                "establishes that SecAgg on the gradient and histogram "
+                "channels is mandatory, not optional -- an unwrapped channel "
+                "reopens the rare-class-membership leak the v2 redesign "
+                "exists to close. The flag is retained only so this "
+                "constraint is stated rather than assumed."
+            )
 
 
 @dataclass(frozen=True)

@@ -928,7 +928,7 @@ The tables stamp `git_sha = 4459f53`, the commit that closed Stage B. The workin
 - **N = 10 seeds is still a small sample.** Both a parametric and a non-parametric test are reported precisely because n=10 cannot lean on asymptotic normality. Several comparisons are not significant after Holm despite large point-estimate gaps (CIC γ=1 `both` vs. `projection-alone`: *p*_holm = 0.063, *d* = 0.88). Readers should weight the "not significant" comparisons accordingly rather than reading a large *d* alone as proof.
 - **Only two datasets, and the central accuracy finding reverses between them.** Which lever drives accuracy recovery flipped completely between CIC-IDS-2017 and UNSW-NB15 (§12). With two data points it is impossible to say which pattern — if either — is typical of real IDS data. The mechanism hypothesized in §12 (client-skew severity) is consistent with the data but was not tested. `Both` is recommended as the safe default *because of* this uncertainty, not because both levers were shown independently necessary everywhere.
 - **A single 60-round horizon.** §13.2's seed-8 run diverged only after round 28. A shorter horizon would have recorded it as benign; a longer one might reveal late divergence in runs recorded here as stable. The horizon was fixed at 60 for comparability with Stage A's committed arms — the right call for *this* comparison, but it makes the results horizon-conditional.
-- **No baselines beyond FedAvg and Static Reparameterization.** FedProx / FedOpt / FedSND are implemented in `fedgraa/baselines.py` and have never been run once; AFL / q-FedAvg / FedAdp are not implemented. The fix is therefore shown to beat two baselines, not a competitive field.
+- **No baselines beyond FedAvg and Static Reparameterization.** FedProx / FedOpt / StaticDistributionAwareTrainer (formerly named "FedSND" after a fabricated citation — renamed per `FEDGRAA_V2_MASTER_PLAN.md` F6) are implemented in `fedgraa/baselines.py` and have never been run once; AFL / q-FedAvg / FedAdp are not implemented. The fix is therefore shown to beat two baselines, not a competitive field.
 - **`n = 3` protected classes only.** The n-sweep (n ∈ {3, 5, 7}) exists in Stage A but was not extended to the factorial.
 - **The `min(L_h, L_m)` sub-gradient treatment is a standard-practice sketch,** not a from-scratch formal derivation — flagged in §4.4 as one of three items for the PhD mentor.
 - **CPU-only training** throughout, Stage A and Stage B alike. Affects wall-clock cost, not correctness.
@@ -1001,7 +1001,7 @@ Per [`publication_roadmap.md`](publication_roadmap.md) §6.6 and the 2026-07-25 
 ### 22.3 Explicitly out of Stage B's scope, deferred to Stage C
 
 - A new method (few-shot / prototype-guided hybrid, or the privacy-compliant redesign).
-- Baselines beyond FedAvg / Static (FedProx / FedOpt / FedSND implemented-but-unrun; AFL / q-FedAvg / FedAdp unimplemented).
+- Baselines beyond FedAvg / Static (FedProx / FedOpt / StaticDistributionAwareTrainer implemented-but-unrun, formerly "FedSND" — F6; AFL / q-FedAvg / FedAdp unimplemented).
 - Scalability (50–200 clients) and extreme non-IID experiments.
 - A third dataset — the direct test of §12's dataset-dependence hypothesis.
 - A fully machine-checked proof with exact `β_eff`, a formal `min()` sub-differential treatment, and an explicit rate constant.

@@ -1,0 +1,27 @@
+{
+  "dataset": "CIC-IDS-2017",
+  "total_elapsed_sec": 1235.925755309,
+  "per_gamma": {
+    "0.0": {
+      "elapsed_sec": 436.284571308,
+      "final_all_acc": 0.13719974031594892,
+      "final_last_n_acc": 0.0
+    },
+    "0.5": {
+      "elapsed_sec": 401.603672616,
+      "final_all_acc": 0.49448171391473705,
+      "final_last_n_acc": 0.0
+    },
+    "1.0": {
+      "elapsed_sec": 398.03737855099996,
+      "final_all_acc": 0.1379932193608887,
+      "final_last_n_acc": 0.16666666666666666
+    }
+  },
+  "peak_mem_mb_after_each_gamma": {
+    "0.0": 8629.875,
+    "0.5": 8629.875,
+    "1.0": 8629.875
+  },
+  "final_peak_mem_mb": 8629.875
+}

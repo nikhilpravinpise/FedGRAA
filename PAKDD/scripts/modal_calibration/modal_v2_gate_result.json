@@ -1,0 +1,5 @@
+{
+  "exit_code": 0,
+  "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+  "avx512": false
+}

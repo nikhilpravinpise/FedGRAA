@@ -12,7 +12,11 @@ import numpy as np
 import pytest
 
 from fedgraa.aggregation import FedGRAA, static_reparam_weights
-from fedgraa.baselines import FedOptServer, FedProxTrainer, FedSNDTrainer
+from fedgraa.baselines import (
+    FedOptServer,
+    FedProxTrainer,
+    StaticDistributionAwareTrainer,
+)
 from fedgraa.config import UNSW_NB15, DatasetSpec, FedConfig
 from fedgraa.data import _cap_frequent_classes, make_synthetic_dataset
 from fedgraa.model import init_params
@@ -190,7 +194,7 @@ def test_all_methods_no_nan_collapse():
         "fedgraa": FederatedTrainer(split, cfg, method="fedgraa"),
         "fedprox": FedProxTrainer(split, cfg, mu=0.01),
         "fedopt": FedOptServer(split, cfg, server_lr=0.01),
-        "fedsnd": FedSNDTrainer(split, cfg),
+        "static_dist_aware": StaticDistributionAwareTrainer(split, cfg),
     }
 
     for name, trainer in methods.items():
@@ -205,10 +209,11 @@ def test_all_methods_no_nan_collapse():
 
 
 def test_baseline_trainers_run():
-    """Gap m-3: FedProx, FedOpt, and FedSND trainers run end-to-end."""
+    """Gap m-3: FedProx, FedOpt, and the static distribution-aware baseline
+    trainers run end-to-end."""
     split = _tiny_split()
     cfg = FedConfig(rounds=5, gamma=1.0, n_rare=1, seed=0)
-    for Trainer in (FedProxTrainer, FedOptServer, FedSNDTrainer):
+    for Trainer in (FedProxTrainer, FedOptServer, StaticDistributionAwareTrainer):
         hist = Trainer(split, cfg).train(eval_every=5)
         assert len(hist.all_acc) >= 1
         assert 0.0 <= hist.final_all_acc <= 1.0

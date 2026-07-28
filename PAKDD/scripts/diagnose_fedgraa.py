@@ -47,49 +47,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 
-from fedgraa.aggregation import FedGRAA
+from fedgraa.aggregation import FedGRAA, ProjectedFedGRAA, project_to_simplex
 from fedgraa.config import FedConfig
 from fedgraa.data import load_dataset
 from fedgraa.partition import partition_non_iid
 from fedgraa.trainer import FederatedTrainer, TrainHistory
 
-
-# --------------------------------------------------------------------------- #
-# Diagnostic-only ablation: Euclidean projection onto the probability simplex.
-# Not part of fedgraa/ — see module docstring.
-# --------------------------------------------------------------------------- #
-def project_to_simplex(w: np.ndarray) -> np.ndarray:
-    """Euclidean projection of ``w`` onto ``{x : x >= 0, sum(x) = 1}``.
-
-    Standard algorithm (Duchi et al., 2008, "Efficient Projections onto the
-    L1-Ball for Learning in High Dimensions", Fig. 1).
-    """
-    w = np.asarray(w, dtype=np.float64)
-    n = len(w)
-    u = np.sort(w)[::-1]
-    css = np.cumsum(u) - 1.0
-    idx = np.arange(1, n + 1)
-    cond = u - css / idx > 0
-    if not np.any(cond):
-        return np.full(n, 1.0 / n, dtype=np.float32)
-    rho = idx[cond][-1]
-    theta = css[cond][-1] / rho
-    return np.maximum(w - theta, 0.0).astype(np.float32)
-
-
-class ProjectedFedGRAA(FedGRAA):
-    """Diagnostic-only ablation of :class:`fedgraa.aggregation.FedGRAA`.
-
-    Identical to the strict-reproduction ``FedGRAA`` except that the weight
-    vector is re-projected onto the probability simplex after the ``E'``-epoch
-    Adam update. Used only by this script to isolate whether unconstrained
-    weight drift (not present in this variant) is the cause of the composite
-    loss divergence observed with the literal Algorithm 2.
-    """
-
-    def update(self, client_params, weights_prev, val):
-        w = super().update(client_params, weights_prev, val)
-        return project_to_simplex(w)
+# NOTE (F1, W0.2): ``ProjectedFedGRAA`` and ``project_to_simplex`` were
+# promoted from this script into ``fedgraa/aggregation.py`` as first-class,
+# tested (but still non-default/non-strict-reproduction) building blocks for
+# FedGRAA-v2. They are imported here rather than redefined so this script and
+# ``fedgraa/aggregation.py`` can never silently diverge.
 
 
 # --------------------------------------------------------------------------- #

@@ -1,0 +1,86 @@
+[
+  {
+    "cpu_label": "cpu=1.0",
+    "cpu_count_visible": 17,
+    "total_elapsed_sec": 681.477279101,
+    "per_gamma": {
+      "0.0": {
+        "elapsed_sec": 220.503426216,
+        "final_all_acc": 0.5679132122067384,
+        "final_last_n_acc": 0.0
+      },
+      "0.5": {
+        "elapsed_sec": 234.81851943499998,
+        "final_all_acc": 0.545422473099312,
+        "final_last_n_acc": 0.17106484166570005
+      },
+      "1.0": {
+        "elapsed_sec": 226.155311219,
+        "final_all_acc": 0.2541012524254719,
+        "final_last_n_acc": 0.05555555555555555
+      }
+    },
+    "peak_mem_mb": 2086.15234375,
+    "env_threads": {
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    }
+  },
+  {
+    "cpu_label": "cpu=2.0",
+    "cpu_count_visible": 18,
+    "total_elapsed_sec": 790.133726947,
+    "per_gamma": {
+      "0.0": {
+        "elapsed_sec": 272.13741829900005,
+        "final_all_acc": 0.5498324219439055,
+        "final_last_n_acc": 0.026998028070989444
+      },
+      "0.5": {
+        "elapsed_sec": 260.37068969599994,
+        "final_all_acc": 0.4996472040924325,
+        "final_last_n_acc": 0.07579682686978824
+      },
+      "1.0": {
+        "elapsed_sec": 257.62559329499993,
+        "final_all_acc": 0.3403598518257188,
+        "final_last_n_acc": 0.3034257433399064
+      }
+    },
+    "peak_mem_mb": 2067.87890625,
+    "env_threads": {
+      "OMP_NUM_THREADS": "2",
+      "OPENBLAS_NUM_THREADS": "2",
+      "MKL_NUM_THREADS": "2"
+    }
+  },
+  {
+    "cpu_label": "cpu=4.0",
+    "cpu_count_visible": 20,
+    "total_elapsed_sec": 617.161173018,
+    "per_gamma": {
+      "0.0": {
+        "elapsed_sec": 205.190217291,
+        "final_all_acc": 0.5498324219439055,
+        "final_last_n_acc": 0.026998028070989444
+      },
+      "0.5": {
+        "elapsed_sec": 204.16707649799997,
+        "final_all_acc": 0.4996472040924325,
+        "final_last_n_acc": 0.07579682686978824
+      },
+      "1.0": {
+        "elapsed_sec": 207.80384489900007,
+        "final_all_acc": 0.3403598518257188,
+        "final_last_n_acc": 0.3034257433399064
+      }
+    },
+    "peak_mem_mb": 2116.83984375,
+    "env_threads": {
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "MKL_NUM_THREADS": "4"
+    }
+  }
+]

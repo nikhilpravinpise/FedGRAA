@@ -137,6 +137,64 @@ def last_n_class_accuracy(
 
 
 # --------------------------------------------------------------------------- #
+# Confusion matrix  (W1.4 -- FEDGRAA_V2_MASTER_PLAN.md T-1..T-3)
+# --------------------------------------------------------------------------- #
+def confusion_matrix(
+    params: Params,
+    X: np.ndarray,
+    y: np.ndarray,
+    n_classes: int,
+) -> np.ndarray:
+    """Row-normalized-free integer confusion matrix, ``C[true, pred]``.
+
+    A pooled confusion matrix is *additive* across clients: summing each
+    client's own confusion matrix over the same ``(true, pred)`` grid gives
+    exactly the pooled-population confusion matrix (T-1's additivity
+    invariant) -- this is what lets per-class precision/recall/F1 (below) be
+    derived identically whether computed once over pooled rows or as a sum of
+    per-client matrices, which the v2 federated evaluation path relies on.
+    """
+    y = np.asarray(y)
+    cm = np.zeros((n_classes, n_classes), dtype=np.int64)
+    if len(y) == 0:
+        return cm
+    model = _get_model(params, X)
+    preds = model.predict(params, X)
+    np.add.at(cm, (y, preds), 1)
+    return cm
+
+
+def per_class_metrics_from_confusion(
+    cm: np.ndarray,
+) -> Dict[int, Dict[str, float]]:
+    """Per-class precision/recall/F1/support derived from a pooled confusion
+    matrix (T-2: macro-F1 from the pooled matrix must equal recomputing it
+    directly). Only classes with nonzero support (row or column) are reported.
+    """
+    n = cm.shape[0]
+    support = cm.sum(axis=1)
+    pred_totals = cm.sum(axis=0)
+    tp = np.diag(cm)
+    report: Dict[int, Dict[str, float]] = {}
+    for cls in range(n):
+        if support[cls] == 0 and pred_totals[cls] == 0:
+            continue
+        precision = float(tp[cls] / pred_totals[cls]) if pred_totals[cls] > 0 else 0.0
+        recall = float(tp[cls] / support[cls]) if support[cls] > 0 else 0.0
+        f1 = (
+            2.0 * precision * recall / (precision + recall)
+            if (precision + recall) > 0 else 0.0
+        )
+        report[cls] = {
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "support": int(support[cls]),
+        }
+    return report
+
+
+# --------------------------------------------------------------------------- #
 # Per-class precision / recall / F1  (gap 3.6 fix)
 # --------------------------------------------------------------------------- #
 def per_class_metrics(
@@ -148,30 +206,31 @@ def per_class_metrics(
 
     Returns a dict ``{class_id: {"precision": p, "recall": r, "f1": f1,
     "support": n}}`` over the classes present in ``y``.
+
+    Implemented on top of :func:`confusion_matrix` /
+    :func:`per_class_metrics_from_confusion` (W1.4) so the pooled and the
+    additive-over-clients computations are structurally the same code path.
+    Behaviour is unchanged: classes present only as false positives (nonzero
+    predicted count, zero true support) were never reported by the original
+    per-``np.unique(y)`` loop either, since it iterated over classes present in
+    ``y`` -- reproduced here by scoping ``n_classes`` to ``y``'s own range and
+    then dropping any class absent from ``y``.
     """
     y = np.asarray(y)
     if len(y) == 0:
         return {}
     model = _get_model(params, X)
     preds = model.predict(params, X)
-    report: Dict[int, Dict[str, float]] = {}
-    for cls in np.unique(y):
-        tp = int(((preds == cls) & (y == cls)).sum())
-        fp = int(((preds == cls) & (y != cls)).sum())
-        fn = int(((preds != cls) & (y == cls)).sum())
-        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-        f1 = (
-            2.0 * precision * recall / (precision + recall)
-            if (precision + recall) > 0 else 0.0
-        )
-        report[int(cls)] = {
-            "precision": precision,
-            "recall": recall,
-            "f1": f1,
-            "support": int((y == cls).sum()),
-        }
-    return report
+    # Size the matrix to cover every class id either truly present or ever
+    # predicted, so a false-positive-only predicted class doesn't index out
+    # of bounds; it is then dropped below to match the original semantics
+    # (only classes present in y are reported).
+    n_classes = int(max(y.max(), preds.max() if len(preds) else 0)) + 1
+    cm = np.zeros((n_classes, n_classes), dtype=np.int64)
+    np.add.at(cm, (y, preds), 1)
+    full_report = per_class_metrics_from_confusion(cm)
+    present = set(np.unique(y).tolist())
+    return {cls: m for cls, m in full_report.items() if cls in present}
 
 
 def classification_report(

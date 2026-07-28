@@ -78,22 +78,57 @@ def paired_ttest(a: Sequence[float], b: Sequence[float]) -> Tuple[float, float]:
     """Paired (dependent-samples) t-test, ``scipy.stats.ttest_rel`` under the hood.
 
     **Degenerate case:** if every paired difference ``a_i - b_i`` is
-    identical, the sample standard error of the differences is exactly
-    zero, so the t-statistic is a literal ``0/0`` (differences all zero) or
-    a division by zero (differences constant but nonzero) — both undefined
+    identical, the sample standard error of the differences is (near) zero,
+    so the t-statistic is a literal ``0/0`` (differences all zero) or a
+    division by ~zero (differences constant but nonzero) — both undefined
     or numerically unstable in a way that would silently produce ``NaN``
     or an unreproducible platform-dependent huge number. Rather than
-    report a spurious near-infinite significance from a single-precision
-    zero-variance sample, this returns ``(0.0, 1.0)`` — "not significant" —
+    report a spurious near-infinite significance from a zero-variance
+    sample, this returns ``(0.0, 1.0)`` — "not significant" —
     and defers the sign call to :func:`wilcoxon_signed_rank`, which handles
     the same degeneracy by construction (see its docstring).
+
+    **The degeneracy test is relative, not exact** (corrected 2026-07-28).
+    An exact ``ptp == 0.0`` check misses the case that actually arises:
+    ``[0.7, 0.8] - [0.6, 0.7]`` is constant in exact arithmetic but its two
+    float64 entries differ by ~1.1e-16, which was enough to slip past the
+    guard and yield ``t = 1.8e15, p = 3.5e-16``. Fewer than two pairs, and
+    any non-finite result from ``scipy``, are also mapped to
+    ``(0.0, 1.0)``.
     """
     a = np.asarray(a, dtype=np.float64)
     b = np.asarray(b, dtype=np.float64)
     diffs = a - b
-    if np.ptp(diffs) == 0.0:
+
+    # A paired t-test needs at least two pairs; with one, the sample standard
+    # deviation is undefined.
+    if diffs.size < 2:
         return (0.0, 1.0)
+
+    # ⚠️ ``np.ptp(diffs) == 0.0`` -- the original guard -- is an EXACT float
+    # comparison, and the degenerate case that matters in practice does not
+    # hit it exactly. ``[0.7, 0.8] - [0.6, 0.7]`` is a constant difference
+    # mathematically, but in float64 the two entries differ by ~1.1e-16, so
+    # ``ptp`` is nonzero, the guard does not fire, and ``ttest_rel`` divides
+    # by a ~1e-17 standard error to produce **t = 1.8e15, p = 3.5e-16** --
+    # exactly the "spurious near-infinite significance" this function's
+    # docstring says it prevents. Found by
+    # ``tests/test_pipeline_invariants.py`` (T-15) and recorded in
+    # ``docs/audit/PRE_COMPUTE_AUDIT_2026-07-28.md``.
+    #
+    # The fix is a *relative* degeneracy test: treat the differences as
+    # constant when their spread is negligible against their own scale. The
+    # tolerance is loose enough to catch accumulated round-off and far tighter
+    # than any real seed-to-seed variation in an accuracy metric (Stage B's
+    # own paired differences have std ~1e-2, twelve orders of magnitude above
+    # this threshold).
+    scale = max(float(np.max(np.abs(diffs))), 1.0)
+    if float(np.std(diffs, ddof=1)) <= 1e-12 * scale:
+        return (0.0, 1.0)
+
     t, p = _scipy_stats.ttest_rel(a, b)
+    if not (np.isfinite(t) and np.isfinite(p)):
+        return (0.0, 1.0)
     return (float(t), float(p))
 
 

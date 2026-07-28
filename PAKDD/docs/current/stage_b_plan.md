@@ -22,7 +22,7 @@ Concretely, Stage B is **done** when all of the following are true and committed
 7. A manifest — [`../../results/ablation/README.md`](../../results/ablation/README.md) — maps every new artifact → exact command, git SHA, seed set, and the claim it supports (same backticked-path convention Stage A's manifest uses).
 8. The standalone section reads end-to-end as **"Why a published FL-IDS aggregation algorithm doesn't converge, and how to fix it,"** ready to hand to the PhD mentor alongside the Stage A package (roadmap §6.6). A short capstone `STAGE_B_MASTER_REPORT.md` records completion (mirroring `STAGE_A_MASTER_REPORT.md`).
 
-Stage B does **not** include: a new method (few-shot/prototype hybrid or the privacy redesign), baselines beyond FedAvg/Static (FedProx/FedOpt/FedSND are implemented but unrun; AFL/q-FedAvg/FedAdp are not implemented), scalability/non-IID experiments, or a fully machine-checked proof with exact constants. Those are Stage C and are explicitly out of scope (§9).
+Stage B does **not** include: a new method (few-shot/prototype hybrid or the privacy redesign), baselines beyond FedAvg/Static (FedProx/FedOpt/StaticDistributionAwareTrainer (formerly "FedSND" — a fabricated citation, see `FEDGRAA_V2_MASTER_PLAN.md` F6) are implemented but unrun; AFL/q-FedAvg/FedAdp are not implemented), scalability/non-IID experiments, or a fully machine-checked proof with exact constants. Those are Stage C and are explicitly out of scope (§9).
 
 ---
 
@@ -300,7 +300,7 @@ git commit -m "Stage B: convergence-defect theory + consolidated ablation with s
 ## 9. Explicitly out of scope (deferred to Stage C)
 
 - **A new method** (few-shot/prototype-guided hybrid, or the privacy-compliant redesign) → Stage C ([`publication_roadmap.md`](publication_roadmap.md) §2 Stage C).
-- **Baselines beyond FedAvg/Static** (FedProx/FedOpt/FedSND implemented but unrun; AFL/q-FedAvg/FedAdp not implemented) → Stage C.
+- **Baselines beyond FedAvg/Static** (FedProx/FedOpt/StaticDistributionAwareTrainer (formerly "FedSND" — a fabricated citation, see `FEDGRAA_V2_MASTER_PLAN.md` F6) implemented but unrun; AFL/q-FedAvg/FedAdp not implemented) → Stage C.
 - **Scalability (50–200 clients) and extreme non-IID** experiments → Stage C.
 - **Fully rigorous / machine-checked proof** with exact β constants and the formal `min()` subgradient treatment → hardened with the mentor in Stage C; Stage B ships the proposition + proof sketch.
 - **Changing the strict-reproduction default** in `fedgraa/` — `ProjectedFedGRAA` stays diagnostic-only in `scripts/`, per the standing no-silent-patching mandate ([`../archive/strict_reproduction_report.md`](../archive/strict_reproduction_report.md)).
