@@ -1,0 +1,57 @@
+{
+  "dataset": "NF-UQ-NIDS-v2",
+  "arm": "v2_m1",
+  "gamma": 1.0,
+  "seed": 0,
+  "grad_refresh_every": 1,
+  "config": {
+    "eta_prime": 0.01,
+    "n_rare": 3,
+    "p_drop": 0.0,
+    "dp_epsilon": null,
+    "secagg_threshold": null,
+    "weight_epochs": 5,
+    "local_epochs": 2,
+    "eta": 0.01,
+    "batch_size": 64,
+    "val_fraction": 0.1,
+    "n_rounds": 2,
+    "eval_every": 1
+  },
+  "provenance": {
+    "git_commit": "9ee076aaf3a220c416bf66a3895f1a0eeb3dc9a2",
+    "git_dirty": true,
+    "python": "3.13.3",
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "tensorflow": "2.21.0",
+    "numpy": "2.5.1",
+    "scipy": "1.18.0",
+    "pandas": "3.0.3",
+    "sklearn": "1.9.0"
+  },
+  "rounds": [
+    0,
+    1,
+    2
+  ],
+  "all_acc": [
+    0.0,
+    0.2748378019229266,
+    0.3030954428202923
+  ],
+  "last_n_acc": [
+    0.0,
+    0.1589159891598916,
+    0.0911111111111111
+  ],
+  "zeta": [
+    null,
+    0.0,
+    0.0
+  ],
+  "final_all_acc": 0.3030954428202923,
+  "final_last_n_acc": 0.0911111111111111,
+  "bytes_sent": 13296888,
+  "comm_rounds": 22,
+  "failed_secagg_rounds": 0
+}

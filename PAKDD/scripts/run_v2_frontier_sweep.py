@@ -74,7 +74,7 @@ import multiprocessing
 import os
 import sys
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -128,6 +128,52 @@ NF_UQ_NIDS_V2_DEFAULT_MAX_PER_CLASS = 10_000
 # datasets (docs/research_c/REMAINING_COMPUTE_WORK.md Sec 5.4's own note that
 # this makes T6 a different experiment, not a literal repeat).
 
+# T3/T5 (external-baseline reproductions, REMAINING_COMPUTE_WORK.md Sec 4):
+# ~14 other papers' methods, implemented as (split, cfg) -> TrainHistory
+# classes with the exact same shape as fedgraa/baselines.py's FedProxTrainer
+# et al. Each entry maps an arm name to the (module, class) that implements
+# it; imported lazily inside run_one_cell so this module stays cheap to
+# import/enumerate without pulling in every baseline's dependencies.
+#
+# FedPGO is DELIBERATELY ABSENT. It is T5's "top priority" baseline per
+# Final_Stage_C.md Sec 4, but its full text is genuinely unreachable: closed
+# access (Computer Networks, Elsevier), its SSRN predecessor (Bikila & Capek,
+# DOI 10.2139/ssrn.5637328) 403s directly and returns zero hits even via
+# OpenAlex/Semantic Scholar metadata search, and six independent channels
+# (Unpaywall, OpenAIRE, CORE, the author's institutional repository, direct
+# SSRN, direct Elsevier) were already exhausted in this project's own prior
+# literature-review pass. A later search this pass surfaced a superficially
+# matching "gradient orthogonalization" mechanism description, but tracing it
+# confirmed it belongs to a DIFFERENT paper (Sun, Zhou & Wang, "Robust
+# intrusion detection based on personalized federated learning for IoT
+# environment," Computers & Security 2025, DOI 10.1016/j.cose.2025.104442 --
+# different journal, different authors than FedPGO's own citation).
+# Implementing a "FedPGO" arm from that paper's mechanism would misattribute
+# one paper's method to a different paper's name -- exactly the citation
+# fabrication this project's own audit discipline exists to catch (cf. the
+# FedSND hallucination, W0.4). FedPGO therefore remains explicitly
+# unimplemented pending institutional access, not silently skipped: this
+# comment is that disclosure.
+T3_ARM_CLASSES = {
+    "celm": ("fedgraa.baselines_t3_contrib", "CELMTrainer"),
+    "spectralfed": ("fedgraa.baselines_t3_contrib", "SpectralFedTrainer"),
+    "coast": ("fedgraa.baselines_t3_contrib", "CoAstTrainer"),
+    "fltrust": ("fedgraa.baselines_t3_trust", "FLTrustTrainer"),
+    "raga": ("fedgraa.baselines_t3_trust", "RAGATrainer"),
+    "fedtruth": ("fedgraa.baselines_t3_trust", "FedTruthTrainer"),
+}
+T5_ARM_CLASSES = {
+    # "fedpgo": excluded -- see the disclosure above.
+    "fedmade": ("fedgraa.baselines_t5_nids", "FedMADETrainer"),
+    "sbfednids": ("fedgraa.baselines_t5_nids", "SBFedNIDSTrainer"),
+    "fedapa": ("fedgraa.baselines_t5_nids", "FedAPATrainer"),
+    "fedawa": ("fedgraa.baselines_t5_adaptive", "FedAWATrainer"),
+    "dapfl": ("fedgraa.baselines_t5_adaptive", "DAPFLTrainer"),
+    "fedaware": ("fedgraa.baselines_t5_adaptive", "FedAWARETrainer"),
+    "adaaggrl": ("fedgraa.baselines_t5_adaptive", "AdaAggRLTrainer"),
+}
+BASELINE_ARM_CLASSES: Dict[str, Tuple[str, str]] = {**T3_ARM_CLASSES, **T5_ARM_CLASSES}
+
 
 @dataclass(frozen=True)
 class CellSpec:
@@ -159,9 +205,11 @@ class CellSpec:
 
     @property
     def grad_refresh_every(self) -> Optional[int]:
-        if self.arm == "v1_projected":
-            return None
-        return int(self.arm.split("_m")[1])
+        if self.arm.startswith("v2_m"):
+            return int(self.arm.split("_m")[1])
+        # v1_projected and every T3/T5 external-baseline arm: not a FedGRAA-v2
+        # refresh-interval arm, so this field is inert for them.
+        return None
 
     @property
     def config_tag(self) -> str:
@@ -237,6 +285,14 @@ def enumerate_cells(
     real-silo dataset instead of the two synthetic-partition ones.
     ``nf_uq_max_per_class`` bounds the loader's memory (B6); it has no effect
     on any other tier's cells.
+
+    **T3/T5** are external-baseline reproductions, not FedGRAA-v2 arms: each
+    is one of :data:`T3_ARM_CLASSES`/:data:`T5_ARM_CLASSES`'s (module, class)
+    pairs x ``datasets`` x ``seeds``, at a fixed gamma=1.0 (gamma is a
+    FedGRAA-specific composite-gradient knob these methods don't have; it is
+    carried on the cell only so :class:`CellSpec` stays one uniform shape).
+    FedPGO is deliberately absent from T5 -- see the disclosure above
+    :data:`T3_ARM_CLASSES`.
     """
     def _common(**overrides) -> dict:
         base = dict(
@@ -289,6 +345,24 @@ def enumerate_cells(
                     seed=seed, nf_uq_max_per_class=nf_uq_max_per_class,
                     **_common(p_drop=0.0, dp_epsilon=None),
                 ))
+
+    if "T3" in tiers:
+        for dataset in datasets:
+            for arm in T3_ARM_CLASSES:
+                for seed in seeds:
+                    cells.append(CellSpec(
+                        dataset=dataset, arm=arm, gamma=1.0, seed=seed,
+                        **_common(p_drop=0.0, dp_epsilon=None),
+                    ))
+
+    if "T5" in tiers:
+        for dataset in datasets:
+            for arm in T5_ARM_CLASSES:
+                for seed in seeds:
+                    cells.append(CellSpec(
+                        dataset=dataset, arm=arm, gamma=1.0, seed=seed,
+                        **_common(p_drop=0.0, dp_epsilon=None),
+                    ))
 
     return cells
 
@@ -405,6 +479,7 @@ def run_one_cell(cell: CellSpec) -> Dict:
     """
     from fedgraa.aggregation import ProjectedFedGRAA
     from fedgraa.config import FedConfig
+    from fedgraa.model import init_params
     from fedgraa.trainer import FederatedTrainer, FederatedTrainerV2
 
     os.makedirs(cell.out_dir, exist_ok=True)
@@ -496,7 +571,9 @@ def run_one_cell(cell: CellSpec) -> Dict:
             weight_epochs=cfg.weight_epochs, layer_sizes=layer_sizes,
         )
         history = trainer.train(eval_every=cell.eval_every, verbose=True)
-    else:
+        bytes_sent_out = trainer.bytes_sent
+        comm_rounds_out = trainer.comm_rounds
+    elif cell.arm.startswith("v2_m"):
         trainer = FederatedTrainerV2(
             split, cfg,
             secagg_threshold=cell.secagg_threshold,
@@ -504,6 +581,31 @@ def run_one_cell(cell: CellSpec) -> Dict:
         )
         history = trainer.train(eval_every=cell.eval_every, verbose=True)
         failed_secagg_rounds = trainer.failed_secagg_rounds
+        bytes_sent_out = trainer.bytes_sent
+        comm_rounds_out = trainer.comm_rounds
+    elif cell.arm in BASELINE_ARM_CLASSES:
+        # T3/T5 external-baseline reproductions (fedgraa/baselines_t3_*.py,
+        # baselines_t5_*.py): none of these do SecAgg or a two-phase
+        # protocol -- every one is plain single-phase, one-download +
+        # one-upload-per-client-per-round communication, identical in shape
+        # to v1_projected's own billing above. None of these Trainer classes
+        # instrument bytes internally (unlike FederatedTrainer/
+        # FederatedTrainerV2), so the same formula is applied analytically
+        # here rather than silently leaving the frontier's x-axis undefined
+        # for 13 of its arms.
+        import importlib
+
+        module_name, class_name = BASELINE_ARM_CLASSES[cell.arm]
+        trainer_cls = getattr(importlib.import_module(module_name), class_name)
+        trainer = trainer_cls(split, cfg)
+        history = trainer.train(eval_every=cell.eval_every, verbose=True)
+        n_params = sum(
+            int(p.size) for p in init_params(spec.model_config().layer_sizes, seed=0)
+        )
+        bytes_sent_out = 4 * 2 * n_params * len(split.clients) * cell.rounds
+        comm_rounds_out = cell.rounds
+    else:
+        raise ValueError(f"unrecognized arm {cell.arm!r} for cell {cell.path!r}")
 
     result = {
         # --- what was run (identity) --------------------------------------
@@ -539,10 +641,11 @@ def run_one_cell(cell: CellSpec) -> Dict:
         "zeta": [v if v == v else None for v in history.zeta],  # NaN -> null
         "final_all_acc": history.final_all_acc,
         "final_last_n_acc": history.final_last_n_acc,
-        # Billed for BOTH arms now -- the frontier's x-axis needs a measured
-        # value at its "1x" anchor, not only at the v2 points.
-        "bytes_sent": trainer.bytes_sent,
-        "comm_rounds": trainer.comm_rounds,
+        # Billed for every arm -- the frontier's x-axis needs a measured (or,
+        # for T3/T5, analytically-computed per the disclosure above) value at
+        # every point, not only at the v2 points.
+        "bytes_sent": bytes_sent_out,
+        "comm_rounds": comm_rounds_out,
         "failed_secagg_rounds": failed_secagg_rounds,
     }
     with open(cell.path, "w", encoding="utf-8") as f:
@@ -591,7 +694,7 @@ def execute(cells: Sequence[CellSpec], workers: int = 1) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--tier", nargs="+", default=["T1"],
-                    choices=["T1", "T2", "T4", "T6"])
+                    choices=["T1", "T2", "T3", "T4", "T5", "T6"])
     ap.add_argument("--datasets", nargs="+", default=DEFAULT_DATASETS)
     ap.add_argument("--seeds", nargs="+", type=int, default=DEFAULT_SEEDS)
     ap.add_argument("--rounds", type=int, default=200)
