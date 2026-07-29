@@ -135,25 +135,20 @@ NF_UQ_NIDS_V2_DEFAULT_MAX_PER_CLASS = 10_000
 # it; imported lazily inside run_one_cell so this module stays cheap to
 # import/enumerate without pulling in every baseline's dependencies.
 #
-# FedPGO is DELIBERATELY ABSENT. It is T5's "top priority" baseline per
-# Final_Stage_C.md Sec 4, but its full text is genuinely unreachable: closed
-# access (Computer Networks, Elsevier), its SSRN predecessor (Bikila & Capek,
-# DOI 10.2139/ssrn.5637328) 403s directly and returns zero hits even via
-# OpenAlex/Semantic Scholar metadata search, and six independent channels
-# (Unpaywall, OpenAIRE, CORE, the author's institutional repository, direct
-# SSRN, direct Elsevier) were already exhausted in this project's own prior
-# literature-review pass. A later search this pass surfaced a superficially
-# matching "gradient orthogonalization" mechanism description, but tracing it
-# confirmed it belongs to a DIFFERENT paper (Sun, Zhou & Wang, "Robust
-# intrusion detection based on personalized federated learning for IoT
-# environment," Computers & Security 2025, DOI 10.1016/j.cose.2025.104442 --
-# different journal, different authors than FedPGO's own citation).
-# Implementing a "FedPGO" arm from that paper's mechanism would misattribute
-# one paper's method to a different paper's name -- exactly the citation
-# fabrication this project's own audit discipline exists to catch (cf. the
-# FedSND hallucination, W0.4). FedPGO therefore remains explicitly
-# unimplemented pending institutional access, not silently skipped: this
-# comment is that disclosure.
+# FedPGO -- Bikila & Capek, "FedPGO: A personalized federated learning
+# framework with gradient orthogonalization for IoT intrusion detection,"
+# Computer Networks 280:112210, 2026-03-10, DOI 10.1016/j.comnet.2026.112210
+# -- IS implemented, in fedgraa/baselines_t5_fedpgo.py, as a disclosed
+# RECONSTRUCTION from this project's own triple-source-verified literature
+# review (Final_Stage_C.md's citation, confirmed via DBLP
+# journals/cn/BikilaC26, OpenAlex W7134986038, Semantic Scholar
+# CorpusId:286471251), not from the paper's own equations -- full text
+# remains genuinely inaccessible across six independent channels. See that
+# module's docstring for the full disclosure, including a corrected mistake:
+# an earlier pass this same session concluded FedPGO was unimplementable
+# after wrongly attributing its AGO/PGF mechanism description to a
+# different paper (Sun, Zhou & Wang, Computers & Security 2025); rereading
+# this project's own already-completed literature review corrected that.
 T3_ARM_CLASSES = {
     "celm": ("fedgraa.baselines_t3_contrib", "CELMTrainer"),
     "spectralfed": ("fedgraa.baselines_t3_contrib", "SpectralFedTrainer"),
@@ -163,7 +158,7 @@ T3_ARM_CLASSES = {
     "fedtruth": ("fedgraa.baselines_t3_trust", "FedTruthTrainer"),
 }
 T5_ARM_CLASSES = {
-    # "fedpgo": excluded -- see the disclosure above.
+    "fedpgo": ("fedgraa.baselines_t5_fedpgo", "FedPGOTrainer"),
     "fedmade": ("fedgraa.baselines_t5_nids", "FedMADETrainer"),
     "sbfednids": ("fedgraa.baselines_t5_nids", "SBFedNIDSTrainer"),
     "fedapa": ("fedgraa.baselines_t5_nids", "FedAPATrainer"),
@@ -291,8 +286,6 @@ def enumerate_cells(
     pairs x ``datasets`` x ``seeds``, at a fixed gamma=1.0 (gamma is a
     FedGRAA-specific composite-gradient knob these methods don't have; it is
     carried on the cell only so :class:`CellSpec` stays one uniform shape).
-    FedPGO is deliberately absent from T5 -- see the disclosure above
-    :data:`T3_ARM_CLASSES`.
     """
     def _common(**overrides) -> dict:
         base = dict(
