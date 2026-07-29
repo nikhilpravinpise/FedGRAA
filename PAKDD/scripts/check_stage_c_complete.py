@@ -120,8 +120,10 @@ def check_cell_json(cell: CellSpec) -> bool:
     return True
 
 
-def check_tier_coverage(tiers: list, datasets: list, seeds: list, out_dir: str) -> None:
-    cells = enumerate_cells(tiers, datasets=datasets, seeds=seeds, out_dir=out_dir)
+def check_tier_coverage(tiers: list, datasets: list, seeds: list, out_dir: str,
+                         t4_m: int = 1) -> None:
+    cells = enumerate_cells(tiers, datasets=datasets, seeds=seeds, out_dir=out_dir,
+                             t4_m=t4_m)
     n_complete = 0
     for cell in cells:
         if check_cell_json(cell):
@@ -148,6 +150,13 @@ def main() -> int:
     ap.add_argument("--datasets", nargs="+", default=DEFAULT_DATASETS)
     ap.add_argument("--seeds", nargs="+", type=int, default=DEFAULT_SEEDS)
     ap.add_argument("--out-dir", default=DEFAULT_OUT_DIR)
+    ap.add_argument(
+        "--t4-m", type=int, default=1,
+        help="Which v2 refresh interval T4 was run at -- must match the "
+             "--t4-m value the campaign itself was launched with "
+             "(scripts/run_v2_frontier_sweep.py's own default), or every T4 "
+             "cell will be reported missing under the wrong filename.",
+    )
     args = ap.parse_args()
 
     print("=" * 80)
@@ -155,11 +164,11 @@ def main() -> int:
     print("=" * 80)
 
     preview_cells = enumerate_cells(args.tier, datasets=args.datasets, seeds=args.seeds,
-                                     out_dir=args.out_dir)
+                                     out_dir=args.out_dir, t4_m=args.t4_m)
     preview_arms = sorted({c.arm for c in preview_cells})
     print(f"\n-- Per-cell result JSONs ({len(preview_arms)} arm(s): "
           f"{', '.join(preview_arms)}) --")
-    check_tier_coverage(args.tier, args.datasets, args.seeds, args.out_dir)
+    check_tier_coverage(args.tier, args.datasets, args.seeds, args.out_dir, t4_m=args.t4_m)
 
     print("\n-- Documentation links --")
     check_doc_links()
