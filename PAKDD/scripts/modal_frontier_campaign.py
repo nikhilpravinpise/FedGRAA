@@ -451,9 +451,17 @@ def main(
         out_dir=f"{REMOTE_RESULTS}/v2_frontier",
     )
     if smoke:
-        # One cell per arm shape: the v1 reference plus the cheapest v2 arm.
-        keep = {"v1_projected", "v2_m1"}
-        cells = [c for c in cells if c.arm in keep][:2]
+        # One cell per arm shape: the v1 reference plus the cheapest v2 arm,
+        # when those arms are actually in the requested tier(s) (T1/T2/T4).
+        # T3/T5 cells never have either arm name (they are external-baseline
+        # arms -- celm, fltrust, fedapa, ... -- see T3_ARM_CLASSES/
+        # T5_ARM_CLASSES in run_v2_frontier_sweep.py), so filtering by that
+        # fixed set would silently produce an EMPTY smoke run for those
+        # tiers. Filter by the preferred set only if it actually matches
+        # something; otherwise just take the first two enumerated cells.
+        preferred = {"v1_projected", "v2_m1"}
+        preferred_cells = [c for c in cells if c.arm in preferred]
+        cells = (preferred_cells or cells)[:2]
 
     print("\n" + "=" * 78)
     print(f"  FedGRAA-v2 frontier campaign -- tiers={tiers}")

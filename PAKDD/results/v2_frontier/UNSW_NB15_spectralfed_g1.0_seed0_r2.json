@@ -1,0 +1,57 @@
+{
+  "dataset": "UNSW-NB15",
+  "arm": "spectralfed",
+  "gamma": 1.0,
+  "seed": 0,
+  "grad_refresh_every": null,
+  "config": {
+    "eta_prime": 0.01,
+    "n_rare": 3,
+    "p_drop": 0.0,
+    "dp_epsilon": null,
+    "secagg_threshold": null,
+    "weight_epochs": 5,
+    "local_epochs": 2,
+    "eta": 0.01,
+    "batch_size": 64,
+    "val_fraction": 0.1,
+    "n_rounds": 2,
+    "eval_every": 1
+  },
+  "provenance": {
+    "git_commit": "7f06718f7186c65aa8dd8be6e87e572123d3fc01",
+    "git_dirty": true,
+    "python": "3.13.3",
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "tensorflow": "2.21.0",
+    "numpy": "2.5.1",
+    "scipy": "1.18.0",
+    "pandas": "3.0.3",
+    "sklearn": "1.9.0"
+  },
+  "rounds": [
+    0,
+    1,
+    2
+  ],
+  "all_acc": [
+    0.049303228082554246,
+    0.5195801728699947,
+    0.575586523196331
+  ],
+  "last_n_acc": [
+    0.04604604604604604,
+    0.1349031434868345,
+    0.058558558558558564
+  ],
+  "zeta": [
+    null,
+    null,
+    null
+  ],
+  "final_all_acc": 0.575586523196331,
+  "final_last_n_acc": 0.058558558558558564,
+  "bytes_sent": 4847040,
+  "comm_rounds": 2,
+  "failed_secagg_rounds": 0
+}
