@@ -47,7 +47,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts.check_doc_links import find_broken_links  # noqa: E402
 from scripts.run_v2_frontier_sweep import (  # noqa: E402
-    ARM_NAMES,
     DEFAULT_DATASETS,
     DEFAULT_OUT_DIR,
     DEFAULT_SEEDS,
@@ -100,18 +99,18 @@ def check_cell_json(cell: CellSpec) -> bool:
         fail(f"{label}: final_last_n_acc is not numeric ({data['final_last_n_acc']!r})")
         return False
 
-    # v1_projected has no SecAgg byte/round instrumentation by design (F5 --
-    # only the v2 arms route through FederatedTrainerV2); v2 arms must have
-    # both populated, since T-12/T-13 exist precisely to make these numbers
-    # trustworthy once real.
-    if cell.arm == "v1_projected":
-        if data["bytes_sent"] is not None or data["comm_rounds"] is not None:
-            fail(f"{label}: v1_projected cell unexpectedly has bytes_sent/comm_rounds set")
-            return False
-    else:
-        if data["bytes_sent"] is None or data["comm_rounds"] is None:
-            fail(f"{label}: v2 arm cell missing bytes_sent/comm_rounds instrumentation")
-            return False
+    # ⚠️ Corrected: this check originally asserted v1_projected must NOT carry
+    # bytes_sent/comm_rounds, written before run_one_cell's "Billed for BOTH
+    # arms now" fix landed (see that function's own comment in
+    # run_v2_frontier_sweep.py) -- v1_projected's FederatedTrainer instruments
+    # its own bytes_sent (fedgraa/trainer.py), and every T3/T5 external
+    # baseline gets an analytically-computed value (same file, the
+    # BASELINE_ARM_CLASSES branch), since none of them do SecAgg either. Every
+    # arm must have both populated -- the frontier's x-axis needs a value at
+    # every point, not only the v2 arms.
+    if data["bytes_sent"] is None or data["comm_rounds"] is None:
+        fail(f"{label}: cell missing bytes_sent/comm_rounds instrumentation")
+        return False
 
     if data["dataset"] != cell.dataset or data["arm"] != cell.arm or data["seed"] != cell.seed:
         fail(f"{label}: {cell.path} identity fields don't match its own file name/cell spec")
@@ -127,8 +126,9 @@ def check_tier_coverage(tiers: list, datasets: list, seeds: list, out_dir: str) 
     for cell in cells:
         if check_cell_json(cell):
             n_complete += 1
+    arms = sorted({c.arm for c in cells})
     print(f"\n  {n_complete}/{len(cells)} cells complete for tier(s) {tiers}, "
-          f"datasets={datasets}, arms={ARM_NAMES}, seeds={seeds}")
+          f"datasets={datasets}, arms={arms}, seeds={seeds}")
 
 
 def check_doc_links() -> None:
@@ -144,7 +144,7 @@ def check_doc_links() -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--tier", nargs="+", default=["T1"],
-                    choices=["T1", "T2", "T4", "T6"])
+                    choices=["T1", "T2", "T3", "T4", "T5", "T6"])
     ap.add_argument("--datasets", nargs="+", default=DEFAULT_DATASETS)
     ap.add_argument("--seeds", nargs="+", type=int, default=DEFAULT_SEEDS)
     ap.add_argument("--out-dir", default=DEFAULT_OUT_DIR)
@@ -154,9 +154,11 @@ def main() -> int:
     print(f"  Stage C completeness check -- tier(s)={args.tier}")
     print("=" * 80)
 
-    print(f"\n-- Per-cell result JSONs ({len(ARM_NAMES)} arms x "
-          f"{len(args.datasets)} datasets x {len(args.seeds)} seeds"
-          f"{' x 3 gammas' if 'T2' in args.tier else ''}) --")
+    preview_cells = enumerate_cells(args.tier, datasets=args.datasets, seeds=args.seeds,
+                                     out_dir=args.out_dir)
+    preview_arms = sorted({c.arm for c in preview_cells})
+    print(f"\n-- Per-cell result JSONs ({len(preview_arms)} arm(s): "
+          f"{', '.join(preview_arms)}) --")
     check_tier_coverage(args.tier, args.datasets, args.seeds, args.out_dir)
 
     print("\n-- Documentation links --")
