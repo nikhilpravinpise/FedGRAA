@@ -1,0 +1,57 @@
+{
+  "dataset": "UNSW-NB15",
+  "arm": "fedpgo",
+  "gamma": 1.0,
+  "seed": 0,
+  "grad_refresh_every": null,
+  "config": {
+    "eta_prime": 0.01,
+    "n_rare": 3,
+    "p_drop": 0.0,
+    "dp_epsilon": null,
+    "secagg_threshold": null,
+    "weight_epochs": 5,
+    "local_epochs": 2,
+    "eta": 0.01,
+    "batch_size": 64,
+    "val_fraction": 0.1,
+    "n_rounds": 2,
+    "eval_every": 1
+  },
+  "provenance": {
+    "git_commit": "605d1f1c35578f5f524b02eb0d7d07ef74082c92",
+    "git_dirty": true,
+    "python": "3.13.3",
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "tensorflow": "2.21.0",
+    "numpy": "2.5.1",
+    "scipy": "1.18.0",
+    "pandas": "3.0.3",
+    "sklearn": "1.9.0"
+  },
+  "rounds": [
+    0,
+    1,
+    2
+  ],
+  "all_acc": [
+    0.049303228082554246,
+    0.5604456988298936,
+    0.563072068364007
+  ],
+  "last_n_acc": [
+    0.04604604604604604,
+    0.045779685264663805,
+    0.03318339799026494
+  ],
+  "zeta": [
+    null,
+    null,
+    null
+  ],
+  "final_all_acc": 0.563072068364007,
+  "final_last_n_acc": 0.03318339799026494,
+  "bytes_sent": 4847040,
+  "comm_rounds": 2,
+  "failed_secagg_rounds": 0
+}
