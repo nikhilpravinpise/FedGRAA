@@ -920,4 +920,33 @@ This document was compiled by an AI assistant (Claude Opus 5) operating under th
 
 ---
 
+## 14. FedPGO full-text accessibility — resolved (dated correction, 2026-07-31)
+
+This dated correction supersedes the FedPGO accessibility statements below,
+**in the accessibility sense only**; every prior statement remains historically
+true of the pass that wrote it and is retained in place. The full text
+(FedPGO/FedPGO.md, 103,210 bytes) was obtained on 2026-07-30 via the
+University of Pardubice institutional repository (`dk.upce.cz`) and committed
+in `9d20ac9`; the mechanism was then reimplemented faithfully (commit
+`25611ce`) and the 20 FedPGO cells rerun (commit `96adb05`). See
+[`STAGE_C_FEDPGO_FAITHFUL_PLAN_2026-07-31.md`](STAGE_C_FEDPGO_FAITHFUL_PLAN_2026-07-31.md)
+and [`STAGE_C_COMPUTE_SESSION_UPDATE_2026-07-30.md`](STAGE_C_COMPUTE_SESSION_UPDATE_2026-07-30.md) §8.
+
+| Site | Statement | Corrected status (2026-07-31) |
+|---|---|---|
+| §4.4 FedPGO row | "Full text access-blocked across 6 channels" | Full text local; mechanism reimplemented from primary text (Eqs. 6–10, Algorithms 1–3), eight judgment calls JC1–JC8 disclosed in `fedgraa/baselines_t5_fedpgo.py`. |
+| §9.0 item (a) | ⛔ STILL BLOCKED — six channels exhausted | ✅ RESOLVED 2026-07-30: primary text obtained via `dk.upce.cz`, committed `9d20ac9`. The SSRN preprint mirror (item in §11) remains 403. |
+| §9.1 item 0 | "FedPGO: STILL BLOCKED — known only through abstract-level secondary summaries" | DONE: full primary-text read; FedPGO's mechanism, personalization scheme, and its own claims are now writable at primary-source confidence, and the "no sentence asserting what FedPGO fails to do" discipline is lifted subject to the faithful implementation's judgment-call disclosures. |
+| §11 FedPGO entry | "Full text access-blocked across six independent channels" | Full text local since 2026-07-30 (committed `9d20ac9`); provenance note retained. |
+| §13.4 item 1 | "FedPGO's full text — the only substantive blocker" | Resolved 2026-07-30 via the institutional repository; no longer unverifiable. |
+| Verdict (§13.5–Verdict, lines 913–915) | "FedPGO's full text is unobtainable" / "not sufficient to assert what FedPGO fails to do" | The full text has been read and the mechanism reimplemented; the differentiation paragraph is now grounded in the primary source rather than the abstract. |
+
+The historical saturation narrative at §13.5 ("the novelty claim survived an
+adversarial saturation test that broke it once (FedPGO, `[S8]`)") is untouched:
+the saturation tests' findings are independent of text accessibility.
+
+*Correction appended 2026-07-31, after commit `96adb05`.*
+
+---
+
 *Compiled 2026-07-27 via ARS `deep-research` (fact-check + synthesis mode). Indices queried this pass: OpenAlex REST, Semantic Scholar Graph API, Crossref, DBLP publication-search API, arXiv API (via WebFetch), DOAJ, Unpaywall, OpenAIRE, CORE, Figshare, CORE Portal (portal.core.edu.au), plus general web search and direct document retrieval. ⚠️ The FastTrack Literature Open, alphaXiv, and Consensus MCP servers named in this pass's brief were **not available in this session** — see §13.2 for the substitutions used and the two instruments that were consequently not run. Supersedes [`STAGE_C_LITERATURE_MASTER.md`](STAGE_C_LITERATURE_MASTER.md) and its three addenda as the Stage C entry point; all nine source documents remain in place as the audit trail.*
