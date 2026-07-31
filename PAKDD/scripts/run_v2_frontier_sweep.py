@@ -138,17 +138,15 @@ NF_UQ_NIDS_V2_DEFAULT_MAX_PER_CLASS = 10_000
 # FedPGO -- Bikila & Capek, "FedPGO: A personalized federated learning
 # framework with gradient orthogonalization for IoT intrusion detection,"
 # Computer Networks 280:112210, 2026-03-10, DOI 10.1016/j.comnet.2026.112210
-# -- IS implemented, in fedgraa/baselines_t5_fedpgo.py, as a disclosed
-# RECONSTRUCTION from this project's own triple-source-verified literature
-# review (Final_Stage_C.md's citation, confirmed via DBLP
-# journals/cn/BikilaC26, OpenAlex W7134986038, Semantic Scholar
-# CorpusId:286471251), not from the paper's own equations -- full text
-# remains genuinely inaccessible across six independent channels. See that
-# module's docstring for the full disclosure, including a corrected mistake:
-# an earlier pass this same session concluded FedPGO was unimplementable
-# after wrongly attributing its AGO/PGF mechanism description to a
-# different paper (Sun, Zhou & Wang, Computers & Security 2025); rereading
-# this project's own already-completed literature review corrected that.
+# -- IS implemented, in fedgraa/baselines_t5_fedpgo.py, as a faithful
+# implementation from the paper's PRIMARY TEXT, local at
+# docs/research_c/FedPGO/FedPGO.md since 2026-07-30 (citation triple-confirmed
+# via DBLP journals/cn/BikilaC26, OpenAlex W7134986038, Semantic Scholar
+# CorpusId:286471251). The earlier "disclosed RECONSTRUCTION" proxy (from the
+# literature review's mechanism summary only) was replaced 2026-07-31 per
+# STAGE_C_FEDPGO_FAITHFUL_PLAN_2026-07-31.md Path 1 (D1); its 20 frontier
+# cells are archived at
+# results/v2_frontier/_archive_fedpgo_proxy_2026-07-30/.
 T3_ARM_CLASSES = {
     "celm": ("fedgraa.baselines_t3_contrib", "CELMTrainer"),
     "spectralfed": ("fedgraa.baselines_t3_contrib", "SpectralFedTrainer"),
@@ -261,6 +259,7 @@ def enumerate_cells(
     t4_m: int = T4_DEFAULT_M,
     nf_uq_max_per_class: int = NF_UQ_NIDS_V2_DEFAULT_MAX_PER_CLASS,
     out_dir: str = DEFAULT_OUT_DIR,
+    arms: Sequence[str] = (),
 ) -> List[CellSpec]:
     """Every cell for the requested tiers, in a stable order.
 
@@ -286,6 +285,12 @@ def enumerate_cells(
     pairs x ``datasets`` x ``seeds``, at a fixed gamma=1.0 (gamma is a
     FedGRAA-specific composite-gradient knob these methods don't have; it is
     carried on the cell only so :class:`CellSpec` stays one uniform shape).
+
+    ``arms`` optionally restricts every tier to the named arm(s) -- e.g.
+    ``arms=["fedpgo"]`` for a single-arm rerun. The filter is applied
+    uniformly across tiers *after* enumeration, so an empty tuple (the
+    default) means "all arms of the tier" and existing callers such as
+    ``check_stage_c_complete.py`` are byte-for-byte unaffected.
     """
     def _common(**overrides) -> dict:
         base = dict(
@@ -356,6 +361,10 @@ def enumerate_cells(
                         dataset=dataset, arm=arm, gamma=1.0, seed=seed,
                         **_common(p_drop=0.0, dp_epsilon=None),
                     ))
+
+    if arms:
+        wanted = set(arms)
+        cells = [c for c in cells if c.arm in wanted]
 
     return cells
 
@@ -585,7 +594,7 @@ def run_one_cell(cell: CellSpec) -> Dict:
         # instrument bytes internally (unlike FederatedTrainer/
         # FederatedTrainerV2), so the same formula is applied analytically
         # here rather than silently leaving the frontier's x-axis undefined
-        # for 13 of its arms.
+        # for 14 of its arms (6 T3 + 8 T5 = 14, BASELINE_ARM_CLASSES).
         import importlib
 
         module_name, class_name = BASELINE_ARM_CLASSES[cell.arm]

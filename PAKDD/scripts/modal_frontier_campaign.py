@@ -77,6 +77,11 @@ Usage::
     modal run --detach scripts/modal_frontier_campaign.py --tier T1
     modal run --detach scripts/modal_frontier_campaign.py --tier T1,T2
 
+    # Single-arm rerun (e.g. the faithful-FedPGO rerun): --arm filters the
+    # enumerated cells uniformly across tiers, --force re-runs cells the
+    # volume already holds complete results for.
+    modal run --detach scripts/modal_frontier_campaign.py --tier T5 --arm fedpgo --force
+
     # T6 -- separate file/App, see modal_frontier_campaign_t6.py's own docstring.
     modal run scripts/modal_frontier_campaign_t6.py --smoke
     modal run --detach scripts/modal_frontier_campaign_t6.py
@@ -381,6 +386,7 @@ def main(
     tier: str = "T1",
     datasets: str = "",
     seeds: str = "",
+    arm: str = "",
     rounds: int = 200,
     eval_every: int = 20,
     eta_prime: float = -1.0,
@@ -437,6 +443,7 @@ def main(
 
     ds = [d.strip() for d in datasets.split(",") if d.strip()] or DEFAULT_DATASETS
     sd = [int(s) for s in seeds.replace(",", " ").split()] or DEFAULT_SEEDS
+    ar = [a.strip() for a in arm.replace(",", " ").split() if a.strip()]
     ep = DEFAULT_ETA_PRIME if eta_prime < 0 else eta_prime
     thr = None if secagg_threshold < 0 else secagg_threshold
 
@@ -449,6 +456,7 @@ def main(
         data_dir=f"{REMOTE_REPO}/data", cache_dir="/tmp/.cache",
         eta_prime=ep, secagg_threshold=thr, t4_m=t4_m,
         out_dir=f"{REMOTE_RESULTS}/v2_frontier",
+        arms=ar,
     )
     if smoke:
         # One cell per arm shape: the v1 reference plus the cheapest v2 arm,
@@ -464,7 +472,8 @@ def main(
         cells = (preferred_cells or cells)[:2]
 
     print("\n" + "=" * 78)
-    print(f"  FedGRAA-v2 frontier campaign -- tiers={tiers}")
+    print(f"  FedGRAA-v2 frontier campaign -- tiers={tiers}"
+          + (f"  arm(s)={ar}" if ar else ""))
     print(f"  datasets={ds}  seeds={sd}  rounds={rounds}")
     print(f"  eta'={ep}  secagg_threshold={thr or 'majority'}"
           + (f"  t4_m={t4_m}" if "T4" in tiers else ""))

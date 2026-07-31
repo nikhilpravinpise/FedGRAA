@@ -126,3 +126,45 @@ def test_t6_paths_never_collide_with_t1_t2_t4():
 def test_t1_t2_t4_t6_together_enumerate_without_any_collision():
     cells = enumerate_cells(["T1", "T2", "T4", "T6"])
     assert len({c.path for c in cells}) == len(cells)
+
+
+# --------------------------------------------------------------------------- #
+# --arm filter (STAGE_C_FEDPGO_FAITHFUL_PLAN_2026-07-31.md §6.1): an optional
+# arms sequence on enumerate_cells, applied uniformly across tiers; empty =
+# all arms (zero behavior change for existing callers).
+# --------------------------------------------------------------------------- #
+def test_arms_filter_empty_is_all_arms():
+    all_cells = enumerate_cells(["T1"], datasets=["CIC-IDS-2017"], seeds=[0, 1])
+    filtered = enumerate_cells(
+        ["T1"], datasets=["CIC-IDS-2017"], seeds=[0, 1], arms=(),
+    )
+    assert filtered == all_cells
+
+
+def test_arms_filter_restricts_arms_uniformly_across_tiers():
+    cells = enumerate_cells(["T5"], datasets=["CIC-IDS-2017"], seeds=[0, 1],
+                            arms=["fedpgo"])
+    assert len(cells) == 2  # 2 seeds
+    assert {c.arm for c in cells} == {"fedpgo"}
+    assert {c.dataset for c in cells} == {"CIC-IDS-2017"}
+
+
+def test_arms_filter_applies_to_fedgraa_arms_too():
+    cells = enumerate_cells(["T1", "T2"], datasets=["CIC-IDS-2017"], seeds=[0],
+                            arms=["v2_m1"])
+    assert len(cells) == 3  # 3 gammas x 1 seed, v2_m1 only
+    assert {c.arm for c in cells} == {"v2_m1"}
+    assert sorted({c.gamma for c in cells}) == [0.0, 0.5, 1.0]
+
+
+def test_arms_filter_unknown_arm_yields_no_cells():
+    cells = enumerate_cells(["T5"], datasets=["CIC-IDS-2017"], seeds=[0, 1],
+                            arms=["does_not_exist"])
+    assert cells == []
+
+
+def test_arms_filter_preserves_stable_order_and_uniqueness():
+    cells = enumerate_cells(["T1", "T5"], datasets=["CIC-IDS-2017"], seeds=[0],
+                            arms=["fedpgo", "v2_m1"])
+    assert len({c.path for c in cells}) == len(cells)
+    assert [c.arm for c in cells] == ["v2_m1", "fedpgo"]
