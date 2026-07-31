@@ -722,7 +722,7 @@ Building on [`Final_Stage_C.md`](Final_Stage_C.md) §7.4's narrowed statement, w
 
 Four more from this pass:
 
-4. ❌ **Any sentence asserting what FedPGO *fails* to do.** Its full text is unobtainable across six channels ([`Final_Stage_C.md`](Final_Stage_C.md) §9.0a). Cite at abstract-level confidence only.
+4. ❌ **Any sentence asserting what FedPGO *fails* to do.** Its full text is unobtainable across six channels ([`Final_Stage_C.md`](Final_Stage_C.md) §9.0a). Cite at abstract-level confidence only. *Dated correction, 2026-07-31: the constraint on **reading** FedPGO is lifted — the full text became local on 2026-07-30 (committed `9d20ac9`, [`Final_Stage_C.md`](Final_Stage_C.md) §14) and the mechanism was reimplemented faithfully (`25611ce`) with the rerun results committed (`96adb05`). What survives of item 4 is its original shape: any sentence about what FedPGO fails to do must now be grounded in the primary text and the faithful implementation's disclosed judgment calls (JC1–JC8), not in the abstract.*
 5. ❌ **"Negligible overhead."** It is 2–6×. Say the number. `[F5]`
 6. ❌ **Any comparison table containing "FedSND."** `[F6]`
 7. ❌ **"FedGRAA-v2 converges"** without the `O(ζ²)` term and the stationarity-not-global-optimality qualifier. Stage B's honesty on this is the project's strongest habit; do not spend it.

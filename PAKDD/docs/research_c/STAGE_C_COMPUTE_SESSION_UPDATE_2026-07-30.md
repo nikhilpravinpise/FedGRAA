@@ -142,6 +142,44 @@ text is inaccessible are now historically true but operationally superseded by
 the local primary source; any correction must be dated and retained in place,
 not silently deleted.
 
+## 8. Resolution (2026-07-31): faithful-baseline path taken, and a §4 factual correction
+
+**Dated decision.** Path 1 of §6 (faithful-baseline path) was taken, as
+planned in
+[`STAGE_C_FEDPGO_FAITHFUL_PLAN_2026-07-31.md`](STAGE_C_FEDPGO_FAITHFUL_PLAN_2026-07-31.md).
+
+**Outcome.**
+
+- The proxy implementation was replaced by a faithful implementation of the
+  primary text (Eqs. 6–10, Algorithms 1–3) in
+  [`fedgraa/baselines_t5_fedpgo.py`](../../fedgraa/baselines_t5_fedpgo.py),
+  with the eight judgment calls JC1–JC8 disclosed in its module docstring
+  (commit `25611ce`).
+- Its test file was rewritten (19 tests, including a gradient-memory
+  regression test pinning the proxy's same-round-FedAvg bug); full suite:
+  453 passed.
+- The 20 FedPGO cells were rerun on Modal (all stamped `25611ce`, `git_dirty:
+  true` — the tree carried the then-untracked plan document) and committed in
+  commit `96adb05`. The rebuilt frontier table/figure include the faithful
+  FedPGO point: CIC-IDS-2017 all=0.5145/rare=0.0676, UNSW-NB15
+  all=0.5318/rare=0.1087 (means over seeds 0–9).
+- The 20 proxy cells were archived, not deleted, at
+  [`results/v2_frontier/_archive_fedpgo_proxy_2026-07-30/`](../../results/v2_frontier/_archive_fedpgo_proxy_2026-07-30/)
+  with a dated README (plan decision D2; collision-free by construction —
+  the table builder's glob is non-recursive and the checker verifies exact
+  `cell.path`).
+- `check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6 --t4-m 3` remains
+  green at 730/730.
+
+**Correction to §4 (dated 2026-07-31).** §4 above states that the smoke
+artefact `results/v2_frontier/UNSW_NB15_fedpgo_g1.0_seed0_r2.json` is
+"deliberately untracked and was not committed". That is wrong: the file was
+committed in `9d20ac9` (57 lines, alongside `FedPGO/FedPGO.md`). The
+CIC-IDS-2017 `_r2` smoke artefact was never tracked. Both proxy-era `_r2`
+files now live in the archive directory; the 2026-07-31 faithful rerun's own
+CIC-IDS-2017 `_r2` smoke artefact (commit `25611ce`) is committed at the
+canonical location. The UNSW-NB15 `_r2` was not re-smoked.
+
 ## 7. Literature-search result carried forward
 
 The existing duplication/scooping result remains unchanged: the FastTrack
