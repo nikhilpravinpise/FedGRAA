@@ -9,7 +9,7 @@ Reads `results/v2_frontier/frontier_table.json` (built by
   (mean over >=10 seeds) with 95% bootstrap CI error bars, per Sec 4.2's own
   spec. The five FedGRAA points (v1-projected, v2 at m in {5,3,2,1}) are
   drawn as filled circles connected by a dashed guide line and annotated
-  with each v2 point's measured median zeta_t; the 13 external-baseline
+  with each v2 point's measured median zeta_t; the 14 external-baseline
   points (T3's contribution-estimation family, T5's adaptive/NIDS-domain
   family) are drawn as unfilled markers, un-connected, since they are not
   points on FedGRAA's own communication-accuracy tradeoff curve -- they are
@@ -64,10 +64,11 @@ BASELINE_LABELS = {
     "dapfl": "DA-PFL",
     "fedaware": "FedAWARE",
     "adaaggrl": "AdaAggRL",
+    "fedpgo": "FedPGO",
 }
-# Distinct marker per baseline so 13 unfilled points stay distinguishable
+# Distinct marker per baseline so 14 unfilled points stay distinguishable
 # without relying on color alone (colorblind- and greyscale-print-safe).
-BASELINE_MARKERS = ["o", "s", "^", "v", "D", "P", "X", "*", "h", "<", ">", "d", "p"]
+BASELINE_MARKERS = ["o", "s", "^", "v", "D", "P", "X", "*", "h", "<", ">", "d", "p", "8"]
 
 
 def _require_mpl():
