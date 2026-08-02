@@ -51,3 +51,12 @@ jobs:
 
       - name: Stage B correctness audit (recomputes every transcribed number from raw JSON)
         run: python scripts/audit_stage_b.py
+
+      - name: Stage C completeness gate (T1-T6, TC)
+        run: python scripts/check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6 TC --t4-m 3
+
+      - name: Stage C completeness gate (T7, 5-seed grid)
+        run: python scripts/check_stage_c_complete.py --tier T7 --seeds 0 1 2 3 4
+
+      - name: Stage C correctness audit (recomputes every transcribed number from raw JSON)
+        run: python scripts/audit_stage_c.py

@@ -5,6 +5,7 @@
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](PAKDD/requirements.txt)
 [![PAKDD Stage A](https://img.shields.io/badge/PAKDD%20Stage%20A-complete-brightgreen)](PAKDD/docs/current/STAGE_A_MASTER_REPORT.md)
 [![PAKDD Stage B](https://img.shields.io/badge/PAKDD%20Stage%20B-complete-brightgreen)](PAKDD/docs/current/STAGE_B_MASTER_REPORT.md)
+[![PAKDD Stage C](https://img.shields.io/badge/PAKDD%20Stage%20C-B%2BD%2BT7%20complete-brightgreen)](PAKDD/docs/current/STAGE_C_MASTER_REPORT.md)
 
 Independent, statistically-tested reproductions of published ML papers —
 built to find out whether the numbers actually hold up, and to show the work
@@ -31,14 +32,14 @@ flowchart LR
     B --> C{"Converges on\nreal data?"}
     C -- "no" --> D["Root-cause diagnosis:\nweights leave the simplex\nin round 1, 120/120 cells"]
     D --> E["Stage B\ncorrected theory +\n10-seed ablation"]
-    E --> F["Stage C\nnovel extension\n(not started)"]
+    E --> F["Stage C\nFedPGO novel extension\n830/830 + 90/90 T7 cells"]
 ```
 
 | Stage | Goal | Status |
 |---|---|---|
 | **A** | Faithful reproduction — every paper table/figure has a persisted, reproduced-or-honestly-diverging counterpart | ✅ complete |
 | **B** | The divergence critique as a rigorous, citable component: formal theory + statistically-tested 10-seed ablation | ✅ complete |
-| **C** | The novel extension for an A/A\*-tier venue | ⏳ not started |
+| **C** | The novel extension for an A/A\*-tier venue: FedPGO (privacy-compliant redesign + adversarial-robustness eval) | ✅ B+D+T7 complete (830/830 + 90/90 cells) — Option A (few-shot hybrid) deliberately deferred |
 
 **Headline finding:** the paper's aggregation-weight update has no
 simplex-projection step, so the weight vector leaves the probability simplex
@@ -53,6 +54,7 @@ proof.
 - [PAKDD/understanding/00_START_HERE.md](PAKDD/understanding/00_START_HERE.md) — a gentle introduction to federated learning and this paper, for readers new to either
 - [PAKDD/docs/current/STAGE_A_MASTER_REPORT.md](PAKDD/docs/current/STAGE_A_MASTER_REPORT.md) — the reproduction, exhaustively
 - [PAKDD/docs/current/STAGE_B_MASTER_REPORT.md](PAKDD/docs/current/STAGE_B_MASTER_REPORT.md) — the theory + ablation campaign, exhaustively
+- [PAKDD/docs/current/STAGE_C_MASTER_REPORT.md](PAKDD/docs/current/STAGE_C_MASTER_REPORT.md) — the FedPGO novel extension, exhaustively
 
 ## Why this repo is organized the way it is
 
@@ -96,9 +98,11 @@ python -m venv .venv313
 .venv313\Scripts\Activate.ps1
 pip install -r requirements.txt
 
-pytest tests --tb=short                     # 151 passed
-python scripts\check_stage_a_complete.py    # exit 0
-python scripts\check_stage_b_complete.py    # exit 0
+pytest tests --tb=short                                    # 551 passed
+python scripts\check_stage_a_complete.py                   # exit 0
+python scripts\check_stage_b_complete.py                   # exit 0
+python scripts\check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6 TC --t4-m 3   # exit 0
+python scripts\check_stage_c_complete.py --tier T7 --seeds 0 1 2 3 4            # exit 0
 ```
 
 Python 3.13 is recommended — TensorFlow 2.21 has no Python 3.14 wheels yet.

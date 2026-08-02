@@ -7,22 +7,26 @@ internally consistent, exiting non-zero on any gap. Same idiom as
 aggregate every failure before exiting, `sys.exit(main())`.
 
 Written directly against `run_one_cell`'s own result-dict schema
-(`scripts/run_v2_frontier_sweep.py`), not against a real campaign's output --
-per `docs/research_c/REMAINING_COMPUTE_WORK.md` §6, no T1 campaign has been
-run yet, so this cannot (and does not) claim to have been exercised against
-real output. The schema itself is not a guess: `run_one_cell` is fully
-implemented, unit/integration-tested (T-5/T-11/T-12/T-13), and one real cell
-has been run end-to-end manually to confirm the wiring -- this checker just
-reads the same dict shape that code already writes to disk. It is scoped to
-the per-cell JSON layer only; a consolidated frontier-figure builder (the v2
-analogue of `build_ablation_table.py`/`render_ablation.py`) does not exist
-yet and is intentionally not checked here, since it cannot be built or
-verified without real T1 data to build it from.
+(`scripts/run_v2_frontier_sweep.py`). As of 2026-08-02 the full compute
+campaign has run for real: T1-T7 and TC are complete (830 + 90 cells; see
+`docs/current/STAGE_C_MASTER_REPORT.md`), so this checker's per-cell
+assertions are exercised against genuine campaign output, not just the
+schema `run_one_cell` writes. It is scoped to the per-cell JSON layer only --
+presence and shape, not correctness. `scripts/audit_stage_c.py` (2026-08-02)
+is the `audit_stage_a.py`/`audit_stage_b.py` analogue this checker itself
+used to lack: it independently re-derives Stage C's reported numbers
+(accuracy, significance, overhead) from the raw per-cell JSON, including the
+consolidated table builders this script doesn't re-check
+(`build_v2_frontier_table.py`, `build_v2_significance_table.py`,
+`build_overhead_table.py`).
 
 Usage::
 
     python scripts/check_stage_c_complete.py --tier T1
     python scripts/check_stage_c_complete.py --tier T1 T2 --datasets CIC-IDS-2017
+    python scripts/check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6 TC --t4-m 3
+    python scripts/check_stage_c_complete.py --tier T7 --seeds 0 1 2 3 4
+    python scripts/check_stage_c_complete.py --tier T7G --seeds 0 1 2 3 4
 """
 
 from __future__ import annotations
@@ -146,7 +150,7 @@ def check_doc_links() -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--tier", nargs="+", default=["T1"],
-                    choices=["T1", "T2", "T3", "T4", "T5", "T6", "TC", "T7"])
+                    choices=["T1", "T2", "T3", "T4", "T5", "T6", "TC", "T7", "T7G"])
     ap.add_argument("--datasets", nargs="+", default=DEFAULT_DATASETS)
     ap.add_argument("--seeds", nargs="+", type=int, default=DEFAULT_SEEDS)
     ap.add_argument("--out-dir", default=DEFAULT_OUT_DIR)
