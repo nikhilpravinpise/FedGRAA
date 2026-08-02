@@ -30,11 +30,19 @@ Usage::
     modal run scripts/modal_frontier_campaign_t7.py --smoke       # 2 cells, 2 rounds
     modal run --detach scripts/modal_frontier_campaign_t7.py
 
+    # Gamma-sweep addendum (STAGE_C_MASTER_REPORT.md Sec 14 item 1 -- "gamma
+    # was not swept in the T7 campaign... the most direct next measurement,
+    # named but not performed"). Runs T7G instead of T7: the undefended
+    # mechanism-specific-attack cross product at gamma in {0, 0.5} (T7 itself
+    # already covers gamma=1.0), same 5-seed grid, same 2 attacker fractions.
+    modal run --detach scripts/modal_frontier_campaign_t7.py --gamma-sweep
+
 Then pull results down exactly as for T1/T2/T4/T6 (same Volume, same
 ``v2_frontier`` path)::
 
     modal volume get fedgraa-v2-results v2_frontier results/
     python scripts/check_stage_c_complete.py --tier T7
+    python scripts/check_stage_c_complete.py --tier T7G --seeds 0 1 2 3 4
 """
 
 from __future__ import annotations
@@ -255,24 +263,37 @@ def main(
     smoke: bool = False,
     verify_only: bool = False,
     force: bool = False,
+    gamma_sweep: bool = False,
 ):
-    """T7 only: the defense cross-product + the D1c undefended-v2 trend
-    addendum. No ``--tier`` flag -- this script only ever runs T7. Per
-    JC-T7-18's final grid, the recommended ``--seeds`` for a real campaign
-    is ``0,1,2,3,4`` (5 seeds -- the base grid's own seed count; the
-    D1c trend addendum's "10 seeds total" comes from splitting those same 5
-    seeds across its 2 attacker-fraction points x 5 = still 5 seeds each,
-    per :func:`scripts.run_v2_frontier_sweep.enumerate_cells`'s own T7
-    branch -- passing more than 5 seeds scales every arm uniformly, not
-    just the addendum).
+    """T7 (default) or T7G (``--gamma-sweep``) only -- no general ``--tier``
+    flag, this script only ever runs one of those two. T7 is the defense
+    cross-product + the D1c undefended-v2 trend addendum, at gamma=1.0. T7G
+    is the gamma-sweep addendum (:data:`scripts.run_v2_frontier_sweep.
+    T7_GAMMA_SWEEP_EXTRA`, gamma in ``{0.0, 0.5}``): the same undefended
+    mechanism-specific-attack cross product, at the two gammas T7 doesn't
+    already cover -- answers STAGE_C_MASTER_REPORT.md Sec 14 item 1 (does
+    higher gamma widen the attack surface?) without re-running the full
+    defense cross-product at every gamma. Per JC-T7-18's final grid, the
+    recommended ``--seeds`` for a real campaign is ``0,1,2,3,4`` (5 seeds --
+    the base grid's own seed count; the D1c trend addendum's "10 seeds
+    total" comes from splitting those same 5 seeds across its 2 attacker-
+    fraction points x 5 = still 5 seeds each, per
+    :func:`scripts.run_v2_frontier_sweep.enumerate_cells`'s own T7/T7G
+    branches -- passing more than 5 seeds scales every arm uniformly, not
+    just the addendum). ``--arm`` is ignored under ``--gamma-sweep``: T7G
+    only ever generates the raresig arm.
     """
     sys.path.insert(0, LOCAL_REPO)
     from scripts.run_v2_frontier_sweep import (  # noqa: E402
         DEFAULT_DATASETS,
         DEFAULT_SEEDS,
         T7_ARM_NAMES,
+        T7_GAMMA_SWEEP_EXTRA,
+        T7_RARESIG_ARM,
         enumerate_cells,
     )
+
+    tier = "T7G" if gamma_sweep else "T7"
 
     print("=" * 78)
     print("  Pre-flight: verifying the T7 image")
@@ -288,13 +309,17 @@ def main(
     sd = [int(s) for s in seeds.replace(",", " ").split()] or DEFAULT_SEEDS
     ds = [d.strip() for d in datasets.split(",") if d.strip()] or DEFAULT_DATASETS
     thr = None if secagg_threshold < 0 else secagg_threshold
-    arms_filter = [arm] if arm else []
+    # T7G only ever generates the raresig arm (see enumerate_cells's T7G
+    # branch) -- an --arm filter under --gamma-sweep would silently produce
+    # zero cells for any value other than v2_raresig, so it's ignored rather
+    # than left as a footgun.
+    arms_filter = [] if gamma_sweep else ([arm] if arm else [])
 
     if smoke:
         rounds, eval_every, sd = 2, 1, [0]
 
     cells = enumerate_cells(
-        ["T7"], datasets=ds, seeds=sd, rounds=rounds, eval_every=eval_every,
+        [tier], datasets=ds, seeds=sd, rounds=rounds, eval_every=eval_every,
         data_dir=f"{REMOTE_REPO}/data", cache_dir="/tmp/.cache",
         secagg_threshold=thr, out_dir=f"{REMOTE_RESULTS}/v2_frontier",
         arms=arms_filter,
@@ -303,10 +328,13 @@ def main(
         keep = {"secfednids_labelflip", "v2_raresig"}
         cells = [c for c in cells if c.arm in keep][:2]
 
+    displayed_arms = [T7_RARESIG_ARM] if gamma_sweep else (T7_ARM_NAMES if not arm else [arm])
     print("\n" + "=" * 78)
-    print("  FedGRAA-v2 frontier campaign -- T7 (adversarial robustness)")
+    print(f"  FedGRAA-v2 frontier campaign -- {tier}"
+          + (" gamma-sweep addendum" if gamma_sweep else " (adversarial robustness)"))
     print(f"  datasets={ds}  seeds={sd}  rounds={rounds}  "
-          f"secagg_threshold={thr or 'majority'}  arms={T7_ARM_NAMES if not arm else [arm]}")
+          f"secagg_threshold={thr or 'majority'}  arms={displayed_arms}"
+          + (f"  gammas={T7_GAMMA_SWEEP_EXTRA}" if gamma_sweep else "  gamma=1.0"))
     print(f"  {len(cells)} cells -> Modal (cpu=1.0, <=20 concurrent)")
     print("=" * 78)
 
@@ -381,6 +409,8 @@ def main(
         print(f"  All {len(cells)} cells completed."
               + (f"  ({skipped} were already done and skipped.)"
                  if skipped else ""))
+    seeds_str = " ".join(str(s) for s in sd)
     print(f"\n  Pull results:  modal volume get {RESULTS_VOLUME} v2_frontier results/")
-    print("  Then verify :  python scripts/check_stage_c_complete.py --tier T7")
+    print(f"  Then verify :  python scripts/check_stage_c_complete.py --tier {tier}"
+          f" --seeds {seeds_str}")
     print("=" * 78)

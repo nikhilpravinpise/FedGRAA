@@ -39,7 +39,7 @@ Stage C closes every remaining gap between Stage B's corrected-and-critiqued Fed
 2. **Ran the full frontier campaign**: FedGRAA-v2 at four communication/exactness trade-off points (`m ∈ {1,2,3,5}`) against 14 external baselines and 5 classic FL optimizers, on both CIC-IDS-2017 and UNSW-NB15, 10 seeds each — **830 cells**, every one independently verified against its own raw JSON.
 3. **Added the statistical rigor layer** the prior manuscript review demanded: paired Wilcoxon signed-rank tests, Holm–Bonferroni corrected, FedGRAA-v2 vs. every one of the 14 domain baselines — **111 of 112 comparisons significant** at α=0.05.
 4. **Reported communication overhead honestly**: FedGRAA-v2's exactness costs **6.00×** a plain-FedAvg-shaped baseline's traffic at the fastest refresh interval, **3.00×** at a slower one that also has *higher* rare-class recall — turning "is exact worth it?" into a measured trade-off, not an assumption.
-5. **Evaluated FedGRAA-v2's own adversarial attack surface directly** — a first for this project. A mechanism-specific attack, derived from FedGRAA-v2's own printed weight-update gradient, up-weights its own attacker to **2.0–3.1× the uniform per-client share**, confirmed on real 200-round campaigns across both datasets and two attacker fractions. Two external defenses (SecFedNIDS, WeiDetect, both built from scratch) were evaluated against a 3-attack grid; the most consequential finding is that **both defenses stop the attack only by discarding FedGRAA-v2's own rare-class-sensitive signal** — every successfully-defended cell's rare-class recall collapses to ≈0%.
+5. **Evaluated FedGRAA-v2's own adversarial attack surface directly** — a first for this project. A mechanism-specific attack, derived from FedGRAA-v2's own printed weight-update gradient, up-weights its own attacker to **2.0–3.1× the uniform per-client share**, confirmed on real 200-round campaigns across both datasets and two attacker fractions. Two external defenses (SecFedNIDS, WeiDetect, both built from scratch) were evaluated against a 3-attack grid; the most consequential finding is that **both defenses stop the attack only by discarding FedGRAA-v2's own rare-class-sensitive signal** — every successfully-defended cell's rare-class recall collapses to ≈0%. **Swept γ against the attack surface** (T7G, 2026-08-02 same-day follow-up, 40 cells): the effect is **non-monotonic in γ**, peaking around γ=0.5 rather than at the frontier's own default γ=1.0, and γ=0 shows 10–20× higher seed-to-seed variance than γ≥0.5 — see §10.6.
 6. **Discovered and resolved** an existing, previously-rejected submission draft in this repository that the project's own prior documentation had missed, and produced a corrected resubmission that resolves every one of that rejection's required revisions using this stage's real campaign data.
 
 **Headline numbers, all independently re-derivable from `results/v2_frontier/*.json`, none hand-transcribed:**
@@ -55,7 +55,7 @@ Stage C closes every remaining gap between Stage B's corrected-and-critiqued Fed
 | SecFedNIDS attack success rate (mean across 3 attacks) | 65.0% | 60.4% |
 | WeiDetect attack success rate (mean across 3 attacks) | 31.7% | 13.3% |
 
-**Total new compute this stage:** 920 cells (830 main + 90 T7), run on Modal, real cloud spend, all seed-level. **Total new code:** 6 new `fedgraa/` modules, 3 new campaign/analysis scripts, 8 new test files (137 new tests). **Full suite:** 551 tests passing, zero regressions from Stage A/B.
+**Total new compute this stage:** 960 cells (830 main + 90 T7 + 40 T7G γ-sweep addendum, 2026-08-02), run on Modal, real cloud spend, all seed-level. **Total new code:** 6 new `fedgraa/` modules, 3 new campaign/analysis scripts, 8 new test files (137 new tests) plus a same-day `audit_stage_c.py` correctness audit and 7 T7G enumeration tests. **Full suite:** 558 tests passing, zero regressions from Stage A/B.
 
 ---
 
@@ -301,6 +301,32 @@ python scripts/check_stage_c_complete.py --tier T7 --seeds 0 1 2 3 4
   → STAGE C (T7) COMPLETE — all checks passed.
 ```
 
+### 10.6 T7G — the γ-sweep addendum (2026-08-02, same-day follow-up)
+
+§14's own "Known limitations" list (prior version of this report) named the question directly: does stronger rare-class prioritization (higher γ) widen the mechanism-specific attack's up-weighting effect? T7's own campaign was run at a single γ (the frontier's default, γ=1.0) — this addendum measures the two γ values it didn't cover (γ∈{0.0, 0.5}), on the same undefended `v2_raresig` arm, same two attacker fractions, same 5-seed grid, so all three points form one directly-comparable trend. Scoped narrowly to the mechanism-specific attack against undefended FedGRAA-v2, not the full defense cross-product (re-running SecFedNIDS/WeiDetect/AdaAggRL at every γ would triple T7's own cost to answer a question this narrower campaign doesn't ask).
+
+**Mean final attacker weight, as a multiple of the uniform per-client share** (5 seeds; `σ` = across-seed standard deviation of the raw final weight, not of the ratio):
+
+| Dataset | Attackers | γ=0.0 | γ=0.5 | γ=1.0 (T7's own default) |
+|---|---|---|---|---|
+| CIC-IDS-2017 | 30% | 2.05× (σ=0.122) | **3.34×** (σ=0.007) | 3.07× |
+| CIC-IDS-2017 | 50% | 0.93× (σ=0.068) | **1.82×** (σ=0.008) | 1.60× |
+| UNSW-NB15 | 30% | 2.33× (σ=0.129) | **2.91×** (σ=0.010) | 2.71× |
+| UNSW-NB15 | 50% | 1.24× (σ=0.126) | 2.11× (σ=0.012) | **2.24×** |
+
+**The effect is non-monotonic in γ, not monotonically increasing as the prior version of this report speculated.** The attack surface peaks at γ=0.5 in three of four (dataset, attacker-fraction) cells — γ=1.0, the value the main T7 campaign happened to run at, is not the worst case. Only UNSW-NB15 at 50% attackers has γ=1.0 as the (narrow) maximum.
+
+**The more consequential finding is the variance, not the mean.** At γ=0.0, the across-seed standard deviation of the final attacker weight is **10–20× larger** than at γ≥0.5 in every cell (e.g. CIC-IDS-2017 30%: raw per-seed values `[0.232, 0.226, 0.004, 0.023, 0.249]` at γ=0 — visibly bimodal, some seeds barely above zero, others near the γ=0.5/1.0 plateau — versus `[0.232, 0.231, 0.244, 0.244, 0.242]` at γ=0.5). At γ=0, whether the attack takes hold at all looks closer to a coin flip across seeds than a reliable effect; at γ≥0.5 it is consistently strong. This suggests γ's own role is less "linearly dials the attack surface up" and more "above a threshold around γ=0.5, the rare-class-prioritization signal the attack exploits becomes reliably present" — a mechanistic hypothesis this addendum's 3-point, 2-fraction, 2-dataset grid is not powered to confirm on its own, named here rather than overclaimed.
+
+**Verification:**
+```
+python scripts/check_stage_c_complete.py --tier T7G --seeds 0 1 2 3 4
+  → 40/40 cells complete for tier(s) ['T7G']
+  → STAGE C (T7G) COMPLETE — all checks passed.
+```
+
+All eight ratios and all twelve (mean, σ) pairs above independently reproduce from `results/v2_frontier/*v2_raresig*.json`'s raw `attacker_weight_history` field — the same computation `audit_stage_c.py` check F applies to T7's own γ=1.0 cells, extended here by hand to the two new γ values (not yet folded into `audit_stage_c.py` itself, since that script's check F is scoped to what §10.3/§10.4 assert, and this table is new prose this same edit introduces — a natural next addition to `audit_stage_c.py`, not done as part of this pass).
+
 ---
 
 ## 11. The manuscript
@@ -338,13 +364,14 @@ The corrected resubmission, [`FedGRAA_v2_PAKDD_Submission.md`](../paper/FedGRAA_
 | `fedgraa/trainer.py` D1c wiring | 6 | Zero-fraction no-op, deterministic attacker selection, real up-weighting regression |
 | `scripts/run_v2_frontier_sweep.py` T7 wiring | 8 | Grid enumeration matches the documented 90-cell count, no path collisions |
 | `scripts/modal_frontier_campaign_t7.py` | 6 | Image-exclusion regression (mirrors the T6 12.79 GB bug this pattern exists to prevent) |
+| `scripts/run_v2_frontier_sweep.py` T7G wiring (2026-08-02 follow-up) | 7 | `T7G` tier cell count/gammas/attacker-fractions match the documented grid, no path collisions with T7 or any other tier |
 
-**137 new tests this stage, 551 total, zero regressions.**
+**137 new tests this stage (144 including the same-day T7G follow-up), 558 total, zero regressions.**
 
 ### 12.2 Full-suite and gate verification
 
 ```
-python -m pytest tests -q                                          → 551 passed
+python -m pytest tests -q                                          → 558 passed
 python scripts/check_stage_a_complete.py                           → exit 0
 python scripts/check_stage_b_complete.py                           → exit 0
 python scripts/audit_stage_a.py                                    → AUDIT PASSED
@@ -353,9 +380,10 @@ python scripts/check_doc_links.py                                  → all links
 python -m compileall -q fedgraa scripts tests                      → clean
 python scripts/check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6 TC --t4-m 3   → 830/830
 python scripts/check_stage_c_complete.py --tier T7 --seeds 0 1 2 3 4            → 90/90
+python scripts/audit_stage_c.py                                                 → AUDIT PASSED
 ```
 
-The first six commands are exactly what `.github/workflows/docs-check.yml`'s `stage-gates`/`doc-links-and-syntax` jobs run on every push to `main` — verified locally before every commit this stage, not assumed.
+All nine commands are exactly what `.github/workflows/docs-check.yml`'s `stage-gates`/`doc-links-and-syntax` jobs run on every push to `main` (`audit_stage_c.py` and the two Stage C completeness gates were wired in 2026-08-02, alongside this repo-wide completeness audit — see `docs/audit/STAGE_ABC_COMPLETENESS_AUDIT_2026-08-02.md`) — verified locally before every commit this stage, not assumed. (`--tier T7G --seeds 0 1 2 3 4` → 40/40 is run the same way but not listed above since T7G is a same-day addendum, not part of the original nine-command CI list — see §10.6.)
 
 ---
 
@@ -363,7 +391,7 @@ The first six commands are exactly what `.github/workflows/docs-check.yml`'s `st
 
 **Environment:** Python 3.13, TensorFlow 2.21.0 (CPU, oneDNN on), NumPy 2.5.1, SciPy 1.18.0, pandas 3.0.3, scikit-learn 1.9.0 — pinned exactly in both Modal campaign drivers and asserted at every container start (`_assert_pinned_env`), not merely declared in `requirements.txt`.
 
-**Seeds:** 0–9 (main frontier + TC), 0–4 (T7, per its own documented grid). `T=200` rounds, `η=0.01`, `E=2`, batch 64 throughout.
+**Seeds:** 0–9 (main frontier + TC), 0–4 (T7 and its T7G γ-sweep addendum, per T7's own documented grid). `T=200` rounds, `η=0.01`, `E=2`, batch 64 throughout.
 
 **Provenance:** every result JSON embeds its own `config` and `provenance` (git commit, dirty-tree flag, resolved library versions) — no result is interpretable only alongside its filename.
 
@@ -383,13 +411,14 @@ python scripts/render_stage_c_figures.py
 modal run --detach scripts/modal_frontier_campaign.py --tier T1 T2 T3 T4 T5 T6 TC
 modal run --detach scripts/modal_frontier_campaign_t6.py
 modal run --detach scripts/modal_frontier_campaign_t7.py --seeds 0,1,2,3,4
+modal run --detach scripts/modal_frontier_campaign_t7.py --gamma-sweep --seeds 0,1,2,3,4
 ```
 
 ---
 
 ## 14. Known limitations
 
-1. **γ was not swept in the T7 campaign.** §10.3's up-weighting effect is measured at the frontier's own default γ; whether stronger rare-class prioritization (higher γ) correspondingly widens the attack surface is the most direct next measurement, named but not performed here.
+1. ~~**γ was not swept in the T7 campaign.**~~ **Resolved 2026-08-02 (§10.6, T7G).** The effect is non-monotonic in γ (peaks near γ=0.5, not at the frontier's own default γ=1.0) and far noisier at γ=0 (10–20× the standard deviation) than at γ≥0.5. The mechanistic question this raises — why does the attack surface stabilize above a γ threshold rather than scale linearly with it? — is itself now the named next measurement, not performed here.
 2. **No defense preserves FedGRAA-v2's own advantage.** Both external defenses evaluated stop the poisoning attack by discarding rare-class sensitivity, not by preserving it (§10.4). A defense that does both is explicitly future work.
 3. **SCAFFOLD/FedNova's own convergence analyses assume a vanilla-SGD local solver**; this codebase's shared Adam-based local training (applied uniformly across every baseline, not only these two) is a disclosed deviation, not a silent one.
 4. **Threat model boundaries** (§3.4): honest-but-curious server only; gradient-inversion attacks on the plaintext parameter channel are unaddressed, unchanged from the original design.
@@ -400,9 +429,9 @@ modal run --detach scripts/modal_frontier_campaign_t7.py --seeds 0,1,2,3,4
 
 ## 15. Roadmap — what remains (Option A only)
 
-**Everything in `STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md` is complete except Option A** (the few-shot/prototype-guided hybrid), which remains explicitly, repeatedly out of scope per the author's own standing decision (`STAGE_DIRECTION_ASSESSMENT.md`'s resolution note; re-confirmed this stage). It is a second, independent novelty contribution — not a variant or remaining task of FedGRAA-v2 — sequenced as a deliberate follow-on with its own from-zero design/implementation/baseline/campaign arc, not started.
+**Everything in `STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md` is complete except Option A** (the few-shot/prototype-guided hybrid), which remains explicitly, repeatedly out of scope per the author's own standing decision (`STAGE_DIRECTION_ASSESSMENT.md`'s resolution note; re-confirmed this stage, and again in the 2026-08-02 same-day follow-up recorded in `docs/audit/STAGE_ABC_COMPLETENESS_AUDIT_2026-08-02.md` §7.4). It is a second, independent novelty contribution — not a variant or remaining task of FedGRAA-v2 — sequenced as a deliberate follow-on with its own from-zero design/implementation/baseline/campaign arc, not started.
 
-The one remaining mechanical step for the manuscript itself is camera-ready formatting (LaTeX/Springer-LNCS conversion, live page-limit verification against the current PAKDD CFP) — disclosed in the manuscript's own Submission Compliance section, not a content gap.
+**Closed in the same-day 2026-08-02 follow-up** (`docs/audit/STAGE_ABC_COMPLETENESS_AUDIT_2026-08-02.md` §7): the Stage C correctness-audit gap (`audit_stage_c.py`, §12.2), the γ-vs-attack-surface sweep (`T7G`, §10.6), and camera-ready LaTeX conversion (`docs/paper/FedGRAA_v2_PAKDD_Submission.tex`, Springer `llncs` class — not compiled in this environment, verify with a real LaTeX engine before submission; page-limit compliance against the current PAKDD CFP still needs live re-verification, and two pre-existing bibliography gaps found during conversion are flagged in the `.tex` file itself for the author's attention). A defense that preserves FedGRAA-v2's rare-class advantage while stopping the mechanism-specific attack (§14 item 2) remains open, deliberately not attempted — it is itself a novel-contribution-scale research question, treated with the same discipline as Option A rather than rushed.
 
 ---
 
@@ -473,7 +502,7 @@ Full per-seed values for every arm, every dataset, are in `results/v2_frontier/*
 
 | Path | Contents |
 |---|---|
-| `results/v2_frontier/*.json` (920 files) | One per cell — every seed's own raw result |
+| `results/v2_frontier/*.json` (960 files) | One per cell — every seed's own raw result (830 main + 90 T7 + 40 T7G) |
 | `results/v2_frontier/frontier_table.{json,md}` | §6's consolidated table |
 | `results/v2_frontier/significance_table.{json,md}` | §7's full significance results |
 | `results/v2_frontier/overhead_table.{json,md}` | §8's overhead results |

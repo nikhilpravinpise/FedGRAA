@@ -15,6 +15,7 @@ from scripts.run_v2_frontier_sweep import (
     ARM_NAMES,
     T7_ARM_NAMES,
     T7_DEFAULT_ATTACKER_FRACTION,
+    T7_GAMMA_SWEEP_EXTRA,
     T7_RARESIG_ARM,
     T7_SECOND_ATTACKER_FRACTION,
     CellSpec,
@@ -231,3 +232,53 @@ def test_t7_arms_filter_restricts_to_one_arm():
                             arms=["secfednids_labelflip"])
     assert {c.arm for c in cells} == {"secfednids_labelflip"}
     assert len(cells) == 2
+
+
+# --------------------------------------------------------------------------- #
+# T7G -- the gamma-sweep addendum (STAGE_C_MASTER_REPORT.md Sec 14 item 1:
+# "gamma was not swept in the T7 campaign... the most direct next
+# measurement, named but not performed here"). Reuses T7's own raresig-arm
+# cross product at the two gammas T7 itself doesn't already cover.
+# --------------------------------------------------------------------------- #
+def test_t7g_enumerates_raresig_arm_only():
+    cells = enumerate_cells(["T7G"], datasets=["CIC-IDS-2017"], seeds=[0, 1, 2, 3, 4])
+    assert {c.arm for c in cells} == {T7_RARESIG_ARM}
+
+
+def test_t7g_covers_exactly_the_two_extra_gammas():
+    cells = enumerate_cells(["T7G"], datasets=["CIC-IDS-2017"], seeds=[0])
+    assert {c.gamma for c in cells} == set(T7_GAMMA_SWEEP_EXTRA)
+    assert 1.0 not in {c.gamma for c in cells}  # T7 itself already covers this
+
+
+def test_t7g_covers_both_attacker_fractions_at_every_gamma():
+    cells = enumerate_cells(["T7G"], datasets=["CIC-IDS-2017"], seeds=[0])
+    for gamma in T7_GAMMA_SWEEP_EXTRA:
+        fracs = {c.attacker_fraction for c in cells if c.gamma == gamma}
+        assert fracs == {T7_DEFAULT_ATTACKER_FRACTION, T7_SECOND_ATTACKER_FRACTION}
+
+
+def test_t7g_cell_count_matches_documented_grid():
+    cells = enumerate_cells(["T7G"], datasets=["CIC-IDS-2017"], seeds=[0, 1, 2, 3, 4])
+    # 2 gammas x 2 attacker fractions x 5 seeds = 20 cells per dataset.
+    assert len(cells) == len(T7_GAMMA_SWEEP_EXTRA) * 2 * 5
+
+
+def test_t7g_paths_never_collide_with_t7_or_any_other_tier():
+    t7 = {c.path for c in enumerate_cells(["T7"])}
+    t7g = {c.path for c in enumerate_cells(["T7G"])}
+    others = {c.path for c in enumerate_cells(["T1", "T2", "T4", "T6", "TC"])}
+    assert not (t7 & t7g)
+    assert not (others & t7g)
+    assert len(t7g) == len(enumerate_cells(["T7G"]))  # no internal collisions
+
+
+def test_t7g_not_included_when_only_t7_requested():
+    cells = enumerate_cells(["T7"], datasets=["CIC-IDS-2017"], seeds=[0])
+    assert all(c.gamma == 1.0 for c in cells)
+
+
+def test_t7_and_t7g_together_give_the_full_three_point_gamma_trend():
+    cells = [c for c in enumerate_cells(["T7", "T7G"], datasets=["CIC-IDS-2017"], seeds=[0])
+             if c.arm == T7_RARESIG_ARM]
+    assert {c.gamma for c in cells} == {0.0, 0.5, 1.0}

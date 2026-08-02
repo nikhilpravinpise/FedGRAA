@@ -1,0 +1,62 @@
+{
+  "dataset": "CIC-IDS-2017",
+  "arm": "v2_raresig",
+  "gamma": 0.0,
+  "seed": 0,
+  "grad_refresh_every": null,
+  "config": {
+    "eta_prime": 0.01,
+    "n_rare": 3,
+    "p_drop": 0.0,
+    "dp_epsilon": null,
+    "secagg_threshold": null,
+    "weight_epochs": 5,
+    "local_epochs": 2,
+    "eta": 0.01,
+    "batch_size": 64,
+    "val_fraction": 0.1,
+    "n_rounds": 2,
+    "eval_every": 1,
+    "attacker_fraction": 0.5
+  },
+  "provenance": {
+    "git_commit": "19b54cc40f5c42e173ebdf372877a140d1697d35",
+    "git_dirty": true,
+    "python": "3.13.3",
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "tensorflow": "2.21.0",
+    "numpy": "2.5.1",
+    "scipy": "1.18.0",
+    "pandas": "3.0.3",
+    "sklearn": "1.9.0"
+  },
+  "rounds": [
+    0,
+    1,
+    2
+  ],
+  "all_acc": [
+    0.0,
+    0.41037293515112166,
+    0.44088581115198733
+  ],
+  "last_n_acc": [
+    0.0,
+    0.5833333333333334,
+    0.5833333333333334
+  ],
+  "zeta": [
+    null,
+    7.096602756285946e-07,
+    8.637382597345291e-07
+  ],
+  "final_all_acc": 0.44088581115198733,
+  "final_last_n_acc": 0.5833333333333334,
+  "bytes_sent": 56071800,
+  "comm_rounds": 22,
+  "failed_secagg_rounds": 0,
+  "attacker_weight_history": [
+    0.0,
+    0.0
+  ]
+}

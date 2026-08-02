@@ -202,6 +202,13 @@ T7_PARAM_ATTACKS: Tuple[str, ...] = ("modelpoison", "adaptive")
 T7_DEFAULT_ATTACKER_FRACTION = 0.3
 T7_SECOND_ATTACKER_FRACTION = 0.5
 T7_RARESIG_ARM = "v2_raresig"
+# T7G -- the gamma-sweep addendum named in STAGE_C_MASTER_REPORT.md Sec 14
+# item 1 ("gamma was not swept in the T7 campaign... the most direct next
+# measurement, named but not performed here"). Reuses T1/T2's own gamma
+# grid ({0, 0.5, 1.0}); T7 itself already covers gamma=1.0 for the raresig
+# arm, so this tier only adds the two gammas T7 doesn't, mirroring T2's own
+# "does not duplicate T1's gamma=1.0 cells" convention.
+T7_GAMMA_SWEEP_EXTRA: List[float] = [0.0, 0.5]
 
 
 def t7_cross_product_arms() -> List[str]:
@@ -482,6 +489,27 @@ def enumerate_cells(
                         attacker_fraction=frac,
                         **_common(p_drop=0.0, dp_epsilon=None),
                     ))
+
+    if "T7G" in tiers:
+        # Gamma-sweep addendum (see T7_GAMMA_SWEEP_EXTRA above): the same
+        # undefended-FedGRAA-v2-under-the-mechanism-specific-attack cross
+        # product as T7's own D1c addendum, at the two gammas T7 doesn't
+        # already cover. Deliberately does NOT touch the defense
+        # cross-product (t7_cross_product_arms()) -- the open question this
+        # answers is specifically whether higher gamma widens the attack
+        # surface on undefended FedGRAA-v2 (STAGE_C_MASTER_REPORT.md Sec 14
+        # item 1), not a full re-run of the defense evaluation at every
+        # gamma, which would triple T7's own cost for a question this
+        # narrower campaign doesn't ask.
+        for dataset in datasets:
+            for gamma in T7_GAMMA_SWEEP_EXTRA:
+                for frac in (T7_DEFAULT_ATTACKER_FRACTION, T7_SECOND_ATTACKER_FRACTION):
+                    for seed in seeds:
+                        cells.append(CellSpec(
+                            dataset=dataset, arm=T7_RARESIG_ARM, gamma=gamma, seed=seed,
+                            attacker_fraction=frac,
+                            **_common(p_drop=0.0, dp_epsilon=None),
+                        ))
 
     if arms:
         wanted = set(arms)
@@ -888,7 +916,7 @@ def execute(cells: Sequence[CellSpec], workers: int = 1) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--tier", nargs="+", default=["T1"],
-                    choices=["T1", "T2", "T3", "T4", "T5", "T6"])
+                    choices=["T1", "T2", "T3", "T4", "T5", "T6", "TC", "T7", "T7G"])
     ap.add_argument("--datasets", nargs="+", default=DEFAULT_DATASETS)
     ap.add_argument("--seeds", nargs="+", type=int, default=DEFAULT_SEEDS)
     ap.add_argument("--rounds", type=int, default=200)
