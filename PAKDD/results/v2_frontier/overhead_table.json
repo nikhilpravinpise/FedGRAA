@@ -1,0 +1,162 @@
+{
+  "approx_baselines": [
+    "celm",
+    "spectralfed"
+  ],
+  "v2_arms": [
+    "v2_m1",
+    "v2_m2",
+    "v2_m3",
+    "v2_m5"
+  ],
+  "datasets": {
+    "CIC-IDS-2017": {
+      "v2_m1": {
+        "celm": {
+          "v2_bytes_gb": 5.60718,
+          "approx_bytes_gb": 0.934416,
+          "byte_ratio": 6.000732008013561,
+          "v2_rare_acc_mean": 0.8805555555555555,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.8805555555555555
+        },
+        "spectralfed": {
+          "v2_bytes_gb": 5.60718,
+          "approx_bytes_gb": 0.934416,
+          "byte_ratio": 6.000732008013561,
+          "v2_rare_acc_mean": 0.8805555555555555,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.8805555555555555
+        }
+      },
+      "v2_m2": {
+        "celm": {
+          "v2_bytes_gb": 3.7382088,
+          "approx_bytes_gb": 0.934416,
+          "byte_ratio": 4.000583037961679,
+          "v2_rare_acc_mean": 0.9180555555555555,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.9180555555555555
+        },
+        "spectralfed": {
+          "v2_bytes_gb": 3.7382088,
+          "approx_bytes_gb": 0.934416,
+          "byte_ratio": 4.000583037961679,
+          "v2_rare_acc_mean": 0.9180555555555555,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.9180555555555555
+        }
+      },
+      "v2_m3": {
+        "celm": {
+          "v2_bytes_gb": 2.8037232,
+          "approx_bytes_gb": 0.934416,
+          "byte_ratio": 3.000508552935737,
+          "v2_rare_acc_mean": 0.9347222222222222,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.9347222222222222
+        },
+        "spectralfed": {
+          "v2_bytes_gb": 2.8037232,
+          "approx_bytes_gb": 0.934416,
+          "byte_ratio": 3.000508552935737,
+          "v2_rare_acc_mean": 0.9347222222222222,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.9347222222222222
+        }
+      },
+      "v2_m5": {
+        "celm": {
+          "v2_bytes_gb": 1.8692376,
+          "approx_bytes_gb": 0.934416,
+          "byte_ratio": 2.000434067909796,
+          "v2_rare_acc_mean": 0.8888888888888888,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.8888888888888888
+        },
+        "spectralfed": {
+          "v2_bytes_gb": 1.8692376,
+          "approx_bytes_gb": 0.934416,
+          "byte_ratio": 2.000434067909796,
+          "v2_rare_acc_mean": 0.8888888888888888,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.8888888888888888
+        }
+      }
+    },
+    "UNSW-NB15": {
+      "v2_m1": {
+        "celm": {
+          "v2_bytes_gb": 2.908596,
+          "approx_bytes_gb": 0.484704,
+          "byte_ratio": 6.000767478708656,
+          "v2_rare_acc_mean": 0.6548105845200056,
+          "approx_rare_acc_mean": 0.048175839631535836,
+          "rare_acc_delta": 0.6066347448884698
+        },
+        "spectralfed": {
+          "v2_bytes_gb": 2.908596,
+          "approx_bytes_gb": 0.484704,
+          "byte_ratio": 6.000767478708656,
+          "v2_rare_acc_mean": 0.6548105845200056,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.6548105845200056
+        }
+      },
+      "v2_m2": {
+        "celm": {
+          "v2_bytes_gb": 1.9390968,
+          "approx_bytes_gb": 0.484704,
+          "byte_ratio": 4.000579322638146,
+          "v2_rare_acc_mean": 0.6570695344845624,
+          "approx_rare_acc_mean": 0.048175839631535836,
+          "rare_acc_delta": 0.6088936948530266
+        },
+        "spectralfed": {
+          "v2_bytes_gb": 1.9390968,
+          "approx_bytes_gb": 0.484704,
+          "byte_ratio": 4.000579322638146,
+          "v2_rare_acc_mean": 0.6570695344845624,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.6570695344845624
+        }
+      },
+      "v2_m3": {
+        "celm": {
+          "v2_bytes_gb": 1.4543472,
+          "approx_bytes_gb": 0.484704,
+          "byte_ratio": 3.0004852446028916,
+          "v2_rare_acc_mean": 0.6965806490168717,
+          "approx_rare_acc_mean": 0.048175839631535836,
+          "rare_acc_delta": 0.6484048093853358
+        },
+        "spectralfed": {
+          "v2_bytes_gb": 1.4543472,
+          "approx_bytes_gb": 0.484704,
+          "byte_ratio": 3.0004852446028916,
+          "v2_rare_acc_mean": 0.6965806490168717,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.6965806490168717
+        }
+      },
+      "v2_m5": {
+        "celm": {
+          "v2_bytes_gb": 0.9695976,
+          "approx_bytes_gb": 0.484704,
+          "byte_ratio": 2.000391166567637,
+          "v2_rare_acc_mean": 0.6830036605929468,
+          "approx_rare_acc_mean": 0.048175839631535836,
+          "rare_acc_delta": 0.634827820961411
+        },
+        "spectralfed": {
+          "v2_bytes_gb": 0.9695976,
+          "approx_bytes_gb": 0.484704,
+          "byte_ratio": 2.000391166567637,
+          "v2_rare_acc_mean": 0.6830036605929468,
+          "approx_rare_acc_mean": 0.0,
+          "rare_acc_delta": 0.6830036605929468
+        }
+      }
+    }
+  }
+}

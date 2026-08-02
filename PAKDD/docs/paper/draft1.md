@@ -1,3 +1,9 @@
+> ⚠️ **SUPERSEDED, 2026-08-02.** Earlier iteration of
+> [`PAKDD_Final_Version_Submit_v3.md`](PAKDD_Final_Version_Submit_v3.md),
+> itself reviewed and rejected — see [`FedGRAA_Simulated_Peer_Review.md`](FedGRAA_Simulated_Peer_Review.md).
+> The corrected resubmission is [`FedGRAA_v2_PAKDD_Submission.md`](FedGRAA_v2_PAKDD_Submission.md).
+> Kept unedited for the historical record; do not cite numbers from this version.
+
 # Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems
 
 No Author Given

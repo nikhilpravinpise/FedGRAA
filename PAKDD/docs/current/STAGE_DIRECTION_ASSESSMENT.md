@@ -1,5 +1,19 @@
 # Direction Assessment — Are Stage A/B/C On Track?
 
+> ### ✅ Stage C complete, manuscript exists — 2026-08-02
+>
+> Everything below (and everything in the 2026-07-28 box beneath it) is
+> superseded by completion, not merely re-scoped. **Stage C is done**:
+> T1–T7 and TC's compute campaigns are complete (830/830 cells,
+> `check_stage_c_complete.py` green), and the manuscript ARS Stage 2 (WRITE)
+> this document's §52 said had "not begun" now has a real output —
+> [`../paper/FedGRAA_v2_PAKDD_Submission.md`](../paper/FedGRAA_v2_PAKDD_Submission.md),
+> a corrected resubmission that resolves every finding of the simulated
+> peer-review rejection this document's own §54 discusses. Full account:
+> `../research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md` §0/§7/§14.
+> The rest of this document is retained as the historical record of the
+> 2026-07-25/07-28 planning state, not current status.
+
 > ### ✅ The mentor-conversation blocker — resolved by the author, 2026-07-28
 >
 > **⚠️ Scope correction, 2026-07-28 (later the same day, then corrected again the same day) — read before the rest of this note.** The paragraph below originally recorded the decision as "the full B+D build," then was briefly (and incorrectly) broadened to "A, B, C, and D, all in full, in parallel." **Both were off. The author's actual instruction is `Final_Stage_C.md` §10's own Option C — "both, sequenced": finish B+D now, take up the few-shot/prototype hybrid (A) afterward, as a follow-on, not simultaneously.** Two different lettering schemes are in play across this project's own documents and it matters here: in **this document's own §5 table**, A = "Stage B stands alone," **B = the few-shot/prototype hybrid**, **C = the privacy-compliant redesign (FedGRAA-v2)**, D = "B, then C" sequencing (i.e. this document's own D names the same sequencing idea `Final_Stage_C.md` calls C). In **`Final_Stage_C.md` §10's table** (the one the rest of this note uses), **A = the few-shot/prototype hybrid**, **B = the privacy-compliant redesign (FedGRAA-v2)**, **C = "both, sequenced"** (the option actually chosen), D = the NF-UQ-NIDS-v2 dataset migration. Under either lettering, the decision is the same *thing*: privacy-compliant redesign + dataset migration now (already substantially implemented, see `REMAINING_COMPUTE_WORK.md` §2–§7), few-shot/prototype hybrid later, sequenced, not started this pass — see `REMAINING_COMPUTE_WORK.md` §3a for that item's tracked scope. §5's table below, and its "not a recommendation" framing, are otherwise unchanged and still historically accurate.

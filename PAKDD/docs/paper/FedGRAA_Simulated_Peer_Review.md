@@ -1,3 +1,12 @@
+> ✅ **Resolved, 2026-08-02.** Every Required Revision (R1–R7) and Suggested
+> Revision this review names is now addressed in
+> [`FedGRAA_v2_PAKDD_Submission.md`](FedGRAA_v2_PAKDD_Submission.md), the
+> corrected resubmission — see that document's own Introduction for the
+> point-by-point mapping, and
+> `../research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md` §0/§7/§14
+> for the full execution record. This review itself is retained unedited
+> below as the input the correction responds to.
+
 # Simulated Peer Review Panel Report
 
 **Manuscript**: *Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems* (FedGRAA)

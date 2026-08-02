@@ -69,3 +69,35 @@ def test_ignore_keeps_everything_t1_t2_t4_actually_need(path):
 @pytest.mark.parametrize("part", ["__pycache__", "results", ".git"])
 def test_ignore_excludes_the_other_declared_parts(part):
     assert _ignore(f"{part}/whatever") is True
+
+
+# --------------------------------------------------------------------------- #
+# T7's own driver (scripts/modal_frontier_campaign_t7.py) -- same excluded-
+# large-dataset regression, mirrored for its own _ignore/EXCLUDE_PARTS.
+# --------------------------------------------------------------------------- #
+from scripts.modal_frontier_campaign_t7 import _ignore as _ignore_t7  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "data/NF-UQ-NIDS-v2",
+        "data/NF-UQ-NIDS-v2/NF-UQ-NIDS-v2.csv",
+        "/repo/data/NF-UQ-NIDS-v2",
+    ],
+)
+def test_t7_ignore_excludes_nf_uq_nids_v2_directory(path):
+    assert _ignore_t7(path) is True
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "data/CIC-IDS-2017",
+        "data/UNSW-NB15/some_file.csv",
+        "fedgraa/attacks.py",
+        "fedgraa/baselines_t7_adversarial.py",
+    ],
+)
+def test_t7_ignore_keeps_everything_t7_actually_needs(path):
+    assert _ignore_t7(path) is False

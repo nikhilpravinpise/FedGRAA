@@ -314,6 +314,84 @@ def _fused_proximal_step(
     return loss
 
 
+@tf.function(jit_compile=True, reduce_retracing=True)
+def _fused_scaffold_step(
+    x: tf.Tensor, y: tf.Tensor, model: tf.keras.Model,
+    opt: tf.keras.optimizers.Optimizer,
+    c_global: Sequence[tf.Tensor], c_local: Sequence[tf.Tensor],
+    n_valid: tf.Tensor,
+) -> tf.Tensor:
+    """Fused step with SCAFFOLD's control-variate correction (Karimireddy
+    et al., ICML 2020, Algorithm 1's local step: ``y_i <- y_i - eta_l *
+    (g_i(y_i) - c_i + c)``). The ``(c - c_i)`` correction is added to the raw
+    gradient before the client optimizer's own update rule is applied --
+    identical in structure to :func:`_fused_proximal_step`'s ``mu*(v-gv)``
+    addition for FedProx, and, like that function, applies the correction
+    through this codebase's shared Adam-based client optimizer rather than
+    the paper's own vanilla-SGD local step (see
+    ``fedgraa/baselines_classic.py``'s module docstring for the disclosed
+    judgment call this implies).
+    """
+    with tf.GradientTape() as tape:
+        logits = model(x, training=True)
+        n_classes = tf.shape(logits)[-1]
+        labels_safe = tf.where(
+            tf.logical_or(y < 0, y >= tf.cast(n_classes, y.dtype)),
+            tf.zeros_like(y), y
+        )
+        losses = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            labels=labels_safe, logits=logits
+        )
+        batch_size = tf.shape(x)[0]
+        mask = tf.cast(tf.range(batch_size) < n_valid, dtype=losses.dtype)
+        loss = tf.reduce_sum(losses * mask) / tf.cast(n_valid, dtype=losses.dtype)
+    grads = tape.gradient(loss, model.trainable_variables)
+    corrected_grads = [
+        g + (cg - cl) for g, cg, cl in zip(grads, c_global, c_local)
+    ]
+    opt.apply_gradients(zip(corrected_grads, model.trainable_variables))
+    return loss
+
+
+@tf.function(jit_compile=True, reduce_retracing=True)
+def _fused_importance_step(
+    x: tf.Tensor, y: tf.Tensor, model: tf.keras.Model,
+    opt: tf.keras.optimizers.Optimizer,
+    omega_acc: Sequence[tf.Variable],
+    n_valid: tf.Tensor,
+) -> tf.Tensor:
+    """Fused step that also accumulates SecFedNIDS's per-parameter
+    importance statistic (Zhao et al., *FGCS* 2022, `consolidate()`;
+    docs/research_c/STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md JC-T7-10):
+    ``omega[n] -= grad[n] * (p_after[n] - p_before[n])`` at every local
+    step, an online path-integral accumulator structurally identical to
+    Synaptic Intelligence. ``omega_acc`` is a list of ``tf.Variable``
+    accumulators, one per trainable parameter array, updated in place via
+    ``assign_add`` -- the caller reads them back to numpy once local
+    training finishes (identical pattern to every other fused step in this
+    module: one Python<->TF boundary crossing per round, not per step).
+    """
+    old_vars = [tf.identity(v) for v in model.trainable_variables]
+    with tf.GradientTape() as tape:
+        logits = model(x, training=True)
+        n_classes = tf.shape(logits)[-1]
+        labels_safe = tf.where(
+            tf.logical_or(y < 0, y >= tf.cast(n_classes, y.dtype)),
+            tf.zeros_like(y), y
+        )
+        losses = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            labels=labels_safe, logits=logits
+        )
+        batch_size = tf.shape(x)[0]
+        mask = tf.cast(tf.range(batch_size) < n_valid, dtype=losses.dtype)
+        loss = tf.reduce_sum(losses * mask) / tf.cast(n_valid, dtype=losses.dtype)
+    grads = tape.gradient(loss, model.trainable_variables)
+    opt.apply_gradients(zip(grads, model.trainable_variables))
+    for acc, g, old_v, v in zip(omega_acc, grads, old_vars, model.trainable_variables):
+        acc.assign_add(-g * (v - old_v))
+    return loss
+
+
 def build_tf_optimizer(
     lr: float,
     variables: Sequence[tf.Variable],

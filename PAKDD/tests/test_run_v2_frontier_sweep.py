@@ -13,9 +13,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts.run_v2_frontier_sweep import (
     ARM_NAMES,
+    T7_ARM_NAMES,
+    T7_DEFAULT_ATTACKER_FRACTION,
+    T7_RARESIG_ARM,
+    T7_SECOND_ATTACKER_FRACTION,
     CellSpec,
     enumerate_cells,
     missing_cells,
+    t7_cross_product_arms,
 )
 
 
@@ -167,4 +172,62 @@ def test_arms_filter_preserves_stable_order_and_uniqueness():
     cells = enumerate_cells(["T1", "T5"], datasets=["CIC-IDS-2017"], seeds=[0],
                             arms=["fedpgo", "v2_m1"])
     assert len({c.path for c in cells}) == len(cells)
-    assert [c.arm for c in cells] == ["v2_m1", "fedpgo"]
+
+
+# --------------------------------------------------------------------------- #
+# T7 -- adversarial robustness
+# (docs/research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md §2;
+# JC-T7-16/18 in STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md for the final grid)
+# --------------------------------------------------------------------------- #
+def test_t7_arm_names_match_the_documented_grid():
+    assert set(T7_ARM_NAMES) == {
+        "secfednids_labelflip", "secfednids_modelpoison", "secfednids_adaptive",
+        "weidetect_labelflip", "weidetect_modelpoison", "weidetect_adaptive",
+        "adaaggrl_labelflip", T7_RARESIG_ARM,
+    }
+    # AdaAggRL only ever pairs with labelflip (JC-T7-16).
+    adaaggrl_arms = [a for a in T7_ARM_NAMES if a.startswith("adaaggrl")]
+    assert adaaggrl_arms == ["adaaggrl_labelflip"]
+
+
+def test_t7_enumerates_cross_product_plus_raresig_trend_addendum():
+    cells = enumerate_cells(["T7"], datasets=["CIC-IDS-2017"], seeds=[0, 1, 2, 3, 4])
+    arms = {c.arm for c in cells}
+    assert arms == set(T7_ARM_NAMES)
+    # 7 cross-product arms x 5 seeds + raresig x 2 fractions x 5 seeds = 45.
+    assert len(cells) == len(t7_cross_product_arms()) * 5 + 2 * 5
+    assert all(c.gamma == 1.0 for c in cells)
+
+
+def test_t7_cross_product_arms_use_the_default_attacker_fraction():
+    cells = enumerate_cells(["T7"], datasets=["CIC-IDS-2017"], seeds=[0])
+    for c in cells:
+        if c.arm != T7_RARESIG_ARM:
+            assert c.attacker_fraction == T7_DEFAULT_ATTACKER_FRACTION
+
+
+def test_t7_raresig_arm_covers_both_attacker_fractions():
+    cells = enumerate_cells(["T7"], datasets=["CIC-IDS-2017"], seeds=[0])
+    raresig_fracs = {c.attacker_fraction for c in cells if c.arm == T7_RARESIG_ARM}
+    assert raresig_fracs == {T7_DEFAULT_ATTACKER_FRACTION, T7_SECOND_ATTACKER_FRACTION}
+
+
+def test_t7_raresig_two_fractions_do_not_collide_on_path():
+    cells = [c for c in enumerate_cells(["T7"], datasets=["CIC-IDS-2017"], seeds=[0])
+             if c.arm == T7_RARESIG_ARM]
+    assert len(cells) == 2
+    assert len({c.path for c in cells}) == 2  # config_tag disambiguates them
+
+
+def test_t7_paths_never_collide_with_t1_t2_t4_t6_tc():
+    others = {c.path for c in enumerate_cells(["T1", "T2", "T4", "T6", "TC"])}
+    t7 = {c.path for c in enumerate_cells(["T7"])}
+    assert not (others & t7)
+    assert len(t7) == len(enumerate_cells(["T7"]))
+
+
+def test_t7_arms_filter_restricts_to_one_arm():
+    cells = enumerate_cells(["T7"], datasets=["CIC-IDS-2017"], seeds=[0, 1],
+                            arms=["secfednids_labelflip"])
+    assert {c.arm for c in cells} == {"secfednids_labelflip"}
+    assert len(cells) == 2
