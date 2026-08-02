@@ -41,13 +41,22 @@ from fedgraa.stats import bootstrap_ci  # noqa: E402
 from scripts.run_v2_frontier_sweep import (  # noqa: E402
     T3_ARM_CLASSES,
     T5_ARM_CLASSES,
+    TC_ARM_CLASSES,
 )
 
 RESULTS_DIR = "results/v2_frontier"
 DATASETS = ["CIC-IDS-2017", "UNSW-NB15"]
 V2_FRONTIER_ARMS = ["v1_projected", "v2_m1", "v2_m2", "v2_m3", "v2_m5"]
+# The 14 specialized NIDS/personalization-aware external baselines FedGRAA-v2
+# is significance-tested against (build_v2_significance_table.py) -- unchanged
+# by §4's classic-FL-optimizer coverage decision.
 BASELINE_ARMS = sorted(T3_ARM_CLASSES) + sorted(T5_ARM_CLASSES)
-ALL_ARMS = V2_FRONTIER_ARMS + BASELINE_ARMS
+# §4: FedAvg/FedProx/FedOpt/SCAFFOLD/FedNova -- generic FL optimizers, kept as
+# a separate list (not merged into BASELINE_ARMS) since the manuscript treats
+# them as context against the field-standard optimizers, not as the
+# significance-tested competitor set item 8 names (that's BASELINE_ARMS).
+CLASSIC_ARMS = sorted(TC_ARM_CLASSES)
+ALL_ARMS = V2_FRONTIER_ARMS + BASELINE_ARMS + CLASSIC_ARMS
 
 
 CANONICAL_ROUNDS = 200
@@ -143,7 +152,8 @@ def build_arm_cell(dataset: str, arm: str, results_dir: str = RESULTS_DIR) -> Op
 def build_table(datasets: List[str] = DATASETS, results_dir: str = RESULTS_DIR) -> dict:
     table: Dict[str, dict] = {"datasets": {}, "arms": ALL_ARMS,
                                "v2_frontier_arms": V2_FRONTIER_ARMS,
-                               "baseline_arms": BASELINE_ARMS}
+                               "baseline_arms": BASELINE_ARMS,
+                               "classic_arms": CLASSIC_ARMS}
     for dataset in datasets:
         table["datasets"][dataset] = {}
         for arm in ALL_ARMS:

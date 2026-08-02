@@ -582,7 +582,19 @@ class FederatedTrainerV2:
         cfg: FedConfig,
         secagg_threshold: Optional[int] = None,
         measure_zeta: bool = False,
+        raresig_attacker_fraction: float = 0.0,
+        raresig_eta_fake: float = 0.5,
     ):
+        """``raresig_attacker_fraction``/``raresig_eta_fake`` wire T7's D1c
+        (the mechanism-specific attack, ``fedgraa.attacks.rare_class_signature_attack``)
+        directly into this trainer -- see
+        ``docs/research_c/STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md`` JC-T7-13/15/18
+        for why this is the *only* attack ever wired into FedGRAA-v2 itself
+        (undefended, no new defense added per D3) rather than routed through
+        the generic T7 harness in ``fedgraa/baselines_t7_adversarial.py``.
+        Zero fraction (the default) is a complete no-op -- every existing
+        caller of this class is unaffected.
+        """
         if cfg.grad_refresh_every < 1:
             raise ValueError("cfg.grad_refresh_every must be >= 1")
         self.split = split
@@ -624,6 +636,21 @@ class FederatedTrainerV2:
         # threshold) and were therefore aborted rather than aggregated. See
         # :meth:`train` for why this is a counter and not an exception.
         self.failed_secagg_rounds = 0
+
+        # T7/D1c: a fixed attacker set, persistent for the whole run
+        # (JC-T7-17), deterministic given cfg.seed.
+        self.raresig_eta_fake = raresig_eta_fake
+        n_attackers = int(round(raresig_attacker_fraction * self.n_clients_total))
+        self.raresig_attacker_ids = set(
+            np.random.default_rng(cfg.seed).choice(
+                self.n_clients_total, size=n_attackers, replace=False,
+            ).tolist()
+        ) if n_attackers > 0 else set()
+        # Mean aggregation weight assigned to attacker clients, one entry
+        # per eval round -- the "vulnerability shape" measurement §2.6 step
+        # 8's results paragraph needs (does gamma trade detection for
+        # up-weighting?), not merely asserted.
+        self.attacker_weight_history: List[float] = []
 
     def _msg_bytes(self, n_float32: int) -> int:
         return int(n_float32) * 4  # float32 wire format, matching F5's byte model
@@ -750,6 +777,19 @@ class FederatedTrainerV2:
                 for client in self.split.clients
             ]
 
+            # --- T7/D1c: mechanism-specific attack injection ---------------- #
+            # Uses self._last_grad_P (the previous round's *measured*
+            # composite gradient, JC-T7-15) -- round 1 has none yet, so
+            # rare_class_signature_attack's own None-fallback (an honest,
+            # unmodified contribution) applies automatically.
+            if self.raresig_attacker_ids:
+                from .attacks import rare_class_signature_attack
+                for i in self.raresig_attacker_ids:
+                    client_params[i] = rare_class_signature_attack(
+                        global_params, self._last_grad_P,
+                        eta_fake=self.raresig_eta_fake,
+                    )
+
             # --- F3: rarity ranking + stratum tags from SecAgg histograms -- #
             #
             # A round in which fewer clients survive than the Shamir
@@ -817,6 +857,11 @@ class FederatedTrainerV2:
             self.comm_rounds += 1
 
             global_params = aggregate(client_params, w)
+
+            if self.raresig_attacker_ids:
+                self.attacker_weight_history.append(
+                    float(np.mean([w[i] for i in self.raresig_attacker_ids]))
+                )
 
             if rnd % eval_every == 0 or rnd == cfg.rounds:
                 all_a = accuracy(

@@ -24,12 +24,12 @@ and [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_REPORT
 |---|---|---|---|
 | **A** | Faithful reproduction — every paper table/figure has a persisted, reproduced-or-honestly-diverging counterpart | ✅ **complete** | [docs/current/STAGE_A_MASTER_REPORT.md](docs/current/STAGE_A_MASTER_REPORT.md) |
 | **B** | Package the divergence critique as a rigorous, citable component — formal theory + statistically-tested 10-seed ablation | ✅ **complete** | [docs/current/STAGE_B_MASTER_REPORT.md](docs/current/STAGE_B_MASTER_REPORT.md) |
-| **C** | Build the novel extension for an A/A*-tier venue: privacy-compliant redesign + dataset migration (`Final_Stage_C.md` §10's Options B+D) now, with the few-shot/prototype hybrid (Option A) sequenced in afterward as a follow-on (Option C, "both, sequenced") | B+D: ✅ **code/tests complete** · ⏳ compute campaign + baseline reproduction + mentor confirmation still open. A: ⏳ **deliberately deferred** to a later phase (committed 2026-07-28, not started) | [docs/research_c/FEDGRAA_V2_MASTER_PLAN.md](docs/research_c/FEDGRAA_V2_MASTER_PLAN.md), [docs/research_c/REMAINING_COMPUTE_WORK.md](docs/research_c/REMAINING_COMPUTE_WORK.md) |
+| **C** | Build the novel extension for an A/A*-tier venue: privacy-compliant redesign + dataset migration (`Final_Stage_C.md` §10's Options B+D), adversarial-robustness evaluation (T7), and the corrected manuscript, with the few-shot/prototype hybrid (Option A) sequenced in afterward as a follow-on (Option C, "both, sequenced") | B+D+T7: ✅ **complete** — 830/830 compute cells (T1–T7, TC), significance-tested, manuscript drafted. A: ⏳ **deliberately deferred** to a later phase (committed 2026-07-28, not started) | [docs/research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md](docs/research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md), [docs/paper/FedGRAA_v2_PAKDD_Submission.md](docs/paper/FedGRAA_v2_PAKDD_Submission.md) |
 
 Verification signals on the current tree:
 
 ```powershell
-.venv313\Scripts\python.exe -m pytest tests --tb=short          # 311 passed
+.venv313\Scripts\python.exe -m pytest tests --tb=short          # 551 passed
 .venv313\Scripts\python.exe scripts\check_stage_a_complete.py   # exit 0 (completeness)
 .venv313\Scripts\python.exe scripts\check_stage_b_complete.py   # exit 0 (completeness)
 .venv313\Scripts\python.exe scripts\audit_stage_a.py            # exit 0 (correctness)
@@ -43,17 +43,23 @@ true?" — every reported value is re-derived from the raw persisted JSON and
 independently recomputed, never read back from the document asserting it.
 See [`docs/audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md`](docs/audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md).
 
-**All six commands above run on every push/PR to `main`** in the `stage-gates`
+**The first six commands above run on every push/PR to `main`** in the `stage-gates`
 job of [`.github/workflows/docs-check.yml`](../.github/workflows/docs-check.yml)
 — they are no longer only-a-human-remembers-to-run-them scripts (see
 [`docs/audit/INDEPENDENT_FULL_AUDIT_2026-07-26.md`](docs/audit/INDEPENDENT_FULL_AUDIT_2026-07-26.md) §3.1).
+The Stage C gate (last line) is not yet wired into CI (its compute-campaign
+output — `results/v2_frontier/*.json` — is real experiment data, not
+something CI should regenerate on every push); it is run and recorded here,
+manually, at each Stage C milestone instead.
 
-Stage C's own completeness gate exists too, and **currently exits 1 by
-design** — the frontier campaign has not been run yet, so no cell result
-JSONs exist:
+**Stage C's compute campaign is complete** (2026-08-02): T1–T7 and TC —
+830/830 cells, verified against every seed's own JSON, not asserted. Two
+commands, since T7 was run at 5 seeds (per its own grid design,
+`STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md`) and every other tier at 10:
 
 ```powershell
-.venv313\Scripts\python.exe scripts\check_stage_c_complete.py --tier T1   # exit 1 until T1 lands
+.venv313\Scripts\python.exe scripts\check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6 TC --t4-m 3   # 830/830
+.venv313\Scripts\python.exe scripts\check_stage_c_complete.py --tier T7 --seeds 0 1 2 3 4             # 90/90
 ```
 
 > **⚠️ Read before running the compute campaign.**
@@ -353,7 +359,17 @@ fedgraa/
   privacy.py       # NEW (Stage C): Laplace mechanism + advanced-composition/RDP accountants
   metrics.py       # all-class / last-n accuracy + confusion_matrix
   experiment.py    # Figure 1/2/3 sweeps + fedgraa_v2 dispatch
-  baselines.py     # FedProx / FedOpt / StaticDistributionAwareTrainer (related work, implemented but unrun)
+  baselines.py     # FedProx / FedOpt / StaticDistributionAwareTrainer
+  baselines_t3_contrib.py   # NEW (Stage C): CELM, SpectralFed, CoAst
+  baselines_t3_trust.py     # NEW (Stage C): FLTrust, RAGA, FedTruth
+  baselines_t5_nids.py      # NEW (Stage C): FedMADE, SBFedNIDS, FedAPA
+  baselines_t5_adaptive.py  # NEW (Stage C): FedAWA, DA-PFL, FedAWARE, AdaAggRL
+  baselines_t5_fedpgo.py    # NEW (Stage C): FedPGO (faithful primary-source reproduction)
+  baselines_classic.py      # NEW (Stage C, §4): FedAvgTrainer adapter, SCAFFOLD, FedNova (from scratch)
+  attacks.py                # NEW (Stage C, T7): label-flip, "pill" model-poisoning, the mechanism-specific
+                             #   attack (derived from FedGRAA-v2's own weight-update gradient), adaptive wrapper
+  baselines_t7_adversarial.py # NEW (Stage C, T7): SecFedNIDS + WeiDetect defense reproductions (incl. a
+                             #   from-scratch Stochastic Outlier Selection implementation)
   stats.py         # NEW (Stage B): bootstrap CI, paired t, Wilcoxon, Cohen's d, Holm
   plot.py          # matplotlib figures
   __main__.py      # CLI: python -m fedgraa ...
@@ -379,7 +395,10 @@ scripts/
   modal_frontier_campaign.py # NEW (Stage C): the Modal app that fans run_one_cell out over T1/T2/T4 (pinned image, Volume-persisted, resumable)
   modal_frontier_campaign_t6.py # NEW (Stage C): T6's OWN Modal app/file (real NF-UQ-NIDS-v2 file, 12.79 GB -- kept off the T1/T2/T4 app deliberately, see its docstring)
   verify_nf_uq_nids_v2_memory.py # NEW (Stage C): measures load_nf_uq_nids_v2_silos's real peak working set against the actual 12.79 GB file (B6)
-  check_stage_c_complete.py  # NEW (Stage C): frontier-campaign completeness signal (exits 1 until T1 lands)
+  check_stage_c_complete.py  # NEW (Stage C): frontier-campaign completeness signal -- 830/830 (T1-T7,TC)
+  build_v2_significance_table.py # NEW (Stage C, §3): paired Wilcoxon + Holm-Bonferroni vs. 14 baselines
+  build_overhead_table.py    # NEW (Stage C, §5): communication-overhead ratio vs. CELM/SpectralFed
+  modal_frontier_campaign_t7.py # NEW (Stage C, T7): T7's OWN Modal app/file, same isolation rationale as T6's
   modal_calibration/         # NEW (Stage C): real Modal cost/concurrency/CPU/memory calibration (measured, not estimated)
   archive/gpu/               # explored-and-rejected GPU benchmark (25% slower than CPU)
 results/
@@ -443,8 +462,11 @@ requirements.txt
 | What's wrong with the paper itself | [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_REPORT.md) and [docs/paper/FedGRAA_Simulated_Peer_Review.md](docs/paper/FedGRAA_Simulated_Peer_Review.md) |
 | What happens next | [docs/current/publication_roadmap.md](docs/current/publication_roadmap.md) and [docs/audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md](docs/audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md) |
 
-> **One open question, recorded rather than assumed.** The target manuscript is
-> an anonymized submission draft, and its publication status has not been
+> **One open question, recorded rather than assumed.** The *original* target
+> manuscript ([docs/paper/PAKDD_Final_Version_Submit_v3.md](docs/paper/PAKDD_Final_Version_Submit_v3.md))
+> is an anonymized submission draft, and its publication status has not been
 > established (see [docs/audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md](docs/audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md) D1
-> and [docs/current/STAGE_B_MASTER_REPORT.md](docs/current/STAGE_B_MASTER_REPORT.md) §21).
+> and [docs/current/STAGE_B_MASTER_REPORT.md](docs/current/STAGE_B_MASTER_REPORT.md) §21) —
+> unaffected by, and orthogonal to, the fact that a **corrected resubmission**
+> now exists: [docs/paper/FedGRAA_v2_PAKDD_Submission.md](docs/paper/FedGRAA_v2_PAKDD_Submission.md).
 > This affects how the critique should be *framed*, not any measurement in it.

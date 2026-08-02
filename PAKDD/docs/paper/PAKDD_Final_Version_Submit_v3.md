@@ -1,3 +1,12 @@
+> ⚠️ **SUPERSEDED, 2026-08-02.** This draft was reviewed by a simulated peer
+> panel and rejected — see [`FedGRAA_Simulated_Peer_Review.md`](FedGRAA_Simulated_Peer_Review.md).
+> Every required revision that review names (missing simplex projection,
+> the convexity-vs-non-convex-architecture contradiction, single-run/
+> unseeded results, missing adaptive-aggregation baselines) is resolved in
+> the corrected resubmission: [`FedGRAA_v2_PAKDD_Submission.md`](FedGRAA_v2_PAKDD_Submission.md).
+> Kept here, unedited, as the original draft the review and the correction
+> both respond to — do not cite numbers from this version.
+
 # Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems
 
 No Author Given

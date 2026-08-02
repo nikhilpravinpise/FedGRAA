@@ -165,7 +165,92 @@ T5_ARM_CLASSES = {
     "fedaware": ("fedgraa.baselines_t5_adaptive", "FedAWARETrainer"),
     "adaaggrl": ("fedgraa.baselines_t5_adaptive", "AdaAggRLTrainer"),
 }
-BASELINE_ARM_CLASSES: Dict[str, Tuple[str, str]] = {**T3_ARM_CLASSES, **T5_ARM_CLASSES}
+# TC -- classic (non-personalization, non-NIDS-specific) FL optimizer
+# baselines (docs/research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md
+# §4): FedAvg/FedProx/FedOpt already existed elsewhere in this codebase but
+# had never run through this v2-harness dispatch path; SCAFFOLD/FedNova are
+# new, from-scratch reproductions (fedgraa/baselines_classic.py).
+TC_ARM_CLASSES = {
+    "fedavg": ("fedgraa.baselines_classic", "FedAvgTrainer"),
+    "fedprox": ("fedgraa.baselines", "FedProxTrainer"),
+    "fedopt": ("fedgraa.baselines", "FedOptServer"),
+    "scaffold": ("fedgraa.baselines_classic", "SCAFFOLDTrainer"),
+    "fednova": ("fedgraa.baselines_classic", "FedNovaTrainer"),
+}
+BASELINE_ARM_CLASSES: Dict[str, Tuple[str, str]] = {
+    **T3_ARM_CLASSES, **T5_ARM_CLASSES, **TC_ARM_CLASSES,
+}
+
+# T7 -- adversarial robustness
+# (docs/research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md §2;
+# judgment calls in STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md). Cross-product
+# arms are named "{defense}_{attack}"; each defense is one of
+# T7_DEFENSE_CLASSES's (module, class) pairs, constructed with the extra
+# attack_fn/attacker_fraction kwargs run_one_cell wires in (not a plain
+# 2-arg BASELINE_ARM_CLASSES dispatch, since these need attack injection).
+# JC-T7-16: AdaAggRL only ever pairs with labelflip (its own T5
+# implementation stays unmodified). JC-T7-18: rare_class_signature (D1c) is
+# never part of the defense cross-product -- it is its own arm,
+# "v2_raresig", wired directly into FederatedTrainerV2 (undefended, D3).
+T7_DEFENSE_CLASSES: Dict[str, Tuple[str, str]] = {
+    "secfednids": ("fedgraa.baselines_t7_adversarial", "SecFedNIDSTrainer"),
+    "weidetect": ("fedgraa.baselines_t7_adversarial", "WeiDetectTrainer"),
+    "adaaggrl": ("fedgraa.baselines_t5_adaptive", "AdaAggRLTrainer"),
+}
+T7_LABEL_ATTACKS: Tuple[str, ...] = ("labelflip",)
+T7_PARAM_ATTACKS: Tuple[str, ...] = ("modelpoison", "adaptive")
+T7_DEFAULT_ATTACKER_FRACTION = 0.3
+T7_SECOND_ATTACKER_FRACTION = 0.5
+T7_RARESIG_ARM = "v2_raresig"
+
+
+def t7_cross_product_arms() -> List[str]:
+    arms = []
+    for defense in ("secfednids", "weidetect"):
+        for attack in T7_LABEL_ATTACKS + T7_PARAM_ATTACKS:
+            arms.append(f"{defense}_{attack}")
+    arms.append("adaaggrl_labelflip")
+    return arms
+
+
+T7_ARM_NAMES: List[str] = t7_cross_product_arms() + [T7_RARESIG_ARM]
+
+
+def _t7_param_attack_fn(attack: str, rng, n_classes: int):
+    """Build the uniform ``(P_current, P_global) -> P_poisoned`` attack_fn
+    for a T7 param-space attack name (``modelpoison``/``adaptive``).
+
+    **JC-T7-19 (disclosed here, not the master JC table, since it's a
+    campaign-wiring detail rather than a mechanism-fidelity one).** The
+    adaptive attacker (D1d) optimizes against an L2-magnitude proxy for
+    detectability -- smaller perturbations look more benign to both
+    SecFedNIDS's SOS-distance-based score and WeiDetect's F1-based score --
+    not each specific defense's own full scoring function, which needs
+    cross-client context (the whole round's client population) a single
+    attacker's local optimization does not have access to in this
+    per-client attack_fn's call signature.
+    """
+    from fedgraa.attacks import adaptive_attack, model_poison_attack, wrap_model_poison_attack
+
+    if attack == "modelpoison":
+        return wrap_model_poison_attack(rng, n_classes=n_classes, scale=10.0)
+    if attack == "adaptive":
+        def _fn(P_current, P_global):
+            delta = [c - g for c, g in zip(P_current, P_global)]
+
+            def base(scale):
+                return model_poison_attack(delta, P_global, n_classes, scale, rng)
+
+            def defense_proxy(candidate_delta):
+                return sum(float((x ** 2).sum()) for x in candidate_delta)
+
+            best_delta, _ = adaptive_attack(
+                base, {}, [("scale", [2.0, 5.0, 10.0, 20.0])], defense_proxy,
+                n_restarts=4, rng=rng,
+            )
+            return [d + g for d, g in zip(best_delta, P_global)]
+        return _fn
+    raise ValueError(f"unrecognized T7 param attack {attack!r}")
 
 
 @dataclass(frozen=True)
@@ -195,6 +280,10 @@ class CellSpec:
     # for CIC-IDS-2017/UNSW-NB15 cells.
     nf_uq_max_per_class: Optional[int] = None
     out_dir: str = DEFAULT_OUT_DIR
+    # T7 only: fraction of clients that are attackers. Part of config_tag
+    # (below) since T7_RARESIG_ARM's two attacker-fraction points would
+    # otherwise collide on the same (dataset, arm, seed) filename.
+    attacker_fraction: float = 0.0
 
     @property
     def grad_refresh_every(self) -> Optional[int]:
@@ -231,6 +320,8 @@ class CellSpec:
             parts.append(f"r{self.rounds}")
         if self.nf_uq_max_per_class is not None:
             parts.append(f"cap{self.nf_uq_max_per_class}")
+        if self.attacker_fraction:
+            parts.append(f"af{self.attacker_fraction}")
         return ("_" + "_".join(parts)) if parts else ""
 
     @property
@@ -280,11 +371,13 @@ def enumerate_cells(
     ``nf_uq_max_per_class`` bounds the loader's memory (B6); it has no effect
     on any other tier's cells.
 
-    **T3/T5** are external-baseline reproductions, not FedGRAA-v2 arms: each
-    is one of :data:`T3_ARM_CLASSES`/:data:`T5_ARM_CLASSES`'s (module, class)
-    pairs x ``datasets`` x ``seeds``, at a fixed gamma=1.0 (gamma is a
-    FedGRAA-specific composite-gradient knob these methods don't have; it is
-    carried on the cell only so :class:`CellSpec` stays one uniform shape).
+    **T3/T5/TC** are external-baseline reproductions, not FedGRAA-v2 arms:
+    each is one of :data:`T3_ARM_CLASSES`/:data:`T5_ARM_CLASSES`/
+    :data:`TC_ARM_CLASSES`'s (module, class) pairs x ``datasets`` x
+    ``seeds``, at a fixed gamma=1.0 (gamma is a FedGRAA-specific
+    composite-gradient knob these methods don't have; it is carried on the
+    cell only so :class:`CellSpec` stays one uniform shape). TC is the
+    classic-FL-optimizer set (FedAvg/FedProx/FedOpt/SCAFFOLD/FedNova, §4).
 
     ``arms`` optionally restricts every tier to the named arm(s) -- e.g.
     ``arms=["fedpgo"]`` for a single-arm rerun. The filter is applied
@@ -359,6 +452,34 @@ def enumerate_cells(
                 for seed in seeds:
                     cells.append(CellSpec(
                         dataset=dataset, arm=arm, gamma=1.0, seed=seed,
+                        **_common(p_drop=0.0, dp_epsilon=None),
+                    ))
+
+    if "TC" in tiers:
+        for dataset in datasets:
+            for arm in TC_ARM_CLASSES:
+                for seed in seeds:
+                    cells.append(CellSpec(
+                        dataset=dataset, arm=arm, gamma=1.0, seed=seed,
+                        **_common(p_drop=0.0, dp_epsilon=None),
+                    ))
+
+    if "T7" in tiers:
+        # Defense cross-product: 1 attacker fraction (JC-T7-18's final grid).
+        for dataset in datasets:
+            for arm in t7_cross_product_arms():
+                for seed in seeds:
+                    cells.append(CellSpec(
+                        dataset=dataset, arm=arm, gamma=1.0, seed=seed,
+                        attacker_fraction=T7_DEFAULT_ATTACKER_FRACTION,
+                        **_common(p_drop=0.0, dp_epsilon=None),
+                    ))
+            # D1c trend addendum: undefended FedGRAA-v2 only, 2 fractions.
+            for frac in (T7_DEFAULT_ATTACKER_FRACTION, T7_SECOND_ATTACKER_FRACTION):
+                for seed in seeds:
+                    cells.append(CellSpec(
+                        dataset=dataset, arm=T7_RARESIG_ARM, gamma=1.0, seed=seed,
+                        attacker_fraction=frac,
                         **_common(p_drop=0.0, dp_epsilon=None),
                     ))
 
@@ -565,6 +686,7 @@ def run_one_cell(cell: CellSpec) -> Dict:
         )
 
     failed_secagg_rounds = 0
+    attacker_weight_history: List[float] = []
     if cell.arm == "v1_projected":
         trainer = FederatedTrainer(split, cfg, method="fedgraa")
         layer_sizes = spec.model_config().layer_sizes
@@ -585,16 +707,80 @@ def run_one_cell(cell: CellSpec) -> Dict:
         failed_secagg_rounds = trainer.failed_secagg_rounds
         bytes_sent_out = trainer.bytes_sent
         comm_rounds_out = trainer.comm_rounds
+    elif cell.arm == T7_RARESIG_ARM:
+        # D1c trend addendum: undefended FedGRAA-v2 itself, under the
+        # mechanism-specific attack (JC-T7-13/15/18, §2.6 step 5).
+        trainer = FederatedTrainerV2(
+            split, cfg,
+            secagg_threshold=cell.secagg_threshold,
+            measure_zeta=True,
+            raresig_attacker_fraction=cell.attacker_fraction,
+        )
+        history = trainer.train(eval_every=cell.eval_every, verbose=True)
+        failed_secagg_rounds = trainer.failed_secagg_rounds
+        bytes_sent_out = trainer.bytes_sent
+        comm_rounds_out = trainer.comm_rounds
+        attacker_weight_history = trainer.attacker_weight_history
+    elif cell.arm in t7_cross_product_arms():
+        # T7 defense-reproduction cross-product: label-flip poisons
+        # split.clients[i].y_train upstream (applies to every trainer with
+        # zero modification, JC-T7-16); param-space attacks (modelpoison,
+        # adaptive) are wired via the uniform (P_current, P_global) ->
+        # P_poisoned attack_fn contract, passed only to the two new T7
+        # trainers (AdaAggRL only ever pairs with labelflip, JC-T7-16).
+        import importlib
+
+        import numpy as np
+
+        from fedgraa.attacks import label_flip_attack
+
+        defense, attack = cell.arm.split("_", 1)
+        n_clients = len(split.clients)
+        n_attackers = int(round(cell.attacker_fraction * n_clients))
+        attacker_ids = set(
+            np.random.default_rng(cfg.seed).choice(
+                n_clients, size=n_attackers, replace=False,
+            ).tolist()
+        ) if n_attackers > 0 else set()
+
+        rng = np.random.default_rng(cfg.seed + 1)
+        if attack in T7_LABEL_ATTACKS:
+            n_classes = spec.n_classes
+            flip_map = {c: spec.benign_id for c in range(n_classes) if c != spec.benign_id}
+            for i in attacker_ids:
+                split.clients[i].y_train = label_flip_attack(
+                    split.clients[i].y_train, flip_map, fraction=1.0, rng=rng,
+                )
+            attack_fn = None
+        else:
+            attack_fn = _t7_param_attack_fn(attack, rng, spec.n_classes)
+
+        module_name, class_name = T7_DEFENSE_CLASSES[defense]
+        trainer_cls = getattr(importlib.import_module(module_name), class_name)
+        if defense == "adaaggrl":
+            trainer = trainer_cls(split, cfg)  # unmodified T5 class, JC-T7-16
+        else:
+            trainer = trainer_cls(
+                split, cfg, attack_fn=attack_fn, attacker_fraction=cell.attacker_fraction,
+            )
+        history = trainer.train(eval_every=cell.eval_every, verbose=True)
+        n_params = sum(
+            int(p.size) for p in init_params(spec.model_config().layer_sizes, seed=0)
+        )
+        bytes_sent_out = 4 * 2 * n_params * len(split.clients) * cell.rounds
+        comm_rounds_out = cell.rounds
+        attacker_weight_history = getattr(trainer, "attack_success_rate_history", [])
     elif cell.arm in BASELINE_ARM_CLASSES:
-        # T3/T5 external-baseline reproductions (fedgraa/baselines_t3_*.py,
-        # baselines_t5_*.py): none of these do SecAgg or a two-phase
-        # protocol -- every one is plain single-phase, one-download +
-        # one-upload-per-client-per-round communication, identical in shape
-        # to v1_projected's own billing above. None of these Trainer classes
-        # instrument bytes internally (unlike FederatedTrainer/
-        # FederatedTrainerV2), so the same formula is applied analytically
-        # here rather than silently leaving the frontier's x-axis undefined
-        # for 14 of its arms (6 T3 + 8 T5 = 14, BASELINE_ARM_CLASSES).
+        # T3/T5/TC external-baseline reproductions (fedgraa/baselines_t3_*.py,
+        # baselines_t5_*.py, baselines_classic.py, baselines.py): none of
+        # these do SecAgg or a two-phase protocol -- every one is plain
+        # single-phase, one-download + one-upload-per-client-per-round
+        # communication, identical in shape to v1_projected's own billing
+        # above. None of these Trainer classes instrument bytes internally
+        # (unlike FederatedTrainer/FederatedTrainerV2), so the same formula
+        # is applied analytically here rather than silently leaving the
+        # frontier's x-axis undefined for any of them (19 arms as of §4:
+        # 6 T3 + 8 T5 + 5 TC = 19, BASELINE_ARM_CLASSES).
         import importlib
 
         module_name, class_name = BASELINE_ARM_CLASSES[cell.arm]
@@ -634,6 +820,7 @@ def run_one_cell(cell: CellSpec) -> Dict:
             "val_fraction": cfg.val_fraction,
             "n_rounds": cell.rounds,
             "eval_every": cell.eval_every,
+            "attacker_fraction": cell.attacker_fraction,
         },
         "provenance": provenance(),
         # --- results ------------------------------------------------------
@@ -649,6 +836,11 @@ def run_one_cell(cell: CellSpec) -> Dict:
         "bytes_sent": bytes_sent_out,
         "comm_rounds": comm_rounds_out,
         "failed_secagg_rounds": failed_secagg_rounds,
+        # T7 only: v2_raresig's per-round mean attacker aggregation weight
+        # (§2.6 step 8's gamma/poisoning-tradeoff paragraph needs this), or
+        # the defense cross-product's per-round attack_success_rate_history
+        # (1 - detection recall). Empty for every non-T7 arm.
+        "attacker_weight_history": attacker_weight_history,
     }
     with open(cell.path, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2)

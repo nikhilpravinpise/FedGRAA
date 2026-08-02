@@ -146,7 +146,7 @@ def check_doc_links() -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--tier", nargs="+", default=["T1"],
-                    choices=["T1", "T2", "T3", "T4", "T5", "T6"])
+                    choices=["T1", "T2", "T3", "T4", "T5", "T6", "TC", "T7"])
     ap.add_argument("--datasets", nargs="+", default=DEFAULT_DATASETS)
     ap.add_argument("--seeds", nargs="+", type=int, default=DEFAULT_SEEDS)
     ap.add_argument("--out-dir", default=DEFAULT_OUT_DIR)

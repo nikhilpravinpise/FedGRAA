@@ -36,6 +36,19 @@
 | No corrected convergence theory | [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) §4 — feasibility + stationarity proposition, empirically verified 60/60 |
 
 **What's still missing for a submission:**
+
+> ⚠️ **Dated correction, 2026-08-02.** Both bullets immediately below are now
+> resolved. Stage C's full compute campaign (T1–T7, TC — 830/830 cells) is
+> complete, and a corrected, resubmission-ready manuscript exists:
+> [`../paper/FedGRAA_v2_PAKDD_Submission.md`](../paper/FedGRAA_v2_PAKDD_Submission.md).
+> It resolves every finding of the (previously undiscovered by this
+> document) simulated peer-review rejection of the original
+> [`../paper/PAKDD_Final_Version_Submit_v3.md`](../paper/PAKDD_Final_Version_Submit_v3.md)
+> draft — see `../research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md`
+> §0/§7/§14 for the full account. Retained below as the historical record of
+> what this document's own snapshot (2026-07-25, pre-Stage-C) believed true
+> at the time.
+
 - **No manuscript exists anywhere** — everything is standalone analysis docs plus two capstone reports. This is the single largest gap.
 - **Stage C is at 0%** and is gated on one mentor conversation (see §6).
 - **The provenance question is unresolved.** Whether the target manuscript is published determines whether Stage B can stand as a citable critique at all — see [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md) §21 and [`../audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md`](../audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md) D1.
