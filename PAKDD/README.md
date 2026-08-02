@@ -24,7 +24,7 @@ and [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_REPORT
 |---|---|---|---|
 | **A** | Faithful reproduction — every paper table/figure has a persisted, reproduced-or-honestly-diverging counterpart | ✅ **complete** | [docs/current/STAGE_A_MASTER_REPORT.md](docs/current/STAGE_A_MASTER_REPORT.md) |
 | **B** | Package the divergence critique as a rigorous, citable component — formal theory + statistically-tested 10-seed ablation | ✅ **complete** | [docs/current/STAGE_B_MASTER_REPORT.md](docs/current/STAGE_B_MASTER_REPORT.md) |
-| **C** | Build the novel extension for an A/A*-tier venue: privacy-compliant redesign + dataset migration (`Final_Stage_C.md` §10's Options B+D), adversarial-robustness evaluation (T7), and the corrected manuscript, with the few-shot/prototype hybrid (Option A) sequenced in afterward as a follow-on (Option C, "both, sequenced") | B+D+T7: ✅ **complete** — 830/830 compute cells (T1–T7, TC), significance-tested, manuscript drafted. A: ⏳ **deliberately deferred** to a later phase (committed 2026-07-28, not started) | [docs/research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md](docs/research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md), [docs/paper/FedGRAA_v2_PAKDD_Submission.md](docs/paper/FedGRAA_v2_PAKDD_Submission.md) |
+| **C** | Build the novel extension for an A/A*-tier venue: privacy-compliant redesign + dataset migration (`Final_Stage_C.md` §10's Options B+D), adversarial-robustness evaluation (T7), and the corrected manuscript, with the few-shot/prototype hybrid (Option A) sequenced in afterward as a follow-on (Option C, "both, sequenced") | B+D+T7: ✅ **complete** — 830/830 compute cells (T1–T7, TC), significance-tested, manuscript drafted. A: ⏳ **deliberately deferred** to a later phase (committed 2026-07-28, not started) | [docs/current/STAGE_C_MASTER_REPORT.md](docs/current/STAGE_C_MASTER_REPORT.md) |
 
 Verification signals on the current tree:
 
@@ -456,7 +456,7 @@ requirements.txt
 
 | If you want… | Read |
 |---|---|
-| The whole project in one file | [docs/current/STAGE_A_MASTER_REPORT.md](docs/current/STAGE_A_MASTER_REPORT.md) then [docs/current/STAGE_B_MASTER_REPORT.md](docs/current/STAGE_B_MASTER_REPORT.md) |
+| The whole project in one file | [docs/current/STAGE_A_MASTER_REPORT.md](docs/current/STAGE_A_MASTER_REPORT.md) → [docs/current/STAGE_B_MASTER_REPORT.md](docs/current/STAGE_B_MASTER_REPORT.md) → [docs/current/STAGE_C_MASTER_REPORT.md](docs/current/STAGE_C_MASTER_REPORT.md) |
 | The paper-section-shaped critique | [docs/current/fedgraa_convergence_defect.md](docs/current/fedgraa_convergence_defect.md) |
 | A gentle introduction to FL and this paper | [understanding/00_START_HERE.md](understanding/00_START_HERE.md) |
 | What's wrong with the paper itself | [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_REPORT.md) and [docs/paper/FedGRAA_Simulated_Peer_Review.md](docs/paper/FedGRAA_Simulated_Peer_Review.md) |

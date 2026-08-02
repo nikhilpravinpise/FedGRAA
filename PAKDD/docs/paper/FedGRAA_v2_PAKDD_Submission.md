@@ -1,3 +1,9 @@
+> **Numeric backbone:** every table and figure below is generated from, and
+> explained at greater length in,
+> [`../current/STAGE_C_MASTER_REPORT.md`](../current/STAGE_C_MASTER_REPORT.md) —
+> the full capstone record, with every per-arm result, every figure, and
+> the complete reproducibility manifest.
+
 # FedGRAA-v2: Privacy-Compliant, Gradient-Refined Adaptive Aggregation for Federated Intrusion Detection
 
 No Author Given

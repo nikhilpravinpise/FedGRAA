@@ -585,6 +585,13 @@ execution this document authorizes but does not itself perform.
 
 ## 14. Final status — execution record (2026-08-02, same day, second session)
 
+> **Capstone record:** the full numeric backbone this section summarizes —
+> every table, every figure, every per-arm result — is consolidated in
+> [`../current/STAGE_C_MASTER_REPORT.md`](../current/STAGE_C_MASTER_REPORT.md),
+> mirroring `STAGE_A_MASTER_REPORT.md`/`STAGE_B_MASTER_REPORT.md`'s own
+> format. This section stays the execution *narrative*; that document is
+> the execution *record*.
+
 Per this document's own §8 (W-DOC4) and the FedPGO plan's §11 precedent, this
 section is appended once §2–§7 actually execute, not written speculatively.
 Author instruction for this pass: implement the complete remaining-work
