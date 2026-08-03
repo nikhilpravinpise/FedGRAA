@@ -1,5 +1,13 @@
 # Speedup Plan v2: Final — Audited, Verified on Real Data
 
+> **ℹ️ Filed in `docs/archive/` for organizational reasons, but NOT
+> superseded — this is the terminal document in the speedup-plan chain
+> (`speedup_plan.md` → this file) and its measurements are still current,
+> still cited as live ground truth by `GPU_DECISION_AND_NEXT_STEPS.md` and
+> `v2_completion.md`.** This folder's own [README](README.md) says "do not
+> treat anything in this folder as current" as a default; this file is the
+> disclosed exception to that default, not a silent violation of it.
+
 *Every number below was independently measured on this machine on 2026-07-22 during a systematic audit with real CIC-IDS-2017 data. Three bugs were found and fixed during the audit (parallel sweep tuple unpacking, checkpoint TF 2.21 API incompatibility, dead code in resume_or_init). All numbers below are the truth.*
 
 *System: AMD Ryzen 7 260 (8C/16T, Zen 4), 24 GB DDR5, NVIDIA GeForce RTX 5050 Laptop GPU (Blackwell GB207, CC 12.0), Python 3.13, TensorFlow 2.21 CPU, Windows 11 + WSL2 for GPU path.*

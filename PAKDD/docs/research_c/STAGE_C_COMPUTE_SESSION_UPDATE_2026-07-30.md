@@ -142,7 +142,7 @@ text is inaccessible are now historically true but operationally superseded by
 the local primary source; any correction must be dated and retained in place,
 not silently deleted.
 
-## 8. Resolution (2026-07-31): faithful-baseline path taken, and a §4 factual correction
+## 7. Resolution (2026-07-31): faithful-baseline path taken, and a §4 factual correction
 
 **Dated decision.** Path 1 of §6 (faithful-baseline path) was taken, as
 planned in
@@ -180,7 +180,17 @@ files now live in the archive directory; the 2026-07-31 faithful rerun's own
 CIC-IDS-2017 `_r2` smoke artefact (commit `25611ce`) is committed at the
 canonical location. The UNSW-NB15 `_r2` was not re-smoked.
 
-## 7. Literature-search result carried forward
+## 8. Literature-search result carried forward
+
+*(Renumbered and moved 2026-08-03 — this section was originally numbered
+"§7" and appeared physically before the "Resolution" section above (then
+numbered "§8"), even though this section was written first chronologically
+and Resolution was appended later the same document; an independent audit
+flagged the resulting out-of-sequence numbering (5, 6, 8, 7). Moved here so
+physical order matches numeric order, and the Resolution section
+renumbered §7 to close the gap. `Final_Stage_C.md`'s reference to this
+document's former "§8" (the Resolution section) has been updated to §7 to
+match.)*
 
 The existing duplication/scooping result remains unchanged: the FastTrack
 pass was re-run in the prior Stage C pass and found no new competing paper;

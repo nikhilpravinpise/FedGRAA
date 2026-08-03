@@ -1,5 +1,27 @@
 # Understanding FedGRAA — Start Here
 
+> **⚠️ Read this before the rest of the series (added 2026-08-03).** This
+> 11-file walkthrough was written before the project's own later findings
+> and is frozen at that earlier, since-corrected state — most importantly,
+> **05_convergence_proof.md's "mathematically guaranteed to converge" framing
+> and the ~88%/55%-over-FedAvg headline numbers below and in
+> 06_glossary_and_cheatsheet.md are no longer this project's own position.**
+> A rigorous, statistically-tested audit later found the paper's Algorithm 2
+> has no simplex projection on its aggregation weights, that this causes
+> real divergence on real data (not a hypothetical), and that the
+> convergence guarantee this proof-walkthrough explains does not hold for
+> the non-convex model actually used. A corrected algorithm, corrected
+> convergence theory, and corrected experimental numbers now exist. Before
+> treating anything numeric or convergence-related in this series as
+> current, read: [`../docs/current/fedgraa_convergence_defect.md`](../docs/current/fedgraa_convergence_defect.md)
+> (the defect and corrected theory), [`../docs/paper/FedGRAA_Simulated_Peer_Review.md`](../docs/paper/FedGRAA_Simulated_Peer_Review.md)
+> (the independent critique that reached the same conclusion), and
+> [`../docs/paper/FedGRAA_v2_PAKDD_Submission.md`](../docs/paper/FedGRAA_v2_PAKDD_Submission.md)
+> (the corrected manuscript, with corrected headline numbers). This series
+> remains useful for the *mechanics* of the original algorithm as
+> published — how the pieces fit together — which is unchanged; it is the
+> *correctness/convergence* claims that need the pointer above.
+
 This folder explains the paper **"Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems" (FedGRAA)** from zero, assuming no prior knowledge of federated learning.
 
 Read the files in this order:

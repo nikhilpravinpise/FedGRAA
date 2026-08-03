@@ -2,9 +2,13 @@
 
 ### The complete, self-contained record of Stage C: the privacy-compliant redesign, the 830-cell frontier campaign, statistical significance testing, communication-overhead reporting, classic-FL baseline coverage, the 90-cell adversarial-robustness campaign, every number, every figure, and the resulting manuscript.
 
-**Compiled:** 2026-08-02, against `HEAD` after commit `586a93c`, main branch.
+**Compiled:** 2026-08-02, against `HEAD` after commit `586a93c`; updated
+2026-08-03 against `HEAD` after commit `d7d72c6` to cover this same
+document's own §10.6 (T7G γ-sweep addendum) and §15 (camera-ready LaTeX),
+both same-day follow-ups to the original compile that hadn't bumped this
+header, main branch.
 
-**Companion documents this report consolidates:** [`../research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md`](../research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md) (the plan and its own execution record, §14–15), [`../research_c/STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md`](../research_c/STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md) (19 disclosed judgment calls), [`../research_c/Final_Stage_C.md`](../research_c/Final_Stage_C.md) (literature foundation), [`../research_c/FEDGRAA_V2_THEORY.md`](../research_c/FEDGRAA_V2_THEORY.md) (the corrected convergence theorem), and [`../paper/FedGRAA_v2_PAKDD_Submission.md`](../paper/FedGRAA_v2_PAKDD_Submission.md) (the manuscript this report's own numbers feed). This report is the numeric backbone; the manuscript is the argument built on top of it. Where the two disagree on a number, this report is authoritative — it is generated closer to the raw JSON.
+**Companion documents this report consolidates:** [`../research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md`](../research_c/STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md) (the plan and its own execution record, §14–15), [`../research_c/STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md`](../research_c/STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md) (18 disclosed judgment calls), [`../research_c/Final_Stage_C.md`](../research_c/Final_Stage_C.md) (literature foundation), [`../research_c/FEDGRAA_V2_THEORY.md`](../research_c/FEDGRAA_V2_THEORY.md) (the corrected convergence theorem), and [`../paper/FedGRAA_v2_PAKDD_Submission.md`](../paper/FedGRAA_v2_PAKDD_Submission.md) (the manuscript this report's own numbers feed). This report is the numeric backbone; the manuscript is the argument built on top of it. Where the two disagree on a number, this report is authoritative — it is generated closer to the raw JSON.
 
 ---
 
@@ -354,6 +358,26 @@ The corrected resubmission, [`FedGRAA_v2_PAKDD_Submission.md`](../paper/FedGRAA_
 
 ### 12.1 New tests this stage
 
+*(Corrected 2026-08-03: this table previously listed 9 hand-picked rows
+summing to 105 tests, next to prose claiming "137 new tests this stage (144
+including T7G)" — neither number was right, and they disagreed with each
+other. Recomputed from source: `git ls-tree` diffed between this stage's
+starting commit — Stage B's close, `9ee076a` — and the current tree shows
+**22 wholly new test files** (the T3/T5/T7 external-baseline suites,
+`test_aggregation_v2.py`, `test_privacy.py`, `test_secagg.py`,
+`test_partition_v2.py`, `test_trainer_v2.py`, `test_modal_frontier_
+campaign.py`, `test_pre_compute_audit_fixes.py`, the `build_v2_*`/
+`run_v2_frontier_sweep`/`run_one_cell_nf_uq` test files, etc.) contributing
+**387 tests**, plus **29 tests** added to pre-existing Stage A/B test files
+during this stage's hardening (e.g. `test_run_experiments_cli.py`,
+`test_check_doc_links.py`, `test_diagnose_fedgraa.py`). **387 + 29 = 416
+new tests this stage; 142 (Stage B's close) + 416 = 558, matching
+`pytest --collect-only`'s count exactly.** The table below is retained as a
+**curated highlight list of the most safety/correctness-critical additions**
+(105 of the 416) — it was never meant to be exhaustive, but the surrounding
+prose incorrectly implied it was. See §12.2 for the live, re-verifiable
+total.)*
+
 | Module | Tests | What they pin |
 |---|---|---|
 | `fedgraa/stats.py` significance wiring | 9 | Hand-computed Wilcoxon regression, Holm-correction scoping |
@@ -366,7 +390,10 @@ The corrected resubmission, [`FedGRAA_v2_PAKDD_Submission.md`](../paper/FedGRAA_
 | `scripts/modal_frontier_campaign_t7.py` | 6 | Image-exclusion regression (mirrors the T6 12.79 GB bug this pattern exists to prevent) |
 | `scripts/run_v2_frontier_sweep.py` T7G wiring (2026-08-02 follow-up) | 7 | `T7G` tier cell count/gammas/attacker-fractions match the documented grid, no path collisions with T7 or any other tier |
 
-**137 new tests this stage (144 including the same-day T7G follow-up), 558 total, zero regressions.**
+*(105 of the 416 new tests, hand-picked as the highest-stakes additions;
+see the corrected summary above for the reconciled total.)*
+
+**416 new tests this stage (105 of them highlighted above), 558 total, zero regressions.**
 
 ### 12.2 Full-suite and gate verification
 

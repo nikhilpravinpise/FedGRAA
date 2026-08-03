@@ -934,6 +934,7 @@ The tables stamp `git_sha = 4459f53`, the commit that closed Stage B. The workin
 - **CPU-only training** throughout, Stage A and Stage B alike. Affects wall-clock cost, not correctness.
 - **Blowup CIs are arithmetically valid and interpretively useless** on heavy-tailed cells (§14). No significance test is run on blowup, and none should be read into that column.
 - **This is a critique of one algorithm in one manuscript,** not a general claim about learned-aggregation-weight FL schemes. Nothing here suggests such schemes are unworkable in general — only that *this* algorithm needs *this* specific constraint to behave as its own theorem claims.
+- **A second, independent deviation from Algorithm 1 exists alongside the simplex-projection defect this stage is built around: client-side Adam momentum persists across all 200 rounds while model weights reset every round.** Orthogonal to the simplex-projection fix above and not corrected by it. Full account: [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) §7; also now cross-referenced from `STAGE_A_MASTER_REPORT.md` §4.1.
 - **And one limitation that is not technical at all:** see §21.
 
 ---

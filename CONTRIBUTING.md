@@ -13,17 +13,20 @@ Every project in this repo keeps its own verification suite. For
 .venv313\Scripts\python.exe -m pytest tests --tb=short
 .venv313\Scripts\python.exe scripts\check_stage_a_complete.py
 .venv313\Scripts\python.exe scripts\check_stage_b_complete.py
+.venv313\Scripts\python.exe scripts\check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6 TC --t4-m 3
+.venv313\Scripts\python.exe scripts\check_stage_c_complete.py --tier T7 --seeds 0 1 2 3 4
 .venv313\Scripts\python.exe scripts\audit_stage_a.py
 .venv313\Scripts\python.exe scripts\audit_stage_b.py
+.venv313\Scripts\python.exe scripts\audit_stage_c.py
 .venv313\Scripts\python.exe scripts\check_doc_links.py
 ```
 
-The first three ("completeness") check that expected artifacts exist and are
-shaped correctly. `audit_stage_*.py` ("correctness") independently
-re-derives every reported number from raw persisted JSON — never trust a
-number back from the prose that reports it. `check_doc_links.py` verifies
-every relative Markdown link resolves. A lightweight version of the last
-check also runs in CI on every push and PR (see
+The `check_stage_*_complete.py` scripts ("completeness") check that expected
+artifacts exist and are shaped correctly. `audit_stage_*.py` ("correctness")
+independently re-derives every reported number from raw persisted JSON —
+never trust a number back from the prose that reports it.
+`check_doc_links.py` verifies every relative Markdown link resolves. All
+nine of these run in CI on every push and PR (see
 [`.github/workflows/docs-check.yml`](.github/workflows/docs-check.yml)).
 
 ## Ground rules

@@ -184,8 +184,7 @@ def secfednids_consensus_filter(
         per_array = []
         for arr in omega:
             flat = arr.ravel()
-            k = max(1, int(round(top_k_frac * flat.size))) if flat.size > 1000 else \
-                max(1, int(round(0.1 * flat.size)))
+            k = max(1, int(round(top_k_frac * flat.size)))
             idx = np.argsort(-np.abs(flat))[:k]
             per_array.append(idx)
         selected_indices.append(per_array)

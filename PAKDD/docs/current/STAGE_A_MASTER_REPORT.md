@@ -292,6 +292,7 @@ Wherever the paper is silent or self-contradictory, the codebase commits to exac
 
 - **UNSW-NB15 cannot support a genuine n=7 sweep.** Only 5 attack classes are non-frequency-capped (Worms, Shellcode, Backdoor, Analysis, Exploits). `UNSW_NB15.rare_label_order` contains exactly those 5; requesting n>5 returns the same 5 classes rather than silently padding with a frequency-capped class, which would contradict the experiment's own purpose. `rare_client_ids()` raises a `RuntimeWarning` naming the shortfall instead of truncating silently.
 - **Algorithm 1 line 17** uses the identical symbol `θ_k^t` on both sides of the assignment — syntactically odd but unambiguously standard SGD-update shorthand; implemented as `θ ← θ − η∇L(θ; b)`.
+- **A second, independent deviation from Algorithm 1: client-side Adam momentum persists across all 200 rounds while model weights reset every round.** `fedgraa/trainer.py`'s `client_train_round` resets each client's model parameters to the current global aggregate every round (as Algorithm 1 specifies), but never rebuilds that client's Adam optimizer, so its momentum/velocity slots carry state across rounds whose starting weights have since changed underneath them. Deliberately kept as "a known deviation, not a bug" (`docs/archive/v1_regression_root_cause_analysis.md` §"root cause"); orthogonal to the simplex-projection defect (§5 below) and not corrected by its fix. Full account: [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) §7.
 
 ### 4.2 Paper-only ambiguity catalogue — 17 issues (verbatim from `PAPER_AMBIGUITY_REPORT.md`)
 
@@ -945,8 +946,8 @@ Bring the completed Stage A (this document) + Stage B critique package to the me
 | Top-level project README | `README.md` |
 | Results manifest | `results/README.md` |
 | The paper itself | `docs/paper/PAKDD_Final_Version_Submit_v3.md` |
-| Literature review & publication strategy | `docs/current/literature_review_and_publication_strategy.md` |
-| Privacy-compliant redesign (unbuilt Stage C candidate) | `docs/current/privacy_compliant_fedgraa_redesign.md` |
+| Literature review & publication strategy | `docs/research_c/literature_review_and_publication_strategy.md` |
+| Privacy-compliant redesign (Stage C B+D, now built) | `docs/research_c/privacy_compliant_fedgraa_redesign.md` |
 | Didactic walkthrough series (feeds Stage B/C) | `understanding/00_START_HERE.md` … `understanding/10_SOTA_adaptive_aggregation.md` |
 
 ### 14.3 Key source code referenced throughout this report

@@ -340,7 +340,15 @@ For the paper's experimental section, the most defensible SOTA baselines are:
 | **Nice to have** | FedAtt (Ji et al. 2019) | Attention-based aggregation weights; shows FedGRAA beats geometric approaches |
 | **Context** | FedNova / SCAFFOLD | Show that *normalization/correction* approaches don't solve class imbalance |
 
-**Note:** FedProx (already in the paper as [5]) and FedSND (already cited as [12]) are already covered.
+**Note:** FedProx (already in the paper as [5]) is already covered.
+**Correction (2026-08-03):** this note previously also named "FedSND
+(already cited as [12])" as covered. That citation was later confirmed
+**fabricated** — three independent bibliographic tools found zero trace of
+it — and has been removed from the paper's bibliography and replaced with
+FedNova (see `docs/paper/draft1.md`'s reference notes and
+`FEDGRAA_V2_MASTER_PLAN.md` F6). Do not cite it. `StaticDistributionAwareTrainer`
+in `fedgraa/baselines.py` was itself formerly named after this same
+hallucinated citation and has since been renamed for the same reason.
 
 ---
 

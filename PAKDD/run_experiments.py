@@ -42,7 +42,8 @@ from fedgraa.experiment import (
 )
 
 
-def main() -> None:
+def build_parser() -> argparse.ArgumentParser:
+    """Construct the CLI parser (imported directly by tests -- no shadow copy)."""
     parser = argparse.ArgumentParser(description="Reproduce FedGRAA Figures 1-3")
     parser.add_argument("--rounds", type=int, default=200,
                         help="Federated training rounds (default 200; use 30-50 for quick tests)")
@@ -79,8 +80,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--round-zero-zero",
-        action="store_true",
-        help="Force round-0 accuracies to 0.00 to match the paper's table (gap C-4).",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Force round-0 accuracies to 0.00 to match the paper's table (gap C-4). "
+             "Default: True (matches FedConfig's own default). Pass "
+             "--no-round-zero-zero to disable.",
     )
     parser.add_argument(
         "--baselines",
@@ -109,7 +113,11 @@ def main() -> None:
     )
     parser.add_argument("--verbose", action="store_true",
                         help="Legacy flag (progress is now always printed)")
-    args = parser.parse_args()
+    return parser
+
+
+def main() -> None:
+    args = build_parser().parse_args()
 
     # Shared FedConfig carrying all reproduction-gap flags.
     base_cfg = FedConfig(

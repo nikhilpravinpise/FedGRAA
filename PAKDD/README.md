@@ -14,7 +14,9 @@ Dense(n_classes, softmax)`, trained with sparse categorical cross-entropy and
 Adam.  Every ambiguous design choice that was previously hidden behind a flag
 has been removed; the remaining ambiguities and apparent paper errors are
 documented in [docs/archive/strict_reproduction_report.md](docs/archive/strict_reproduction_report.md)
-and [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_REPORT.md).
+(⚠️ archived — historical background only, see that folder's
+[README](docs/archive/README.md) for what supersedes it) and the live,
+current [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_REPORT.md).
 
 ---
 
@@ -29,12 +31,17 @@ and [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_REPORT
 Verification signals on the current tree:
 
 ```powershell
-.venv313\Scripts\python.exe -m pytest tests --tb=short          # 551 passed
-.venv313\Scripts\python.exe scripts\check_stage_a_complete.py   # exit 0 (completeness)
-.venv313\Scripts\python.exe scripts\check_stage_b_complete.py   # exit 0 (completeness)
-.venv313\Scripts\python.exe scripts\audit_stage_a.py            # exit 0 (correctness)
-.venv313\Scripts\python.exe scripts\audit_stage_b.py            # exit 0 (correctness)
-.venv313\Scripts\python.exe scripts\check_doc_links.py          # exit 0 (doc-link integrity)
+.venv313\Scripts\python.exe -m pytest tests --tb=short                          # 559 passed
+.venv313\Scripts\python.exe scripts\check_stage_a_complete.py                   # exit 0 (completeness)
+.venv313\Scripts\python.exe scripts\check_stage_b_complete.py                   # exit 0 (completeness)
+.venv313\Scripts\python.exe scripts\check_stage_c_complete.py `
+    --tier T1 T2 T3 T4 T5 T6 TC --t4-m 3                                        # exit 0 (completeness)
+.venv313\Scripts\python.exe scripts\check_stage_c_complete.py `
+    --tier T7 --seeds 0 1 2 3 4                                                 # exit 0 (completeness)
+.venv313\Scripts\python.exe scripts\audit_stage_a.py                            # exit 0 (correctness)
+.venv313\Scripts\python.exe scripts\audit_stage_b.py                            # exit 0 (correctness)
+.venv313\Scripts\python.exe scripts\audit_stage_c.py                            # exit 0 (correctness)
+.venv313\Scripts\python.exe scripts\check_doc_links.py                          # exit 0 (doc-link integrity)
 ```
 
 The completeness gates ask "is every artifact present and shaped right?";
@@ -172,17 +179,22 @@ can attempt to download the files automatically from the
 |---|---|
 | `--datasets CIC-IDS-2017` | Run only CIC (skip UNSW). Default: both. |
 | `--sweep gamma` | Figure 1 only (5 method runs). |
-| `--sweep n` | Figures 2-3 only (9 runs). |
-| `--sweep both` | All 14 runs (default). |
+| `--sweep n` | Figures 2-3 only (`fedavg + static + 3×fedgraa` per `n`; 15 runs with the default `--ns 3 5 7`). |
+| `--sweep both` | All 20 runs (default: 5 gamma-sweep + 15 n-sweep, with the default `--ns 3 5 7`). |
+| `--ns N [N ...]` | Values of `n` to sweep in the n-sweep. Default `3 5 7`. |
 | `--rounds N` | Training rounds. Paper uses 200. Use 5–30 for quick checks. |
 | `--eval-every N` | Print metrics every N rounds. Default 20. |
+| `--data-dir DIR` | Directory with CIC-IDS-2017 or UNSW-NB15 CSV files. |
 | `--cache-dir DIR` | Cache/reload preprocessed arrays here. |
-| `--round-zero-zero` | Force round-0 accuracies to 0.00 (default True). |
+| `--seed N` | Base random seed. Default 0. |
+| `--round-zero-zero` / `--no-round-zero-zero` | Force round-0 accuracies to 0.00 (default True, matching `FedConfig`'s own default). |
 | `--baselines` | Include FedProx / FedOpt / the static distribution-aware baseline (related work only, never run head-to-head). |
 | `--parallel` | Run sweep configs concurrently via `ProcessPoolExecutor`. |
+| `--workers N` | Cap the number of parallel worker processes (only used with `--parallel`). |
 | `--results-dir DIR` | Persist raw sweep results to `<DIR>/<dataset>_gamma_sweep.json` / `_n_sweep.json`. |
 | `--plot-dir DIR` | Save Figure 1 / 2-3 PNGs here. |
 | `--checkpoint-dir DIR` | Save/resume training checkpoints. |
+| `--verbose` | Legacy flag (progress is now always printed). |
 
 ### Recommended workflows
 
@@ -293,7 +305,7 @@ mandate.
 Run the full suite before pushing:
 
 ```powershell
-.venv313\Scripts\python.exe -m pytest tests --tb=short      # 551 passed
+.venv313\Scripts\python.exe -m pytest tests --tb=short      # 559 passed
 ```
 
 The suite covers:
@@ -396,6 +408,8 @@ fedgraa/
   stats.py         # NEW (Stage B): bootstrap CI, paired t, Wilcoxon, Cohen's d, Holm
   plot.py          # matplotlib figures
   __main__.py      # CLI: python -m fedgraa ...
+archive/
+  FedGRAA_reproduction.ipynb # original exploratory notebook, kept for history
 data/
   CIC-IDS-2017/    # 8 CSV files
   UNSW-NB15/       # official train/test CSVs
@@ -435,7 +449,7 @@ results/
     seed_sweep_{DS}_{fedavg,static}_r60.json
     README.md                          # Stage B manifest (27 checked paths)
     _logs/                             # raw campaign stdout
-tests/             # 311 unit + gradient + e2e + diagnostic + statistics + doc-link + FedGRAA-v2 + pre-compute-audit tests
+tests/             # 559 unit + gradient + e2e + diagnostic + statistics + doc-link + FedGRAA-v2 + pre-compute-audit tests
 docs/
   current/         # the live documents
     STAGE_A_MASTER_REPORT.md           # Stage A capstone (exhaustive)

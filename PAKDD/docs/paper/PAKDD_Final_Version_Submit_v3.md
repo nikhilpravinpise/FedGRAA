@@ -6,6 +6,19 @@
 > the corrected resubmission: [`FedGRAA_v2_PAKDD_Submission.md`](FedGRAA_v2_PAKDD_Submission.md).
 > Kept here, unedited, as the original draft the review and the correction
 > both respond to — do not cite numbers from this version.
+>
+> **Citation-integrity note added 2026-08-03, without altering the frozen
+> text below:** reference [12] (line 1722) cites "Zhang, X., Li, T., Jin,
+> R., Yang, Q.: Federated learning on non-iid data via local and global
+> adaptation... ICML 2020" alongside an arXiv link
+> (`arxiv.org/pdf/2306.14443`) whose ID encodes a June-2023 posting date —
+> inconsistent with a 2020 ICML paper, and the same reference slot
+> `draft1.md`'s bibliography separately confirmed was a fabricated
+> citation ("FedSND") elsewhere in this same draft's lineage. This entry
+> was never independently re-verified as real; do not cite it. The
+> corrected resubmission's bibliography
+> ([`FedGRAA_v2_PAKDD_Submission.md`](FedGRAA_v2_PAKDD_Submission.md)) does
+> not carry this entry forward.
 
 # Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems
 

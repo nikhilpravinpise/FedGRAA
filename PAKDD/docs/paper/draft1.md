@@ -2,7 +2,21 @@
 > [`PAKDD_Final_Version_Submit_v3.md`](PAKDD_Final_Version_Submit_v3.md),
 > itself reviewed and rejected — see [`FedGRAA_Simulated_Peer_Review.md`](FedGRAA_Simulated_Peer_Review.md).
 > The corrected resubmission is [`FedGRAA_v2_PAKDD_Submission.md`](FedGRAA_v2_PAKDD_Submission.md).
-> Kept unedited for the historical record; do not cite numbers from this version.
+> Do not cite numbers from this version.
+>
+> **Correction (2026-08-03):** this banner previously said "kept unedited
+> for the historical record" — that was inaccurate. The abstract above was
+> rewritten (withdrawing the original 88%/55%-over-FedAvg claim and
+> reporting corrected 70-89%/37-69% recovery figures instead) and several
+> reference entries carry dated 2026-07-26 corrections (see the inline
+> `<!-- corrected -->` comments in the bibliography). **What was *not*
+> updated to match: Section 5's result tables still show the original,
+> withdrawn numbers (88.88%, 66.66%, etc.)** — the corrected 70-89%/37-69%
+> figures the abstract now reports do not appear anywhere in this file's
+> own body. Do not treat the abstract and the body tables as consistent
+> with each other; neither should be cited as current regardless — see
+> [`FedGRAA_v2_PAKDD_Submission.md`](FedGRAA_v2_PAKDD_Submission.md) for
+> the one place both the narrative and the numbers agree.
 
 # Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems
 

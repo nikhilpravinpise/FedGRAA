@@ -115,6 +115,12 @@ def check_cell_json(cell: CellSpec) -> bool:
     if data["bytes_sent"] is None or data["comm_rounds"] is None:
         fail(f"{label}: cell missing bytes_sent/comm_rounds instrumentation")
         return False
+    if not isinstance(data["bytes_sent"], (int, float)):
+        fail(f"{label}: bytes_sent is not numeric ({data['bytes_sent']!r})")
+        return False
+    if not isinstance(data["comm_rounds"], (int, float)):
+        fail(f"{label}: comm_rounds is not numeric ({data['comm_rounds']!r})")
+        return False
 
     if data["dataset"] != cell.dataset or data["arm"] != cell.arm or data["seed"] != cell.seed:
         fail(f"{label}: {cell.path} identity fields don't match its own file name/cell spec")

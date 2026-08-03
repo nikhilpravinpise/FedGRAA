@@ -166,8 +166,20 @@ def render_figure(table: dict, save_path: Optional[str] = None):
             dedup_labels.append(l)
     fig.legend(dedup_handles, dedup_labels, loc="lower center", ncol=6,
                fontsize=7.5, bbox_to_anchor=(0.5, -0.08))
+    n_seeds_seen = sorted({
+        cell["n_seeds"]
+        for cells in table["datasets"].values()
+        for cell in cells.values()
+        if cell is not None
+    })
+    if len(n_seeds_seen) == 1:
+        seed_clause = f"mean over {n_seeds_seen[0]} seeds"
+    elif n_seeds_seen:
+        seed_clause = f"mean over {n_seeds_seen[0]}-{n_seeds_seen[-1]} seeds (varies by cell)"
+    else:
+        seed_clause = "mean over per-cell seed count"
     fig.suptitle("FedGRAA-v2 frontier: communication cost vs. rare-class recall "
-                  "(mean over >=10 seeds, 95% bootstrap CI)")
+                  f"({seed_clause}, 95% bootstrap CI)")
     fig.tight_layout(rect=(0, 0.05, 1, 1))
     if save_path:
         fig.savefig(save_path, dpi=150, bbox_inches="tight")

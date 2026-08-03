@@ -52,8 +52,21 @@
 1. Federated learning trains a shared model across clients without sharing raw data, which is ideal for privacy-sensitive intrusion detection.
 2. But real clients have **non-IID, imbalanced** data, and standard **FedAvg** weights clients by data size, so rare-but-critical attacks (Heartbleed, SQL Injection) are essentially ignored (≈0% detection).
 3. The paper proposes **FedGRAA**, which treats the aggregation weights as **learnable parameters** and trains them by gradient descent to minimize a loss that explicitly rewards rare-class accuracy, controlled by a knob $\gamma$.
-4. On CIC-IDS-2017 and UNSW-NB15, FedGRAA lifts rare-attack accuracy from ~0% to ~88% (CIC) while keeping overall accuracy competitive, and its advantage grows as more clients hold rare data.
-5. A convergence proof (under standard convexity/smoothness assumptions) guarantees the learned weights and global model settle at the loss-minimizing optimum.
+4. On CIC-IDS-2017 and UNSW-NB15, FedGRAA lifts rare-attack accuracy from ~0% to ~88% (CIC) while keeping overall accuracy competitive, and its advantage grows as more clients hold rare data. *(This is the paper's own claimed number — see the correction below; it is not this project's current position.)*
+5. A convergence proof (under standard convexity/smoothness assumptions) guarantees the learned weights and global model settle at the loss-minimizing optimum. *(Also superseded — see below.)*
+
+> **⚠️ Correction (2026-08-03).** Sentences 4 and 5 above, and "convergence-proven"
+> in §6.3, restate the paper's own claims as this project's summary of them —
+> but this project later found both do not hold as stated. The algorithm as
+> printed has no simplex projection on its aggregation weights, which
+> provably leave the simplex on real data starting at round 1, invalidating
+> the non-increasing-loss assumption sentence 5 relies on; the corrected
+> algorithm recovers a real but smaller accuracy gain (not the ~88%/55%-over-FedAvg
+> figures above) under a weaker, honest convergence guarantee (stationarity,
+> not global optimality). See
+> [`../docs/current/fedgraa_convergence_defect.md`](../docs/current/fedgraa_convergence_defect.md)
+> and [`../docs/paper/FedGRAA_v2_PAKDD_Submission.md`](../docs/paper/FedGRAA_v2_PAKDD_Submission.md)
+> for the corrected numbers and theory.
 
 ## 6.5 Questions to test your own understanding
 

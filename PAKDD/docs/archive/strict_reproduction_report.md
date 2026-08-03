@@ -1,5 +1,15 @@
 # Strict-Reproduction Report — FedGRAA Keras Implementation
 
+> **⚠️ ARCHIVED — describes an earlier architecture/ambiguity snapshot,
+> itself since superseded.** This was written just after the NumPy→Keras
+> rewrite (`plan.md`'s successor) and was accurate at the time, but the
+> codebase and the project's account of its own ambiguities have moved on
+> since. For the current architecture and correctness account see
+> `../audit/REPRODUCTION_AUDIT.md`; for the current, live catalogue of
+> paper ambiguities see `../current/PAPER_AMBIGUITY_REPORT.md`. Kept for
+> historical record — do not cite its specific claims as current without
+> cross-checking them against those two documents first.
+
 This document records every deviation, ambiguity, or apparent error in the
 FedGRAA paper (PAKDD final version) that the reproduction deliberately leaves
 unresolved.  It is the counterpart to the code: the implementation follows the

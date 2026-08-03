@@ -47,7 +47,7 @@ laid out in §8.
 | Stage A — faithful reproduction | ✅ Complete |
 | Stage B — formal critique + statistical ablation | ✅ Complete |
 | Stage C — novel A/A\*-tier extension (Option B+D now, FedGRAA-v2; Option A, few-shot/prototype hybrid, sequenced as a follow-on per Option C) | B+D: ✅ **Code/tests complete** (2026-07-28) · ⏳ compute campaign, baseline reproduction, and the mentor conversation itself still open. A: ⏳ **deliberately deferred** — committed as a later, sequenced phase, no design/code/tests yet — see `docs/research_c/REMAINING_COMPUTE_WORK.md` §2–§7 (B/D, active) and §3a (A, deferred) |
-| Tests | **311/311 passing** as of 2026-07-28 (252 after the Stage C implementation pass, +40 regression guards from `docs/audit/PRE_COMPUTE_AUDIT_2026-07-28.md`'s remediation, +19 from that same audit's B6 fix and T6 wiring; this doc's own 155 above was the pre-Stage-C-implementation baseline) |
+| Tests | **311/311 passing** as of 2026-07-28 (252 after the Stage C implementation pass, +40 regression guards from `docs/audit/PRE_COMPUTE_AUDIT_2026-07-28.md`'s remediation, +19 from that same audit's B6 fix and T6 wiring; this doc's own 155 above was the pre-Stage-C-implementation baseline); **559/559 current** now that Stage C's compute campaign, T7, and classic-FL baselines have landed — see `docs/current/STAGE_C_MASTER_REPORT.md` §12 |
 | Completeness gates (structure) | 2/2 green |
 | Correctness audits (values re-derived from raw data) | 2/2 green |
 | Manuscript | Does not exist yet — everything below is analysis docs, not a paper draft |
@@ -403,11 +403,12 @@ conclusions in §3–4 moved as a result of this audit.
 
 ---
 
-## 7. Current status snapshot
+## 7. Status snapshot as of 2026-07-28 (pre-Stage-C; see the 2026-08-02
+   update banner at the top of this document for what changed since)
 
 | Item | Value |
 |---|---|
-| Tests | 155/155 passing, live-verified (unit, gradient, end-to-end, statistics, CLI) |
+| Tests | 155/155 passing as of this snapshot (2026-07-28); **559/559 current** — see `docs/current/STAGE_C_MASTER_REPORT.md` §12 |
 | Completeness gates | `check_stage_a_complete.py` exit 0, `check_stage_b_complete.py` exit 0 |
 | Correctness audits | `audit_stage_a.py`, `audit_stage_b.py` — all headline numbers re-derived and matched |
 | CI | GitHub Actions runs all four gates + doc-link check on every push (added yesterday) |
@@ -531,11 +532,14 @@ python -m venv .venv313
 .venv313\Scripts\Activate.ps1
 pip install -r requirements.txt
 
-pytest tests --tb=short                     # 155 passed
-python scripts\check_stage_a_complete.py    # exit 0
-python scripts\check_stage_b_complete.py    # exit 0
+pytest tests --tb=short                                              # 559 passed
+python scripts\check_stage_a_complete.py                             # exit 0
+python scripts\check_stage_b_complete.py                             # exit 0
+python scripts\check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6 TC --t4-m 3  # exit 0
+python scripts\check_stage_c_complete.py --tier T7 --seeds 0 1 2 3 4 # exit 0
 python scripts\audit_stage_a.py             # re-derives every Stage A number from raw JSON
 python scripts\audit_stage_b.py             # re-derives every Stage B number from raw JSON
+python scripts\audit_stage_c.py             # re-derives every Stage C number from raw JSON
 ```
 
 Datasets are not tracked in git — see `PAKDD/README.md § Datasets` for where

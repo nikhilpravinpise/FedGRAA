@@ -43,6 +43,23 @@
 **Also decided, 2026-07-28 (same update, corrected twice later the same day):** the author has resolved the mentor-conversation decision `STAGE_DIRECTION_ASSESSMENT.md` flagged as the standing blocker on Stage C's scope — see that document's new resolution note and §4 below. The decision is `Final_Stage_C.md` §10's **Option C — "both, sequenced"**: implement B (privacy redesign) and D (dataset migration) now, which is already underway per §2–§6 and unaffected by this note, and pursue A (the few-shot/prototype hybrid) **afterward, as a follow-on**, not in parallel and not starting this pass — see §3a for what A will need when that phase begins. The specific T3/T5-vs-external-compute trade-off (§4) is deliberately deferred until real T1/T2 frontier numbers are in hand, not decided now; that deferral is unaffected by this correction.
 
 > ✅ **Dated correction, 2026-08-02 (W-DOC1,** [`STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md`](STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md) **§0/§8).** This section's "reproducing ~14 other papers' methods as baselines" line is now stale: **all 14 T3/T5 external baselines are implemented and complete** — `fedgraa/baselines_t3_contrib.py` (CELM, SpectralFed, CoAst), `fedgraa/baselines_t3_trust.py` (FLTrust, RAGA, FedTruth), `fedgraa/baselines_t5_nids.py` (FedMADE, SBFedNIDS, FedAPA), `fedgraa/baselines_t5_adaptive.py` (FedAWA, DA-PFL, FedAWARE, AdaAggRL), `fedgraa/baselines_t5_fedpgo.py` (FedPGO, faithful since `25611ce`) — 730/730 cells, `check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6` green, re-verified live 2026-08-02. What remains of Stage C is **not** more baseline code: it is T7 (adversarial robustness, still zero code as of this correction), the classic-FL-optimizer coverage decision (§4 of the referenced plan — resolved 2026-08-02: build FedAvg/FedProx/FedOpt/SCAFFOLD/FedNova in full, `fedgraa/baselines_classic.py`), two analysis layers over already-completed data (significance testing, overhead reporting), and the manuscript itself, which has not been started. See the referenced plan's §0 table for the full, corrected ground truth.
+>
+> ✅ **Dated correction, 2026-08-03.** The W-DOC1 correction above stopped at
+> "T7 ... still zero code as of this correction" — that was true on
+> 2026-08-02 but this document's own §2 G5 row and §3 T7 row were never
+> updated to match, and an independent audit later flagged both as stale.
+> **Both are now resolved:** T7's attack harness (SecFedNIDS protocol +
+> rare-class fabrication) was built and run — 90/90 cells complete,
+> `check_stage_c_complete.py --tier T7 --seeds 0 1 2 3 4` green — and G5
+> (T1–T3 complete, `check_stage_c_complete.py` passes) closed alongside the
+> full 830/830-cell T1–T6/TC campaign. See
+> [`../current/STAGE_C_MASTER_REPORT.md`](../current/STAGE_C_MASTER_REPORT.md)
+> §10 for the full T7 account and
+> [`STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md`](STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md)
+> for the 18 disclosed judgment calls T7's implementation required. This
+> document's §2/§3 tables below are left as the historical record of what
+> was true on 2026-07-28; treat the two correction boxes above as the
+> authoritative current status, not the tables under them.
 
 ---
 

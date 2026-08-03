@@ -1,5 +1,19 @@
 # 3. The Methodology — Static Reparameterization and FedGRAA
 
+> **⚠️ Note (2026-08-03).** This file describes Algorithm 2 exactly as
+> printed in the paper — no aggregation-weight projection step, matching
+> `fedgraa/aggregation.py`'s literal `FedGRAA` class (kept unprojected on
+> purpose, as a strict reproduction). It does not mention that the codebase
+> also implements and validates two **corrected** variants,
+> `ProjectedFedGRAA` and `FedGRAAv2`, which add the simplex-projection step
+> this file's algorithm lacks. If you're trying to understand what the
+> project actually recommends/uses going forward rather than just what the
+> original paper printed, see
+> [`../docs/current/fedgraa_convergence_defect.md`](../docs/current/fedgraa_convergence_defect.md)
+> and [`../docs/paper/FedGRAA_v2_PAKDD_Submission.md`](../docs/paper/FedGRAA_v2_PAKDD_Submission.md).
+> The walkthrough below is still accurate as a description of the
+> *original, as-published* algorithm.
+
 This is the heart of the paper. We build up in three steps:
 1. **Static Reparameterization** — a simple first fix (a baseline the paper also compares against).
 2. **The big idea of FedGRAA** — *learn* the aggregation weights instead of fixing them.
