@@ -1,5 +1,13 @@
 # GPU: Keep or Kill? — And What Actually Matters Next
 
+> **ℹ️ Filed in `docs/archive/` for organizational reasons, but NOT
+> superseded — this document's decision and measurement are still current,
+> still cited as live ground truth (e.g. the root `README.md`'s "why
+> CPU-only" note), and nothing has replaced them.** This folder's own
+> [README](README.md) says "do not treat anything in this folder as
+> current" as a default; this file is the disclosed exception to that
+> default, not a silent violation of it.
+
 **Date:** 2026-07-23
 **Question asked:** *"Do we really need to remove the GPU stuff? What should we do?"*
 **Short answer:** **No — don't delete it. But stop pursuing it, fix the one doc that still oversells it, and put the effort where the project is actually stuck: the science, not the speed.**

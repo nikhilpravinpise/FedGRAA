@@ -14,7 +14,13 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          # Pinned to an exact patch release, not just "3.13": an unpinned
+          # minor-version spec can float onto a runner image with a
+          # different CPU-generation/AVX512 baseline between runs, which
+          # PRE_COMPUTE_AUDIT_2026-07-28.md's M7 flagged as a source of
+          # non-deterministic CI failures. Match this to the local dev
+          # environment's version when bumping.
+          python-version: "3.13.14"
 
       - name: Check PAKDD documentation links
         run: python PAKDD/scripts/check_doc_links.py
@@ -32,7 +38,13 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          # Pinned to an exact patch release, not just "3.13": an unpinned
+          # minor-version spec can float onto a runner image with a
+          # different CPU-generation/AVX512 baseline between runs, which
+          # PRE_COMPUTE_AUDIT_2026-07-28.md's M7 flagged as a source of
+          # non-deterministic CI failures. Match this to the local dev
+          # environment's version when bumping.
+          python-version: "3.13.14"
 
       - name: Install dependencies
         run: pip install -r requirements.txt

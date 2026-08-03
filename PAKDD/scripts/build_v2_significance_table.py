@@ -132,11 +132,28 @@ def build_significance_table(
 
 
 def render_markdown(sig_table: dict) -> str:
+    n_paired_seeds_seen = sorted({
+        res["n_paired_seeds"]
+        for arms in sig_table["datasets"].values()
+        for per_baseline in arms.values()
+        for res in per_baseline.values()
+        if res is not None
+    })
+    if len(n_paired_seeds_seen) == 1:
+        seed_count_clause = f"{n_paired_seeds_seen[0]} matched seeds per comparison"
+    elif n_paired_seeds_seen:
+        seed_count_clause = (
+            f"{n_paired_seeds_seen[0]}-{n_paired_seeds_seen[-1]} matched seeds per "
+            f"comparison (varies by comparison; see the per-row table below)"
+        )
+    else:
+        seed_count_clause = "no comparisons with matched seeds"
+
     lines = [
         "# FedGRAA-v2 frontier significance table",
         "",
         f"Paired Wilcoxon signed-rank test on `{sig_table['metric']}` "
-        f"(rare-class recall), 10 matched seeds per comparison, "
+        f"(rare-class recall), {seed_count_clause}, "
         f"Holm-Bonferroni corrected within each (dataset, v2 arm) family "
         f"of {len(sig_table['baseline_arms'])} baselines. "
         f"alpha = {sig_table['alpha']}. {sig_table['n_comparisons']} total comparisons.",
@@ -148,14 +165,15 @@ def render_markdown(sig_table: dict) -> str:
         for v2_arm, per_baseline in arms.items():
             lines.append(f"### {v2_arm}")
             lines.append("")
-            lines.append("| baseline | v2 mean | baseline mean | diff | p (Wilcoxon) | p (Holm) | significant |")
-            lines.append("|---|---|---|---|---|---|---|")
+            lines.append("| baseline | n seeds | v2 mean | baseline mean | diff | p (Wilcoxon) | p (Holm) | significant |")
+            lines.append("|---|---|---|---|---|---|---|---|")
             for baseline, res in sorted(per_baseline.items()):
                 if res is None:
-                    lines.append(f"| {baseline} | -- | -- | -- | -- | -- | no data |")
+                    lines.append(f"| {baseline} | -- | -- | -- | -- | -- | -- | no data |")
                     continue
                 lines.append(
-                    f"| {baseline} | {res['v2_mean']:.4f} | {res['baseline_mean']:.4f} | "
+                    f"| {baseline} | {res['n_paired_seeds']} | {res['v2_mean']:.4f} | "
+                    f"{res['baseline_mean']:.4f} | "
                     f"{res['mean_diff']:+.4f} | {res['p_wilcoxon']:.4g} | "
                     f"{res['p_holm']:.4g} | {'yes' if res['significant'] else 'no'} |"
                 )

@@ -83,7 +83,16 @@ def _is_t1_cell(data: dict) -> bool:
     if data["config"]["n_rounds"] != CANONICAL_ROUNDS:
         return False
     cfg = data["config"]
-    return not cfg["p_drop"] and cfg["dp_epsilon"] is None
+    if not (not cfg["p_drop"] and cfg["dp_epsilon"] is None):
+        return False
+    # T7's attack cells (v2_raresig, secfednids_*, weidetect_*, ...) share
+    # this same gamma=1.0/CANONICAL_ROUNDS/no-p_drop/no-dp_epsilon signature
+    # -- they're only kept out of the frontier today because T7's arm names
+    # never collide with the frontier's `{dataset}_{arm}_g*` glob (checked
+    # explicitly, not by accident). Gating on attacker_fraction==0 too closes
+    # that latent gap so this function stays correct if arm-naming ever
+    # changes rather than depending on today's glob not colliding.
+    return cfg.get("attacker_fraction", 0.0) == 0.0
 
 
 def _median_zeta(zeta_series: List[Optional[float]]) -> Optional[float]:

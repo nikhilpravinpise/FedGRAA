@@ -1,5 +1,23 @@
 # 5. The Convergence Proof (Appendix A.1), Explained Simply
 
+> **⚠️ Correction (2026-08-03) — the caveat in §5.2 below understates a
+> finding this project later rated CRITICAL, not a minor idealization.**
+> This file explains *what the paper's proof claims and how it's argued* —
+> that reading is unchanged and still useful. But the project's own later,
+> rigorous audit found that Assumption 1 (convexity) doesn't just not-hold
+> "in the general parameter space" as a routine idealization — the specific
+> non-convex tanh-MLP this paper actually trains genuinely invalidates
+> Theorem 1's stated guarantee for the model as used, not just as a
+> theoretical nicety. Separately, and more consequentially in practice: the
+> aggregation weights `w` this proof assumes stay on the probability
+> simplex (`w_k ≥ 0, Σw_k = 1`) provably do not, on real data, from round 1
+> onward — Algorithm 2 as printed has no step enforcing it. See
+> [`../docs/current/fedgraa_convergence_defect.md`](../docs/current/fedgraa_convergence_defect.md)
+> for the corrected proposition (a weaker, honest stationarity guarantee,
+> not the original's global-optimality claim) and
+> [`../docs/current/fedgraa_divergence_diagnosis.md`](../docs/current/fedgraa_divergence_diagnosis.md)
+> for the empirical measurement.
+
 A new training algorithm should come with a guarantee that it actually **converges** — i.e. that repeating the rounds drives the model toward the best possible solution rather than wandering forever. Appendix A.1 provides this guarantee for FedGRAA. You don't need to be a mathematician; here is the logic.
 
 ## 5.1 What "converge" means here

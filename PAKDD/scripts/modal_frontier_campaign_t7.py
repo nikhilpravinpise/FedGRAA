@@ -405,6 +405,31 @@ def main(
         for r in failed:
             print(f"    - {r['label']}: {r['error']}")
         print("\n  Re-run the same command; completed cells are skipped.")
+
+        # Persist the failure signal to disk. Console output alone doesn't
+        # survive past this terminal's scrollback -- without this, a later
+        # table-build pass that sees "fewer files than expected" has no
+        # on-disk record of *why* (crashed vs. never launched).
+        import json
+        import time as _time
+        log_dir = os.path.join(LOCAL_REPO, "results", "campaign_logs")
+        os.makedirs(log_dir, exist_ok=True)
+        manifest_path = os.path.join(
+            log_dir, f"frontier_{tier}_{int(_time.time())}_failures.json"
+        )
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump({
+                "tiers": [tier],
+                "git_commit": git_commit,
+                "git_dirty": git_dirty,
+                "n_cells": len(cells),
+                "n_failed": len(failed),
+                "failures": [
+                    {"label": r["label"], "path": r["path"], "error": r["error"]}
+                    for r in failed
+                ],
+            }, f, indent=2)
+        print(f"  Failure manifest written: {manifest_path}")
     else:
         print(f"  All {len(cells)} cells completed."
               + (f"  ({skipped} were already done and skipped.)"

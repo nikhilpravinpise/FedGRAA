@@ -25,7 +25,7 @@ algorithm as printed, not a bug in this implementation, and not something a
 strict, paper-faithful reproduction is entitled to silently patch away.
 
 **Update:** two follow-up experiments close the two loose ends this diagnosis
-left open (§4, §6.1). **§8** shows that projection and a reduced `η'` were
+left open (§4, §6.1). **§7** shows that projection and a reduced `η'` were
 each tested *alone* but never *together* — combined (simplex projection +
 `η' ≤ 0.01` instead of the paper's `0.1`, everything else unchanged), FedGRAA
 converges cleanly (blowup **1.0×** at every `γ`, confirmed with **zero**
@@ -35,7 +35,7 @@ Reparam's own 88.9%±3.9%, `γ=0` is noisier at 72.2%±10.4%) — without the
 overall-accuracy collapse (<1%) that reducing `η'` alone caused. This is the
 difference between "the paper's algorithm is broken"
 and "here is the minimal, principled correction that makes it do what the
-paper claims." **§9** confirms the same simplex-violation mechanism reproduces
+paper claims." **§8** confirms the same simplex-violation mechanism reproduces
 on UNSW-NB15 (round-1 violation at every `γ`, exactly as on CIC), but its
 *consequences* are markedly less catastrophic there — milder loss blowup and,
 at `γ=0.5`, non-trivial (if unstable) rare-class accuracy even without any
@@ -46,7 +46,7 @@ fix — so the severity of this defect is real-data-dependent, not universal.
 ## 1. Method
 
 Every result below comes from real, cached data — CIC-IDS-2017 for §2-4 and
-§6-8, UNSW-NB15 for §9 (`.cache/{CIC_IDS_2017,UNSW_NB15}_seed0_*.npy`,
+§6-7, UNSW-NB15 for §8 (`.cache/{CIC_IDS_2017,UNSW_NB15}_seed0_*.npy`,
 independently verified in §5 to be genuine CSV-derived data, not the synthetic
 generator) — using the **unmodified** `fedgraa/` package — the same code that
 produces every other number in this repository. The only new artifact is
@@ -251,7 +251,7 @@ Reparam's rare-class advantage is real and reasonably tight (±3.93 points on
 a mean of 88.9%) — the single-seed 91.67% reported elsewhere in this repo is
 representative, not a lucky draw.
 
-## 8. Finding 5 — the genuine fix: projection *and* moderate η′ together, not either alone
+## 7. Finding 5 — the genuine fix: projection *and* moderate η′ together, not either alone
 
 §4 and §6.1 each tested one intervention in isolation and each came up short:
 projection alone (still `η'=0.1`) stabilizes the loss but leaves rare-class
@@ -338,7 +338,7 @@ there remains to implement Algorithm 2 exactly as printed
 remains a diagnostic-only class in `scripts/diagnose_fedgraa.py`, not a
 change to `fedgraa/aggregation.py`.
 
-## 9. Finding 6 — UNSW-NB15 confirms the mechanism, not the severity
+## 8. Finding 6 — UNSW-NB15 confirms the mechanism, not the severity
 
 Every claim above was measured on CIC-IDS-2017 only. The same literal
 diagnostic (`scripts/diagnose_fedgraa.py`, no `--project`, `η'=0.1`, `E'=5`,
@@ -383,7 +383,7 @@ IDS data, sometimes, unreliably" is closer to the honest UNSW-only headline
 than "FedGRAA gets exactly 0%" — that exact-zero result is specific to
 CIC-IDS-2017 and should not be generalized as if it were dataset-agnostic.
 
-## 10. Bottom line
+## 9. Bottom line
 
 FedGRAA's failure to reproduce the paper's rare-class accuracy claim on
 CIC-IDS-2017 is **explained, not merely observed**, and it is now also
@@ -391,14 +391,14 @@ CIC-IDS-2017 is **explained, not merely observed**, and it is now also
 mechanism, if not in severity) to a second dataset.** The mechanism is a
 missing simplex projection in Algorithm 2 as printed — confirmed by directly
 measuring where `w^t` leaves the simplex (round 1, universally, on **both**
-CIC-IDS-2017 and UNSW-NB15, §2 and §9), by an ablation that removes exactly
+CIC-IDS-2017 and UNSW-NB15, §2 and §8), by an ablation that removes exactly
 that one degree of freedom and watches the instability shrink (§3-4), and by
 a real-data hyperparameter intervention that, combined with that same
 projection, eliminates the blowup entirely **and** recovers rare-class
-accuracy without sacrificing overall accuracy (§8) — succeeding where either
+accuracy without sacrificing overall accuracy (§7) — succeeding where either
 intervention alone (§4, §6.1) had failed, and confirmed across 3 seeds to be
 a real effect and not a lucky draw (72-94% mean rare-acc across `γ`, blowup
-exactly `1.0×` with zero variance on all 9 seed×γ runs, §8 Step 3). None of
+exactly `1.0×` with zero variance on all 9 seed×γ runs, §7 Step 3). None of
 this licenses changing the
 strict-reproduction default; the paper states `η'=0.1`, `E'=5` explicitly in
 §5, and this codebase's mandate (`../archive/strict_reproduction_report.md`) is to

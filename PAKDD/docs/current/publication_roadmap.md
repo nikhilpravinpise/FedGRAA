@@ -1,9 +1,19 @@
 # Publication Roadmap — FedGRAA: Reproduction, Critique & Extension
 
-**Last refreshed:** 2026-07-25, against `HEAD` with Stages A and B complete and all four gates green (R4 of [`../audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md`](../audit/AUDIT_REMEDIATION_PLAN_2026-07-25.md)).
-**Current state in one line:** Stage A ✅ · Stage B ✅ · **Stage C 0%, blocked on one mentor conversation, not on compute** (§6).
+**Last refreshed:** 2026-08-03, against `HEAD` after commit `d7d72c6`, with
+Stages A, B, and C (B+D+T7) all complete and all nine CI gates green.
+**Current state in one line:** Stage A ✅ · Stage B ✅ · **Stage C (B+D+T7) ✅ complete** — 830/830 + 90/90 compute cells, significance-tested, corrected manuscript drafted (`../paper/FedGRAA_v2_PAKDD_Submission.md`) — **but the provenance question (§6 action 1) is still open** and now blocks submission, not compute or code (§6).
 
-> **Maintainer's note.** This document went two full stages stale once — it described Stage A as unstarted while Stages A and B were both finished and gated. It is the first thing a returning session or the mentor reads, so **refresh §1 and §6 whenever a stage closes.** If the state line above disagrees with the gates, trust the gates.
+> **Maintainer's note.** This document has gone stale twice on the same
+> axis now — first describing Stage A as unstarted while Stages A and B
+> were both finished and gated, then (the correction banner at §1 below)
+> describing Stage C as 0%-blocked for over a week after the compute
+> campaign and manuscript had actually landed. It is the first thing a
+> returning session or the mentor reads, so **refresh §1 and §6 whenever a
+> stage closes — not just with a dated addendum, but by updating this
+> header and the "what's still missing" bullets directly, since that's
+> the part a skimming reader sees first.** If the state line above
+> disagrees with the gates, trust the gates.
 
 **Purpose of this document:** a single entry point for "what's left to do to genuinely publish this." It is a router, not a re-audit — it points to the existing docs that already contain the detailed work, and lays out the sequence, decision points, and process knowledge to get from here to a real submission.
 
@@ -49,12 +59,42 @@
 > what this document's own snapshot (2026-07-25, pre-Stage-C) believed true
 > at the time.
 
-- **No manuscript exists anywhere** — everything is standalone analysis docs plus two capstone reports. This is the single largest gap.
-- **Stage C is at 0%** and is gated on one mentor conversation (see §6).
-- **The provenance question is unresolved.** Whether the target manuscript is published determines whether Stage B can stand as a citable critique at all — see [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md) §21 and [`../audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md`](../audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md) D1.
-- Baselines beyond FedAvg/Static are implemented (`../../fedgraa/baselines.py` has FedProx, FedOpt, FedSND) but **never run** against FedGRAA — verified still true. A separate SOTA-baseline catalogue, `../../understanding/10_SOTA_adaptive_aggregation.md`, flags AFL, q-FedAvg, and FedAdp as "must-have" comparisons — none run yet.
-- The extension method (few-shot/prototype hybrid, or the privacy redesign) is unimplemented.
-- **~140 carried-over bibliography entries in the Stage C corpus were never independently re-verified** — see [`../research_c/STAGE_C_LITERATURE_REAUDIT_2026-07-25.md`](../research_c/STAGE_C_LITERATURE_REAUDIT_2026-07-25.md). This must be closed before Stage C's Related Work is written on top of it.
+*(Updated 2026-08-03 — Stage C landed since the last refresh. What's below
+is the current gap list, not the 2026-07-25 one.)*
+
+- **The provenance question is unresolved, and is now the single blocking
+  item.** Whether the target manuscript is published determines whether
+  Stage B (and now the whole corrected resubmission) can stand as a citable
+  critique at all — see [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md)
+  §21 and [`../audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md`](../audit/RESEARCH_DIRECTION_AUDIT_2026-07-25.md)
+  D1. This has now been the top-priority open item across at least four
+  documents and 8+ days without being closed, while implementation work
+  proceeded past it regardless — see §6 action 1.
+- ~~No manuscript exists anywhere~~ — **resolved.** A corrected,
+  resubmission-ready manuscript exists:
+  [`../paper/FedGRAA_v2_PAKDD_Submission.md`](../paper/FedGRAA_v2_PAKDD_Submission.md).
+- ~~Stage C is at 0%~~ — **resolved for the B+D+T7 angle** (privacy-compliant
+  redesign + adversarial-robustness evaluation): 830/830 + 90/90 compute
+  cells, significance-tested. Option A (the few-shot/prototype hybrid) is
+  **deliberately deferred** as a later, sequenced phase — not implemented,
+  but not blocking either, per the project's own stated sequencing decision.
+- Baselines: the Stage C compute campaign ran FedGRAA-v2 against 16 external
+  baseline reproductions (CELM, SpectralFed, CoAst, FLTrust, RAGA, FedTruth,
+  FedMADE, SBFedNIDS, FedAPA, FedAWA, DA-PFL, FedAWARE, AdaAggRL, FedPGO,
+  SecFedNIDS, WeiDetect) plus classic FL (SCAFFOLD, FedNova). The narrower
+  gap from the original list still stands: FedProx/FedOpt/the static
+  distribution-aware baseline (`../../fedgraa/baselines.py`) remain
+  implemented but **never run head-to-head** against FedGRAA (confirmed
+  still true — `PAKDD/README.md`'s own `--baselines` flag description says
+  so explicitly), and AFL/q-FedAvg/FedAdp specifically (flagged
+  "must-have" by `../../understanding/10_SOTA_adaptive_aggregation.md`)
+  were not part of the competitor set actually run.
+- **~140 carried-over bibliography entries in the Stage C corpus** — status
+  not re-verified by this refresh; see
+  [`../research_c/STAGE_C_LITERATURE_REAUDIT_2026-07-25.md`](../research_c/STAGE_C_LITERATURE_REAUDIT_2026-07-25.md)
+  and the more recent `../research_c/STAGE_C_LITERATURE_MASTER.md` for
+  whether this closed during Stage C's literature work before trusting
+  either way.
 
 ---
 
@@ -64,7 +104,7 @@
 
 Goal: every table/figure in the original paper has a corresponding persisted, reproduced (or honestly-diverging) counterpart in `results/`.
 
-> **Capstone: [`STAGE_A_MASTER_REPORT.md`](STAGE_A_MASTER_REPORT.md)** (976 lines) · Plan: [`stage_a_plan.md`](stage_a_plan.md) · Gates: `check_stage_a_complete.py` (completeness) + `audit_stage_a.py` (correctness) · Manifest: [`../../results/README.md`](../../results/README.md)
+> **Capstone: [`STAGE_A_MASTER_REPORT.md`](STAGE_A_MASTER_REPORT.md)** (977 lines) · Plan: [`stage_a_plan.md`](stage_a_plan.md) · Gates: `check_stage_a_complete.py` (completeness) + `audit_stage_a.py` (correctness) · Manifest: [`../../results/README.md`](../../results/README.md)
 
 Delivered: CIC-IDS-2017 γ- and n-sweeps; UNSW-NB15 γ- and n-sweeps; UNSW combined-fix seed band; all figures regenerated; the `plot_n_sweep` curve-dropping defect fixed and regression-tested; `seed_sweep_combined_fix.py` generalized to any dataset. The n=7 ≡ n=5 result on UNSW is a documented honest divergence, not a bug — UNSW has only 5 genuinely-rare classes, so `rare_client_ids(7)` truncates to the same 5.
 
@@ -145,16 +185,39 @@ Goal: the actual novel contribution that earns a spot at AAAI/IJCAI-tier venue, 
 
 ## 6. Immediate next actions
 
-**Stages A and B are complete.** All six actions this section previously enumerated have been executed, gated, and audited. The frontier is now **Stage C, which is at 0% and blocked on a conversation, not on compute.**
+**Stages A, B, and C (B+D+T7) are complete** — code, compute, and a
+corrected manuscript. *(Updated 2026-08-03: this section previously said
+Stage C was "at 0%, blocked on a conversation, not on compute" — that was
+true on 2026-07-25 and stayed unedited for over a week after it stopped
+being true. Questions 2 and 3 below are now effectively answered by what
+was actually built; they're kept, marked as answered, so the historical
+"what was decided vs. what was asked" record stays intact.)*
 
-**The one action that unblocks everything — talk to the mentor.** Four questions, one conversation:
+**The one action that still unblocks a real submission — talk to the
+mentor.** Of the original four questions, one conversation:
 
-1. **Provenance.** Is FedGRAA the lab's own submission, or a third party's unpublished manuscript? Two zero-result web searches plus a DBLP and Semantic Scholar sweep found no published trace (see [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) §7 and [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md) §21). **This branches everything downstream:**
+1. **Provenance — still open, now the sole blocker.** Is FedGRAA the lab's
+   own submission, or a third party's unpublished manuscript? Two
+   zero-result web searches plus a DBLP and Semantic Scholar sweep found no
+   published trace (see [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md)
+   §7 and [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md) §21).
+   **This branches everything downstream:**
    - *If it's the lab's own* — Stage B was never a critique; it is internal QA, and its defect finding, fix, and corrected theory become §4–§5 of a corrected resubmission, co-authored.
    - *If it's a third party's* — the critique-as-paper plan is not viable, and Stage B becomes internal validation plus a Method-section ingredient for Stage C.
-2. **The Stage C angle.** Few-shot/prototype-guided hybrid aggregation, or the privacy-compliant redesign? Both are scoped; neither is implemented. This has been "the next decision" for three consecutive passes.
-3. **Compute.** Everything so far is CPU-only. Stage C's baseline comparison (FedProx/FedOpt/FedSND + AFL/q-FedAvg/FedAdp across both datasets) is materially larger than anything run to date. What is actually available?
-4. **Authorship** on whatever Stage C becomes.
+2. **The Stage C angle — answered by implementation, not by a mentor
+   conversation.** The privacy-compliant redesign (Option B+D) was built
+   and run; the few-shot/prototype hybrid (Option A) was deliberately
+   sequenced as a later follow-on rather than decided against. Per
+   `STAGE_C_IMPACT_ON_STAGE_AB_2026-07-27.md`, this was decided
+   unilaterally, without the mentor conversation this question originally
+   assumed would happen first — worth surfacing to the mentor explicitly,
+   since it's a deviation from the plan this document itself laid out.
+3. **Compute — answered.** The full Stage C campaign (830/830 + 90/90
+   cells) ran on Modal; see
+   `../research_c/COMPUTE_INFRASTRUCTURE_2026-07-27.md` for what was
+   actually available and used.
+4. **Authorship** on whatever Stage C becomes — still genuinely open, not
+   resolved by any amount of implementation work.
 
 **Once those are answered, in this order:**
 

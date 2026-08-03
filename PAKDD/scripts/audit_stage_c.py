@@ -530,7 +530,11 @@ def check_master_report_transcription(frontier_table: dict, sig_table: dict,
             clean = False
             continue
         start = doc.index(marker)
-        end = doc.index("###", start + 10) if "###" in doc[start + 10:] else len(doc)
+        # Match a *heading* boundary (line starting with exactly "### ", not
+        # "#### ...") rather than a bare "###" substring, so a "####"
+        # sub-heading inside this section can't truncate the block early.
+        m_end = re.search(r"(?m)^###(?!#)\s", doc[start + 10:])
+        end = start + 10 + m_end.start() if m_end else len(doc)
         block = doc[start:end]
         for line in block.splitlines():
             cols = [c.strip() for c in line.strip().strip("|").split("|")]

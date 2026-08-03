@@ -530,7 +530,7 @@ Family 1 (gradient-composition inference) + Family 3 (SecAgg/DP summary statisti
 
 ### 7.3 The honest cost, computed exactly from the live codebase
 
-- **Communication:** ≈**6×** total training-run traffic (≈5.61 GB CIC-IDS-2017, ≈2.98 GB UNSW-NB15, from exact layer sizes in `fedgraa/config.py`/`model.py`, `E'=5`). SecAgg histogram + masking overhead is **six or more orders of magnitude smaller** — essentially free.
+- **Communication:** ≈**6×** total training-run traffic (≈5.606 GB CIC-IDS-2017, ≈**2.908 GB** UNSW-NB15 — corrected 2026-08-03; the ≈2.98 GB figure this line previously carried used a stale `n_features=43` assumption for UNSW-NB15, live `fedgraa/config.py` uses 39, a 2.4% overstatement caught and fixed in `FEDGRAA_V2_MASTER_PLAN.md` F5 but never propagated back to this summary — see that document's exact-cost table for the authoritative figures, from exact layer sizes in `fedgraa/config.py`/`model.py`, `E'=5`). SecAgg histogram + masking overhead is **six or more orders of magnitude smaller** — essentially free.
 - **Privacy accounting:** report the **composed** `(ε,δ)` over all `T=200` rounds, not a per-round `ε`. Advanced composition gives `ε_total ≈ 8.89` at `ε_round=0.1, δ=10⁻⁵`; RDP is tighter and recommended.
 - **A genuinely non-obvious, dataset-dependent finding:** DP noise on the rare-class histogram is **unusable** for CIC-IDS-2017's rarest classes (Heartbleed, ≈1 held-out sample) even at the loosest common budget, but only **mildly** degraded for UNSW-NB15's rarest (Worms, ≈17 samples, ≈5% relative error at `ε=10`). **Report both datasets side by side; do not generalize from one.**
 - **Convergence proof impact:** one new standard assumption — bounded estimation error `ζ` between the true and federated composite-loss gradient. A noise-ball weakening, not a different theorem.
@@ -930,7 +930,7 @@ University of Pardubice institutional repository (`dk.upce.cz`) and committed
 in `9d20ac9`; the mechanism was then reimplemented faithfully (commit
 `25611ce`) and the 20 FedPGO cells rerun (commit `96adb05`). See
 [`STAGE_C_FEDPGO_FAITHFUL_PLAN_2026-07-31.md`](STAGE_C_FEDPGO_FAITHFUL_PLAN_2026-07-31.md)
-and [`STAGE_C_COMPUTE_SESSION_UPDATE_2026-07-30.md`](STAGE_C_COMPUTE_SESSION_UPDATE_2026-07-30.md) §8.
+and [`STAGE_C_COMPUTE_SESSION_UPDATE_2026-07-30.md`](STAGE_C_COMPUTE_SESSION_UPDATE_2026-07-30.md) §7.
 
 | Site | Statement | Corrected status (2026-07-31) |
 |---|---|---|
