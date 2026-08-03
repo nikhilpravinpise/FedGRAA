@@ -59,7 +59,7 @@ Stage C closes every remaining gap between Stage B's corrected-and-critiqued Fed
 | SecFedNIDS attack success rate (mean across 3 attacks) | 65.0% | 60.4% |
 | WeiDetect attack success rate (mean across 3 attacks) | 31.7% | 13.3% |
 
-**Total new compute this stage:** 960 cells (830 main + 90 T7 + 40 T7G γ-sweep addendum, 2026-08-02), run on Modal, real cloud spend, all seed-level. **Total new code:** 6 new `fedgraa/` modules, 3 new campaign/analysis scripts, 8 new test files (137 new tests) plus a same-day `audit_stage_c.py` correctness audit and 7 T7G enumeration tests. **Full suite:** 558 tests passing, zero regressions from Stage A/B.
+**Total new compute this stage:** 960 cells (830 main + 90 T7 + 40 T7G γ-sweep addendum, 2026-08-02), run on Modal, real cloud spend, all seed-level. **Total new code:** 6 new `fedgraa/` modules, 3 new campaign/analysis scripts, 8 new test files (137 new tests) plus a same-day `audit_stage_c.py` correctness audit and 7 T7G enumeration tests. **Full suite:** 563 tests passing, zero regressions from Stage A/B.
 
 ---
 
@@ -398,7 +398,7 @@ see the corrected summary above for the reconciled total.)*
 ### 12.2 Full-suite and gate verification
 
 ```
-python -m pytest tests -q                                          → 558 passed
+python -m pytest tests -q                                          → 563 passed
 python scripts/check_stage_a_complete.py                           → exit 0
 python scripts/check_stage_b_complete.py                           → exit 0
 python scripts/audit_stage_a.py                                    → AUDIT PASSED

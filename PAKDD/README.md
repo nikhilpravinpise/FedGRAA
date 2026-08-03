@@ -31,7 +31,7 @@ current [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_RE
 Verification signals on the current tree:
 
 ```powershell
-.venv313\Scripts\python.exe -m pytest tests --tb=short                          # 559 passed
+.venv313\Scripts\python.exe -m pytest tests --tb=short                          # 563 passed
 .venv313\Scripts\python.exe scripts\check_stage_a_complete.py                   # exit 0 (completeness)
 .venv313\Scripts\python.exe scripts\check_stage_b_complete.py                   # exit 0 (completeness)
 .venv313\Scripts\python.exe scripts\check_stage_c_complete.py `
@@ -305,7 +305,7 @@ mandate.
 Run the full suite before pushing:
 
 ```powershell
-.venv313\Scripts\python.exe -m pytest tests --tb=short      # 559 passed
+.venv313\Scripts\python.exe -m pytest tests --tb=short      # 563 passed
 ```
 
 The suite covers:
@@ -449,7 +449,7 @@ results/
     seed_sweep_{DS}_{fedavg,static}_r60.json
     README.md                          # Stage B manifest (27 checked paths)
     _logs/                             # raw campaign stdout
-tests/             # 559 unit + gradient + e2e + diagnostic + statistics + doc-link + FedGRAA-v2 + pre-compute-audit tests
+tests/             # 563 unit + gradient + e2e + diagnostic + statistics + doc-link + FedGRAA-v2 + pre-compute-audit tests
 docs/
   current/         # the live documents
     STAGE_A_MASTER_REPORT.md           # Stage A capstone (exhaustive)

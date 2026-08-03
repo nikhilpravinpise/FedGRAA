@@ -40,10 +40,18 @@ summarized here (full rationale in that table):
   perplexity-calibrated affinity matrix, then each point's outlier
   probability as the product, over every other point, of "that point did
   not bind me as a neighbor."
-* **`contamination`/consensus-threshold/perplexity are all rescaled**
-  proportionally to this project's own (much smaller) client count,
-  per JC-T7-9 -- SecFedNIDS's reference script hard-codes all three to its
-  own 100-client experimental setup.
+* **`contamination`/consensus-threshold are rescaled** proportionally to
+  this project's own (much smaller) client count, per JC-T7-9 --
+  SecFedNIDS's reference script hard-codes both to its own 100-client
+  experimental setup. The actual formula used at the call site
+  (`SecFedNIDSTrainer.train`) is `consensus_frac = min(0.9, 1 - 1/n)`, not
+  a flat `0.9` -- this only differs from `0.9` when `n < 10` (i.e. on
+  UNSW-NB15's 9 clients, where it evaluates to `0.8889`; on CIC-IDS-2017's
+  14 clients it is exactly `0.9`). `perplexity` is **not** rescaled per
+  client count -- it uses `sos_outlier_probabilities`'s own fixed default
+  (`4.0`) on both datasets; the only per-dataset adjustment it receives is
+  a generic degenerate-input safety clamp (`min(perplexity, n-1)`) inside
+  that function, unrelated to JC-T7-9's rescaling rationale.
 """
 
 from __future__ import annotations

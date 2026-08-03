@@ -208,3 +208,98 @@ def test_t7_defense_trainers_zero_attacker_fraction_flags_nothing_spuriously():
     trainer = SecFedNIDSTrainer(split, _cfg(rounds=2), attacker_fraction=0.0)
     trainer.train(eval_every=2)
     assert trainer.attack_success_rate_history == []
+
+
+# --------------------------------------------------------------------------- #
+# End-to-end poisoned-client SUPPRESSION -- the actual robustness property,
+# not merely "runs and doesn't NaN." Added 2026-08-03 per the independent
+# Stage C audit (INDEPENDENT_STAGE_C_CODE_VS_PAPER_AUDIT_2026-08-03.md §3.4):
+# every other T3/T5 trust/robustness baseline in this codebase has a test
+# proving a poisoned client is actually suppressed by the full trainer
+# (see tests/test_baselines_t3_trust.py::test_poisoned_client_is_down_
+# weighted_end_to_end); T7's defenses previously had none, only smoke tests
+# on the isolated math helpers.
+# --------------------------------------------------------------------------- #
+def _wide_split(seed: int = 0, n_attack_labels: int = 8):
+    """A wider synthetic partition (K=n_attack_labels non-benign clients,
+    one attack label each) than _tiny_split's K=3 -- large enough that
+    SecFedNIDS's consensus filter and WeiDetect's Weibull top-T selection
+    both have enough clients to form a meaningful non-degenerate consensus/
+    ranking, matching the real campaign's client-count regime (K=9..14)
+    much more closely than the 3-client smoke fixture above.
+    """
+    labels = ["Benign"] + [f"Atk{i}" for i in range(n_attack_labels)]
+    used_counts = [400] + [80] * n_attack_labels
+    spec = DatasetSpec(
+        name="T7_WIDE_TEST",
+        n_features=6,
+        labels=labels,
+        used_counts=used_counts,
+        benign_id=0,
+        rare_label_order=labels[-2:],
+    )
+    X, y, spec = make_synthetic_dataset(spec, seed=seed, class_separation=3.0)
+    return partition_non_iid(X, y, spec, n_rare=2, val_fraction=0.10, seed=seed)
+
+
+@pytest.mark.parametrize("name", sorted(TRAINERS))
+def test_t7_defense_trainer_detects_more_than_zero_obvious_attackers(name):
+    """The actual robustness property, not a smoke test: against a strong,
+    obvious model-poisoning attack (large scale, so poisoned deltas are
+    unambiguous outliers relative to the honest cluster), the defense's own
+    detection mechanism must flag *at least one* real attacker at least
+    once over the run -- i.e. attack_success_rate_history must contain a
+    value strictly below 1.0 (perfect miss). A defense that never catches
+    anything, on an attack this obvious, on a client population this size,
+    would indicate the wiring from `secfednids_consensus_filter`/
+    `weibull_top_t_selection` into the trainer's own flagging loop is
+    broken -- exactly the class of bug the previous smoke-only tests
+    (no-NaN, valid-accuracy-range) cannot catch, since a trainer that flags
+    *nobody* every round still produces finite, in-range accuracy."""
+    split = _wide_split(seed=0, n_attack_labels=8)
+    rng = np.random.default_rng(0)
+    attack_fn = wrap_model_poison_attack(rng, n_classes=len(split.spec.labels), scale=50.0)
+    trainer = TRAINERS[name](
+        split, _cfg(rounds=6), attack_fn=attack_fn, attacker_fraction=0.375,
+    )
+    trainer.train(eval_every=6)
+    assert trainer.attacker_ids, "fixture must actually have attackers to test detection"
+    assert trainer.attack_success_rate_history, "ASR history must be populated when attackers exist"
+    min_asr = min(trainer.attack_success_rate_history)
+    assert min_asr < 1.0, (
+        f"{name} never detected a single obvious poisoned client across "
+        f"{len(trainer.attack_success_rate_history)} rounds (best ASR "
+        f"{min_asr:.3f} == 1.0, i.e. zero true positives ever) -- "
+        f"detection-to-trainer wiring appears broken, not merely imperfect"
+    )
+
+
+@pytest.mark.parametrize("name", sorted(TRAINERS))
+def test_t7_defense_trainer_detects_attackers_in_most_rounds_not_a_single_fluke(name):
+    """Stronger than the min()-based check above, which a single lucky round
+    could satisfy: across an 8-round run against an obvious attack, at
+    least 2 distinct rounds must show *some* true-positive detection
+    (ASR < 1.0) -- i.e. detection is a repeatable behavior of the wiring,
+    not a one-off fluke. (Measured ground truth for this exact fixture:
+    SecFedNIDS detects in 3/8 rounds, WeiDetect in more; consensus-style
+    filters are not expected to catch every round every time -- that
+    variability is itself part of what §10.4 of the master report reports
+    honestly -- so this asserts "detection repeats," not "detection is
+    perfect.")"""
+    split = _wide_split(seed=1, n_attack_labels=9)
+    rng = np.random.default_rng(1)
+    attack_fn = wrap_model_poison_attack(rng, n_classes=len(split.spec.labels), scale=50.0)
+    trainer = TRAINERS[name](
+        split, _cfg(rounds=8), attack_fn=attack_fn, attacker_fraction=0.33,
+    )
+    trainer.train(eval_every=8)
+    history = trainer.attack_success_rate_history
+    assert history, "ASR history must be populated when attackers exist"
+    rounds_with_detection = sum(1 for asr in history if asr < 1.0)
+    assert rounds_with_detection >= 2, (
+        f"{name} only detected an attacker in {rounds_with_detection}/{len(history)} "
+        f"rounds against an obvious attack (ASR history: "
+        f"{[round(a, 3) for a in history]}) -- detection is either badly "
+        f"underpowered or the flag-to-trainer wiring is only intermittently "
+        f"connected"
+    )
