@@ -405,9 +405,48 @@ standalone throwaway script that monkeypatched the module attribute at
 runtime — no source file was ever edited for this check, so no revert step
 was needed; `git status` was confirmed clean immediately after.
 
-**Not remediated, by design — left for the repo owner's judgment, not
-blocking:** §4's LOW/informational items are polish, not correctness gaps,
-and were left as-is (e.g. the plain unprojected `FedGRAA` class naming, the
-`verify_v2_exactness.py` γ-coverage note, SCAFFOLD/FedNova's Adam-state-reset
-disclosure gap, the JC-T7 "18 vs 19" count already tracked by the prior
-2026-08-02 audit).
+**All six §4 LOW/informational items also remediated (2026-08-03, second
+pass):** none were correctness gaps, but each was closed rather than left as
+a permanent asterisk, since the fix cost was low in every case:
+
+1. `docs/paper/FedGRAA_v2_PAKDD_Submission.md` §4.1: added one clause noting
+   the codebase retains the literal, unprojected pre-review algorithm as a
+   separate, explicitly-named strict-reproduction class for the diagnostic
+   comparison, and that every §6+ result uses only the corrected variant.
+2. `scripts/verify_v2_exactness.py`: extended the main sweep from
+   γ∈{1.0,0.5} to γ∈{1.0,0.5,0.0} — the script itself now covers the "three
+   γ values" the paper cites, rather than relying on a different file
+   (`tests/test_aggregation_v2.py`) for the third point. Re-ran: all checks
+   pass, γ=0.0 relative error ≈3.1–3.4×10⁻⁷ on both datasets, consistent
+   with the already-passing γ=1.0/0.5 cases.
+3. `fedgraa/baselines_classic.py`'s JC-TC-1 note: added a paragraph
+   disclosing that SCAFFOLD's per-client Adam optimizer state is never
+   reset between rounds, so its momentum buffers absorb the history of the
+   per-round-varying `(c_global - c_local)` correction term, not merely the
+   raw client gradient — a second-order consequence beyond "Adam vs. SGD"
+   alone that hadn't been named explicitly before.
+4. *(Already remediated in the first pass — FedPGO's JC10.)*
+5. `docs/research_c/STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md`: added JC-T7-19
+   (the adaptive attacker's L2-magnitude detectability proxy), consolidating
+   a disclosure that previously existed only inline in
+   `scripts/run_v2_frontier_sweep.py`. The table now genuinely contains 19
+   entries, resolving the "18 vs. 19" miscount the 2026-08-02 audit flagged
+   — `STAGE_C_MASTER_REPORT.md`'s two "19" citations were already correct;
+   its one remaining "18" instance (line 11) was corrected to match.
+6. `tests/test_baselines_classic.py`: added a docstring note to
+   `test_fednova_reduces_to_fedavg_when_taus_are_uniform` naming its own
+   blind spot (cannot distinguish a correct implementation from a
+   wrong-per-client-normalization bug when all τ_k are equal) and pointing
+   to the heterogeneous-τ tests that actually cover that bug class — so a
+   future reader doesn't mistake this one test for complete coverage.
+
+**Verified after this second pass:** `python -m compileall -q fedgraa scripts docs`
+(clean), `pytest tests/test_baselines_classic.py tests/test_baselines_t5_fedpgo.py
+tests/test_baselines_t7_adversarial.py -q` (66/66 passed), full suite
+`pytest tests -q` (563/563 passed, unchanged — this pass added no new
+tests, only docstrings/disclosures/a wider γ-sweep in a standalone script),
+`python scripts/check_doc_links.py` (all links resolve), `python
+scripts/audit_stage_c.py` (AUDIT PASSED, all 6 sub-checks including the
+Sec 6–8 transcription check against the now-updated master report).
+
+Nothing remains outstanding from this audit.

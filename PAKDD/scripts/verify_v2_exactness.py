@@ -275,7 +275,7 @@ def main() -> int:
     print("F12 -- is the federated backward pass exact? (plan sec 2 F12, sec 3)")
     print("=" * 78)
     for spec in (CIC_IDS_2017, UNSW_NB15):
-        for gamma in (1.0, 0.5):
+        for gamma in (1.0, 0.5, 0.0):
             run(spec, gamma)
 
     print("\n" + "-" * 78)
