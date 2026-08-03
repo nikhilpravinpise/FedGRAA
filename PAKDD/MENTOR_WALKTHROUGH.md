@@ -532,7 +532,7 @@ python -m venv .venv313
 .venv313\Scripts\Activate.ps1
 pip install -r requirements.txt
 
-pytest tests --tb=short                                              # 559 passed
+pytest tests --tb=short                                              # 563 passed
 python scripts\check_stage_a_complete.py                             # exit 0
 python scripts\check_stage_b_complete.py                             # exit 0
 python scripts\check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6 TC --t4-m 3  # exit 0

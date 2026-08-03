@@ -126,6 +126,27 @@ JC8         Delta-space sign convention               Server update ``+ server_l
                                                       ``w_{t+1} = w_t - eta * g'_G`` maps onto it with
                                                       the delta sign convention; consistent with the
                                                       repo's T3/T5 baselines.
+JC9         Local training loss                       Plain softmax cross-entropy, via this repo's
+                                                      shared ``client_train_round`` (``trainer.py``) --
+                                                      the primary text's own Sec. 3.3/Eq. 4 names focal
+                                                      loss as part of FedPGO's local-training procedure,
+                                                      not merely an incidental detail, and this is
+                                                      *not* implemented here. Deviation, not merely an
+                                                      ambiguity: kept for fair-comparison consistency
+                                                      with every other T3/T5/TC baseline, all of which
+                                                      share this same generic trainer and loss. Flagged
+                                                      2026-08-03 as a real, if disclosed-late, gap --
+                                                      FedPGO's measured rare-class recall may differ
+                                                      from what the paper's own focal-loss training
+                                                      would produce.
+JC10        Shared/personalized layer-split boundary  ``personalized_layers=1`` default (last layer
+                                                      only) -- a judgment call about which of this
+                                                      project's MLP layers correspond to the paper's
+                                                      Conv1D-based shared extractor ``f_s`` vs.
+                                                      personalized head ``f_p``; exposed as a
+                                                      constructor argument, tested
+                                                      (``test_fedpgo_personalized_heads_differ_shared_
+                                                      layers_aggregated``).
 ==========  =========================================  =================================================
 
 Constructor surface (all disclosed defaults, none claimed as paper values):
