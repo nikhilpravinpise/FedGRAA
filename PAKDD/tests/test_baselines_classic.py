@@ -183,7 +183,16 @@ def test_fednova_reduces_to_fedavg_when_taus_are_uniform():
     tau (constant) and the normalized update collapses to a plain
     size-weighted average of client deltas -- exactly FedAvg's own
     aggregation. This is the sanity check that FedNova's normalization is a
-    generalization of FedAvg, not an unrelated formula."""
+    generalization of FedAvg, not an unrelated formula.
+
+    Known blind spot (noted 2026-08-03, independent Stage C audit, confirmed
+    by mutation testing): because the buggy and correct per-client
+    normalization formulas algebraically coincide whenever every tau_i is
+    equal, this specific test cannot distinguish a correct implementation
+    from one with a wrong per-client normalization -- that bug class is
+    instead caught by the heterogeneous-tau hand-computed cases above
+    (test_fednova_normalized_update_excludes_zero_tau_clients and its
+    neighbors), which use genuinely different tau_i values per client."""
     global_params = [np.array([0.0, 0.0], dtype=np.float32)]
     client_params = [
         [np.array([2.0, 4.0], dtype=np.float32)],

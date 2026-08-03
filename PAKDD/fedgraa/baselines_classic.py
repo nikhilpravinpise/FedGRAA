@@ -50,6 +50,18 @@ disclosed nowhere before this file because no one had occasion to state the
 general rule -- it is stated once, here, for both new methods rather than
 per-method.
 
+A second-order consequence of JC-TC-1 specific to SCAFFOLD: each client's
+Adam optimizer state (first/second moment buffers) is never reset between
+communication rounds -- the same pre-existing, already-tracked repo-wide
+pattern as Stage A/B's "Gap 2.2" (:mod:`fedgraa.trainer`'s own
+``resume_or_init``). For SCAFFOLD specifically this means the momentum
+buffers absorb the history of a *per-round-varying* correction term
+(``c_global - c_local``, itself drifting round to round as the control
+variates update), not merely the raw client gradient. This is a genuine,
+if minor, deviation beyond "Adam vs. SGD" alone and was not called out
+separately before this note (added 2026-08-03, per the independent Stage C
+audit).
+
 **SCAFFOLD-specific (JC-TC-2..5).**
 
 * *(JC-TC-2)* **Option II** control-variate update is used (`c_i^+ <- c_i -
