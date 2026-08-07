@@ -32,14 +32,14 @@ flowchart LR
     B --> C{"Converges on\nreal data?"}
     C -- "no" --> D["Root-cause diagnosis:\nweights leave the simplex\nin round 1, 120/120 cells"]
     D --> E["Stage B\ncorrected theory +\n10-seed ablation"]
-    E --> F["Stage C\nFedPGO novel extension\n830/830 + 90/90 T7 cells"]
+    E --> F["Stage C\nFedGRAA-v2 novel extension\n830/830 + 90/90 T7 cells"]
 ```
 
 | Stage | Goal | Status |
 |---|---|---|
 | **A** | Faithful reproduction — every paper table/figure has a persisted, reproduced-or-honestly-diverging counterpart | ✅ complete |
 | **B** | The divergence critique as a rigorous, citable component: formal theory + statistically-tested 10-seed ablation | ✅ complete |
-| **C** | The novel extension for an A/A\*-tier venue: FedPGO (privacy-compliant redesign + adversarial-robustness eval) | ✅ B+D+T7 complete (830/830 + 90/90 cells) — Option A (few-shot hybrid) deliberately deferred |
+| **C** | The novel extension for an A/A\*-tier venue: FedGRAA-v2 (privacy-compliant redesign + adversarial-robustness eval) | ✅ B+D+T7 complete (830/830 + 90/90 cells) — Option A (few-shot hybrid) deliberately deferred |
 
 **Headline finding:** the paper's aggregation-weight update has no
 simplex-projection step, so the weight vector leaves the probability simplex
@@ -54,7 +54,7 @@ proof.
 - [PAKDD/understanding/00_START_HERE.md](PAKDD/understanding/00_START_HERE.md) — a gentle introduction to federated learning and this paper, for readers new to either
 - [PAKDD/docs/current/STAGE_A_MASTER_REPORT.md](PAKDD/docs/current/STAGE_A_MASTER_REPORT.md) — the reproduction, exhaustively
 - [PAKDD/docs/current/STAGE_B_MASTER_REPORT.md](PAKDD/docs/current/STAGE_B_MASTER_REPORT.md) — the theory + ablation campaign, exhaustively
-- [PAKDD/docs/current/STAGE_C_MASTER_REPORT.md](PAKDD/docs/current/STAGE_C_MASTER_REPORT.md) — the FedPGO novel extension, exhaustively
+- [PAKDD/docs/current/STAGE_C_MASTER_REPORT.md](PAKDD/docs/current/STAGE_C_MASTER_REPORT.md) — the FedGRAA-v2 novel extension, exhaustively
 
 ## Why this repo is organized the way it is
 
