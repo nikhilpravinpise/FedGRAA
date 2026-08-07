@@ -90,6 +90,11 @@ The script's module docstring said "no T1 campaign has been run yet" (true when 
 
 ## 4. Stage C — FedGRAA-v2 / FedPGO novel extension
 
+> **Note (2026-08-07):** heading wording clarified — "FedGRAA-v2" is Stage
+> C's own novel contribution; "FedPGO" is a separate baseline paper (Bikila &
+> Čapek, *Computer Networks* 280:112210, 2026) compared against it, not part
+> of Stage C's own extension. The body below was already accurate.
+
 **Status confirmed: T1–T7 and TC complete — 920/920 cells (830 + 90), independently re-verified this session via the completeness gate run with correct tier flags, matching `STAGE_C_MASTER_REPORT.md`'s own claim exactly.** This is the freshest and most complex stage (compiled 2026-08-02, `HEAD` at commit `586a93c`/`19b54cc`), and the one where documentation had the most opportunity to drift from reality — the checks below specifically hunted for that.
 
 ### 4.1 The one prior scare that resolved cleanly
