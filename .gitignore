@@ -73,3 +73,8 @@ Thumbs.db
 .DS_Store
 
 .claude
+
+# Mentor-related files
+**/MENTOR_*.md
+**/*mentor*.md
+**/*MENTOR*.md
