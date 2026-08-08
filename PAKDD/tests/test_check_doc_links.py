@@ -104,3 +104,25 @@ def test_multiple_broken_links_all_reported(tmp_path):
     assert sorted(broken) == sorted(
         [("a.md", "missing1.md"), ("a.md", "missing2.md")]
     )
+
+
+def test_html_img_src_resolves_when_present(tmp_path):
+    root = str(tmp_path)
+    _write(
+        os.path.join(root, "a.md"),
+        '<p align="center"><img src="img/pic.png" alt="x" width="46%"></p>',
+    )
+    _write(os.path.join(root, "img", "pic.png"), "stand-in for a binary file")
+
+    assert find_broken_links(root) == []
+
+
+def test_catches_broken_html_img_src(tmp_path):
+    root = str(tmp_path)
+    _write(
+        os.path.join(root, "a.md"),
+        '<img src="img/does_not_exist.png" alt="x" width="46%">',
+    )
+
+    broken = find_broken_links(root)
+    assert broken == [("a.md", "img/does_not_exist.png")]

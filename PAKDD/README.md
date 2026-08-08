@@ -18,6 +18,15 @@ documented in [docs/archive/strict_reproduction_report.md](docs/archive/strict_r
 [README](docs/archive/README.md) for what supersedes it) and the live,
 current [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_REPORT.md).
 
+**Contents:** [Project status](#project-status) ·
+[Environment](#environment) · [Data setup](#data-setup) ·
+[Running experiments](#running-experiments) ·
+[Actual measured results](#actual-measured-results) · [Tests](#tests) ·
+[How it maps to the paper](#how-it-maps-to-the-paper) ·
+[Project layout](#project-layout) ·
+[Where to start reading](#where-to-start-reading) ·
+[Full doc map](docs/README.md)
+
 ---
 
 ## Project status
@@ -26,12 +35,12 @@ current [docs/current/PAPER_AMBIGUITY_REPORT.md](docs/current/PAPER_AMBIGUITY_RE
 |---|---|---|---|
 | **A** | Faithful reproduction — every paper table/figure has a persisted, reproduced-or-honestly-diverging counterpart | ✅ **complete** | [docs/current/STAGE_A_MASTER_REPORT.md](docs/current/STAGE_A_MASTER_REPORT.md) |
 | **B** | Package the divergence critique as a rigorous, citable component — formal theory + statistically-tested 10-seed ablation | ✅ **complete** | [docs/current/STAGE_B_MASTER_REPORT.md](docs/current/STAGE_B_MASTER_REPORT.md) |
-| **C** | Build the novel extension for an A/A*-tier venue: privacy-compliant redesign + dataset migration (`Final_Stage_C.md` §10's Options B+D), adversarial-robustness evaluation (T7), and the corrected manuscript, with the few-shot/prototype hybrid (Option A) sequenced in afterward as a follow-on (Option C, "both, sequenced") | B+D+T7: ✅ **complete** — 830/830 compute cells (T1–T7, TC), significance-tested, manuscript drafted. A: ⏳ **deliberately deferred** to a later phase (committed 2026-07-28, not started) | [docs/current/STAGE_C_MASTER_REPORT.md](docs/current/STAGE_C_MASTER_REPORT.md) |
+| **C** | Build the novel extension for an A/A*-tier venue: privacy-compliant redesign + dataset migration (`Final_Stage_C.md` §10's Options B+D), adversarial-robustness evaluation (T7 + the T7G γ-sweep addendum), and the corrected manuscript, with the few-shot/prototype hybrid (Option A) sequenced in afterward as a follow-on (Option C, "both, sequenced") | B+D+T7+T7G: ✅ **complete** — 960/960 compute cells (T1–T7, T7G, TC), significance-tested, manuscript drafted. A: ⏳ **deliberately deferred** to a later phase (committed 2026-07-28, not started) | [docs/current/STAGE_C_MASTER_REPORT.md](docs/current/STAGE_C_MASTER_REPORT.md) |
 
 Verification signals on the current tree:
 
 ```powershell
-.venv313\Scripts\python.exe -m pytest tests --tb=short                          # 563 passed
+.venv313\Scripts\python.exe -m pytest tests --tb=short                          # 565 passed
 .venv313\Scripts\python.exe scripts\check_stage_a_complete.py                   # exit 0 (completeness)
 .venv313\Scripts\python.exe scripts\check_stage_b_complete.py                   # exit 0 (completeness)
 .venv313\Scripts\python.exe scripts\check_stage_c_complete.py `
@@ -78,6 +87,18 @@ commands, since T7 was run at 5 seeds (per its own grid design,
 .venv313\Scripts\python.exe scripts\check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6 TC --t4-m 3   # 830/830
 .venv313\Scripts\python.exe scripts\check_stage_c_complete.py --tier T7 --seeds 0 1 2 3 4             # 90/90
 ```
+
+A same-day follow-up (2026-08-02) swept γ against the T7 attack surface —
+**T7G, 40/40 cells** — per §10.6 of `STAGE_C_MASTER_REPORT.md`. It's run the
+same way but isn't part of the original nine-command CI list above, since it
+was added after that list was wired into `docs-check.yml`:
+
+```powershell
+.venv313\Scripts\python.exe scripts\check_stage_c_complete.py --tier T7G --seeds 0 1 2 3 4            # 40/40
+```
+
+**Total Stage C compute: 960 cells** (830 + 90 + 40), all seed-level,
+verified against every seed's own committed JSON.
 
 > **⚠️ Read before running the compute campaign.**
 > [`docs/audit/PRE_COMPUTE_AUDIT_2026-07-28.md`](docs/audit/PRE_COMPUTE_AUDIT_2026-07-28.md)
@@ -244,6 +265,15 @@ Static Reparam.  >  FedAvg ≈ FedGRAA(any γ) ≈ 0%     (rare-class accuracy)
 This is **not** what the paper reports (it claims FedGRAA reaches ~88% on
 minority classes, beating both baselines).
 
+<p align="center">
+  <img src="results/figures/CIC-IDS-2017_figure1.png" alt="CIC-IDS-2017 Figure 1 reproduction: literal FedGRAA collapses to ~0% rare-class accuracy at every γ" width="46%">
+  <img src="results/figures/UNSW-NB15_figure1.png" alt="UNSW-NB15 Figure 1 reproduction: same γ-sweep, milder but still non-reproducing collapse" width="46%">
+</p>
+
+*Figure 1 γ-sweep reproduction, CIC-IDS-2017 (left) and UNSW-NB15 (right) —
+literal, unprojected FedGRAA at every γ, matching the table above.
+Provenance for both: [results/README.md](results/README.md).*
+
 ### 2. The diagnosed root cause
 
 FedGRAA's aggregation weights `w^t` **leave the probability simplex in round 1
@@ -298,6 +328,18 @@ solely in `scripts/diagnose_fedgraa.py`; `fedgraa/` implements Algorithm 2
 literally and unprojected, on purpose, per the standing no-silent-patching
 mandate.
 
+### 5. Figures 2-3 (n-sweep), for completeness
+
+<p align="center">
+  <img src="results/figures/CIC-IDS-2017_figure2_3.png" alt="CIC-IDS-2017 Figures 2-3: n-sweep across n=3,5,7 clients" width="46%">
+  <img src="results/figures/UNSW-NB15_figure2_3.png" alt="UNSW-NB15 Figures 2-3: n-sweep across n=3,5,7 clients" width="46%">
+</p>
+
+*Same literal-collapse story across `n ∈ {3, 5, 7}` clients; Static
+Reparam. is the only baseline that retains rare-class accuracy at this
+horizon. Full manifest, per-cell numbers, and honest-divergence notes:
+[results/README.md](results/README.md).*
+
 ---
 
 ## Tests
@@ -305,7 +347,7 @@ mandate.
 Run the full suite before pushing:
 
 ```powershell
-.venv313\Scripts\python.exe -m pytest tests --tb=short      # 563 passed
+.venv313\Scripts\python.exe -m pytest tests --tb=short      # 565 passed
 ```
 
 The suite covers:
@@ -449,7 +491,7 @@ results/
     seed_sweep_{DS}_{fedavg,static}_r60.json
     README.md                          # Stage B manifest (27 checked paths)
     _logs/                             # raw campaign stdout
-tests/             # 563 unit + gradient + e2e + diagnostic + statistics + doc-link + FedGRAA-v2 + pre-compute-audit tests
+tests/             # 565 unit + gradient + e2e + diagnostic + statistics + doc-link + FedGRAA-v2 + pre-compute-audit tests
 docs/
   current/         # the live documents
     STAGE_A_MASTER_REPORT.md           # Stage A capstone (exhaustive)
