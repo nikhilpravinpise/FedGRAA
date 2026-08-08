@@ -5,8 +5,10 @@ superseded file below carries its own `⚠️ ARCHIVED` banner explaining what
 replaced it. These are kept for historical record (git history alone
 doesn't make prior reasoning easy to find), not because they're still
 authoritative. For current project status, start at
-[`PAKDD_STATUS_REPORT.md`](../../PAKDD_STATUS_REPORT.md) (repo root) and
-[`README.md`](../../README.md).
+[`../current/publication_roadmap.md`](../current/publication_roadmap.md) (the
+single current entry point) and [`README.md`](../../README.md). (Note:
+`PAKDD_STATUS_REPORT.md` at the repo root used to be the pointer here, but it
+is itself superseded — see its own banner.)
 
 **Two disclosed exceptions:** `GPU_DECISION_AND_NEXT_STEPS.md` and
 `speedup_plan_v2.md` live in this folder for organizational reasons but are

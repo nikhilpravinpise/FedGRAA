@@ -5,7 +5,7 @@
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](PAKDD/requirements.txt)
 [![PAKDD Stage A](https://img.shields.io/badge/PAKDD%20Stage%20A-complete-brightgreen)](PAKDD/docs/current/STAGE_A_MASTER_REPORT.md)
 [![PAKDD Stage B](https://img.shields.io/badge/PAKDD%20Stage%20B-complete-brightgreen)](PAKDD/docs/current/STAGE_B_MASTER_REPORT.md)
-[![PAKDD Stage C](https://img.shields.io/badge/PAKDD%20Stage%20C-B%2BD%2BT7%20complete-brightgreen)](PAKDD/docs/current/STAGE_C_MASTER_REPORT.md)
+[![PAKDD Stage C](https://img.shields.io/badge/PAKDD%20Stage%20C-B%2BD%2BT7%2BT7G%20complete-brightgreen)](PAKDD/docs/current/STAGE_C_MASTER_REPORT.md)
 
 Independent, statistically-tested reproductions of published ML papers —
 built to find out whether the numbers actually hold up, and to show the work
@@ -32,14 +32,14 @@ flowchart LR
     B --> C{"Converges on\nreal data?"}
     C -- "no" --> D["Root-cause diagnosis:\nweights leave the simplex\nin round 1, 120/120 cells"]
     D --> E["Stage B\ncorrected theory +\n10-seed ablation"]
-    E --> F["Stage C\nFedGRAA-v2 novel extension\n830/830 + 90/90 T7 cells"]
+    E --> F["Stage C\nFedGRAA-v2 novel extension\n830/830 + 90/90 T7 + 40/40 T7G cells"]
 ```
 
 | Stage | Goal | Status |
 |---|---|---|
 | **A** | Faithful reproduction — every paper table/figure has a persisted, reproduced-or-honestly-diverging counterpart | ✅ complete |
 | **B** | The divergence critique as a rigorous, citable component: formal theory + statistically-tested 10-seed ablation | ✅ complete |
-| **C** | The novel extension for an A/A\*-tier venue: FedGRAA-v2 (privacy-compliant redesign + adversarial-robustness eval) | ✅ B+D+T7 complete (830/830 + 90/90 cells) — Option A (few-shot hybrid) deliberately deferred |
+| **C** | The novel extension for an A/A\*-tier venue: FedGRAA-v2 (privacy-compliant redesign + adversarial-robustness eval) | ✅ B+D+T7+T7G complete (960/960 cells: 830 + 90 T7 + 40 T7G) — Option A (few-shot hybrid) deliberately deferred |
 
 **Headline finding:** the paper's aggregation-weight update has no
 simplex-projection step, so the weight vector leaves the probability simplex
@@ -49,12 +49,22 @@ non-increasing-loss lemma fails immediately as a result. A minimal fix
 both datasets, backed by a corrected — and explicitly weaker — convergence
 proof.
 
+<p align="center">
+  <img src="PAKDD/results/figures/CIC-IDS-2017_figure1.png" alt="CIC-IDS-2017 Figure 1 reproduction: literal FedGRAA collapses to ~0% rare-class accuracy at every gamma, vs. the paper's claimed ~89%" width="70%">
+</p>
+
+*The literal reproduction (CIC-IDS-2017, γ-sweep) — every FedGRAA curve
+collapses instead of matching the paper's claimed rare-class accuracy. Full
+figure set and per-dataset breakdown: [PAKDD/results/README.md](PAKDD/results/README.md).*
+
 **Start here:**
 - [PAKDD/README.md](PAKDD/README.md) — setup, experiments, full project layout
 - [PAKDD/understanding/00_START_HERE.md](PAKDD/understanding/00_START_HERE.md) — a gentle introduction to federated learning and this paper, for readers new to either
 - [PAKDD/docs/current/STAGE_A_MASTER_REPORT.md](PAKDD/docs/current/STAGE_A_MASTER_REPORT.md) — the reproduction, exhaustively
 - [PAKDD/docs/current/STAGE_B_MASTER_REPORT.md](PAKDD/docs/current/STAGE_B_MASTER_REPORT.md) — the theory + ablation campaign, exhaustively
 - [PAKDD/docs/current/STAGE_C_MASTER_REPORT.md](PAKDD/docs/current/STAGE_C_MASTER_REPORT.md) — the FedGRAA-v2 novel extension, exhaustively
+- [PAKDD/results/README.md](PAKDD/results/README.md) — every committed result artifact, mapped to the paper table/figure it reproduces
+- [PAKDD/docs/README.md](PAKDD/docs/README.md) — full map of the ~90-file `docs/` tree (audits, literature, paper drafts, archive)
 
 ## Why this repo is organized the way it is
 
@@ -98,7 +108,7 @@ python -m venv .venv313
 .venv313\Scripts\Activate.ps1
 pip install -r requirements.txt
 
-pytest tests --tb=short                                    # 563 passed
+pytest tests --tb=short                                    # 565 passed
 python scripts\check_stage_a_complete.py                   # exit 0
 python scripts\check_stage_b_complete.py                   # exit 0
 python scripts\check_stage_c_complete.py --tier T1 T2 T3 T4 T5 T6 TC --t4-m 3   # exit 0

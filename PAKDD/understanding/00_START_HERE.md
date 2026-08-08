@@ -37,6 +37,7 @@ Read the files in this order:
 | 7 | [07_my_questions.md](07_my_questions.md) | Critical questions about the design choices (for the mentor) |
 | 8 | [08_answers_researched.md](08_answers_researched.md) | Researched, documentation-grounded answers to those questions |
 | 9 | [09_sources.md](09_sources.md) | Sources verified, separating fact from analysis |
+| 10 | [10_SOTA_adaptive_aggregation.md](10_SOTA_adaptive_aggregation.md) | Where FedGRAA sits among other adaptive-aggregation methods in the wider literature |
 
 ## The 30-second version
 

@@ -6,6 +6,14 @@ completeness gate checked this before -- both only validate ``results/...``
 paths -- which is how 34 links silently broke across a doc reorganization
 without either gate noticing (F6 in the verification audit).
 
+Also checks raw HTML ``<img src="...">`` tags, not just markdown
+``![]()``/``[]()`` syntax: READMEs that center or size-constrain an image
+via ``<p align="center"><img src="..." width="...%"></p>`` (used for the
+Stage A/B result figures embedded in the root and ``PAKDD/README.md``) would
+otherwise have their image paths silently unchecked by this script -- the
+same class of blind spot R6/R10 exists to close, just for HTML instead of
+markdown syntax.
+
 Skips absolute URLs (``http(s):``, ``mailto:``), bare anchors (``#...``),
 and the fragment portion of a link (``file.md#section`` is resolved against
 ``file.md``; the anchor itself is not verified against the target's headers).
@@ -24,6 +32,7 @@ import sys
 import urllib.parse
 
 LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+HTML_IMG_SRC_RE = re.compile(r'<img\s[^>]*\bsrc=["\']([^"\']+)["\']', re.IGNORECASE)
 SKIP_ROOT_DIRS = {".venv313", "__pycache__", ".git", "node_modules", ".pytest_cache"}
 
 
@@ -50,7 +59,8 @@ def find_broken_links(root_dir: str) -> list[tuple[str, str]]:
             except OSError:
                 continue
 
-            for raw_target in LINK_RE.findall(text):
+            raw_targets = LINK_RE.findall(text) + HTML_IMG_SRC_RE.findall(text)
+            for raw_target in raw_targets:
                 target = raw_target.split()[0].strip()  # drop optional "title"
                 if not target or re.match(r"^(https?:|mailto:|#)", target):
                     continue
