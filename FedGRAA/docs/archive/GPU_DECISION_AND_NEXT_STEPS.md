@@ -47,7 +47,7 @@ The 6 GPU helper scripts have been **archived** (not deleted) to
 | [`setup_wsl2_gpu.ps1`](../../scripts/archive/gpu/setup_wsl2_gpu.ps1), [`setup_gpu_wsl.sh`](../../scripts/archive/gpu/setup_gpu_wsl.sh) | WSL2 + CUDA + TF install automation | **Kept (archived)** |
 | GPU section of [`speedup_plan_v2.md`](speedup_plan_v2.md) | The negative result, fully measured | **Keep — this is canonical** |
 | GPU section of [`v2_completion.md`](v2_completion.md) | Optimistic "5–10× / 192–320×" projection + "remaining action item" | **Reconciled** — SUPERSEDED banner added (see §4) |
-| GPU rows in [`../../PAKDD_STATUS_REPORT.md`](../../PAKDD_STATUS_REPORT.md) | "GPU rejected" summary | **Keep — correct** |
+| GPU rows in [`../../PAKDD_STATUS_REPORT.md`](../../FedGRAA_STATUS_REPORT.md) | "GPU rejected" summary | **Keep — correct** |
 
 *(The 7th script in `scripts/`, `real_reproduction.py`, is the CPU reproduction
 runner — not GPU — and stays in place.)*
@@ -138,7 +138,7 @@ not yet reproduced.** Ranked by importance:
 
 ### P0 — FedGRAA does not converge (the headline result is missing)
 
-Real CIC-IDS-2017, 200 rounds, n=3 (from [`../../PAKDD_STATUS_REPORT.md`](../../PAKDD_STATUS_REPORT.md)):
+Real CIC-IDS-2017, 200 rounds, n=3 (from [`../../PAKDD_STATUS_REPORT.md`](../../FedGRAA_STATUS_REPORT.md)):
 
 | Method | All-class acc | Rare (last-n) acc |
 |---|---|---|

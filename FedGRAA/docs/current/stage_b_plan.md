@@ -90,7 +90,7 @@ This yields, per (dataset, γ): the **main effect of projection**, the **main ef
 
 ## 3. Global run conventions (apply to every task)
 
-- **Working dir:** `c:\Dev\Research\PAKDD`. **Interpreter:** `.venv313\Scripts\python.exe` (shown as `python` below).
+- **Working dir:** `c:\Dev\FedGRAA\FedGRAA`. **Interpreter:** `.venv313\Scripts\python.exe` (shown as `python` below).
 - **Data/cache:** always `--data-dir data --cache-dir .cache`. First UNSW seed-1…9 runs pay a one-time ~30 s preprocessing cost each, then cache.
 - **Diagnostic horizon:** `--rounds 60 --eval-every 1` for **every** arm — identical to the existing arms so all cells are comparable. Do **not** switch to the 200-round base-sweep horizon here; comparability with the committed seed-0 arms depends on holding the horizon fixed.
 - **The four factorial arms (one lever at a time, all at E′ = 5).** `diagnose_fedgraa.py` names files `{DS}_{variant}{_tag}_r{rounds}.json`, where `variant` = `projected` if `--project` else `literal`, and **the seed is folded into `--tag`** — there is *no* `--seed` component in the filename, so seed 0 omits it and seed *s* > 0 appends `_seed{s}` (this is why the existing multi-seed files read `..._E5_seed1_r60.json`). At seed 0:
@@ -263,7 +263,7 @@ Keep it out of `pytest tests` (decoupled from large committed binaries). Run it 
 ## 8. One-shot runbook (ordered; copy-paste)
 
 ```bash
-cd /c/Dev/Research/PAKDD
+cd /c/Dev/FedGRAA/FedGRAA
 
 # --- Phase 1: code first (no big compute) ---
 #  6.1 stats.py (+ scipy in requirements) · 6.2 ablation driver · 6.3 table builder

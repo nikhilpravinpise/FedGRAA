@@ -5,7 +5,7 @@ mismatch, say what was wrong before. -->
 
 ## Verification
 
-<!-- For PAKDD changes, paste the exit status of the relevant checks:
+<!-- For FedGRAA changes, paste the exit status of the relevant checks:
 pytest, check_stage_a_complete.py, check_stage_b_complete.py,
 audit_stage_a.py, audit_stage_b.py, check_doc_links.py.
 See CONTRIBUTING.md for the full list. -->

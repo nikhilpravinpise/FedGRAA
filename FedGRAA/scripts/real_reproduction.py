@@ -20,7 +20,7 @@ DATA_DIR = "data"
 CACHE_DIR = ".cache"
 
 print("=" * 72)
-print("  PAKDD Reproduction Test — Real Data (CIC-IDS-2017)")
+print("  FedGRAA Reproduction Test — Real Data (CIC-IDS-2017)")
 print("  System: Windows CPU only (TF 2.21, oneDNN, XLA)")
 print("=" * 72)
 

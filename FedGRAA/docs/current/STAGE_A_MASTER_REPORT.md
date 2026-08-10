@@ -1,4 +1,4 @@
-# FedGRAA / PAKDD — Stage A Master Report
+# FedGRAA — Stage A Master Report
 
 ### The complete, self-contained reproduction record: methodology, data, every number, every figure, every documented ambiguity, and every honest divergence.
 
@@ -27,7 +27,7 @@
 
 ## 1. Executive summary
 
-This project is a from-scratch, TensorFlow/Keras reproduction of the paper *"Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems"* (FedGRAA), which proposes a federated-learning aggregation scheme intended to protect classification accuracy on rare/minority attack classes in network intrusion detection. The reproduction (`PAKDD/fedgraa/`) implements the paper's architecture (Dense 200→100→50, tanh, softmax output), both datasets (CIC-IDS-2017, UNSW-NB15), Algorithm 1 (the federated training loop) and Algorithm 2 (the FedGRAA aggregation-weight learner) line-for-line, and passes **79/79 unit/gradient/end-to-end tests**.
+This project is a from-scratch, TensorFlow/Keras reproduction of the paper *"Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems"* (FedGRAA), which proposes a federated-learning aggregation scheme intended to protect classification accuracy on rare/minority attack classes in network intrusion detection. The reproduction (`FedGRAA/fedgraa/`) implements the paper's architecture (Dense 200→100→50, tanh, softmax output), both datasets (CIC-IDS-2017, UNSW-NB15), Algorithm 1 (the federated training loop) and Algorithm 2 (the FedGRAA aggregation-weight learner) line-for-line, and passes **79/79 unit/gradient/end-to-end tests**.
 
 **Stage A's goal** — per [`publication_roadmap.md`](publication_roadmap.md) — was to ensure every table/figure in the original paper has a corresponding persisted, reproduced (or honestly-diverging) counterpart in `results/`. That goal is now met: both datasets' γ-sweeps (paper Figure 1) and n-sweeps (paper Figures 2–3) are run, persisted as JSON, and rendered as figures; every honest divergence is documented in-file and in the results manifest; and `python scripts/check_stage_a_complete.py` exits `0`.
 
@@ -840,9 +840,9 @@ All four base-sweep artifacts (CIC γ-sweep, CIC n-sweep, UNSW γ-sweep, UNSW n-
 
 Surfaced while compiling this document, listed rather than silently resolved:
 
-### 11.1 The η′=0.001 vs. η′=0.01 discrepancy in `PAKDD_STATUS_REPORT.md`
+### 11.1 The η′=0.001 vs. η′=0.01 discrepancy in `FedGRAA_STATUS_REPORT.md`
 
-`PAKDD_STATUS_REPORT.md`'s update section states the real-data hyperparameter intervention is *"η'=0.001... eliminates the blowup entirely and recovers 75-100% rare-class accuracy."* Every other current source — [`fedgraa_divergence_diagnosis.md`](fedgraa_divergence_diagnosis.md) §5.6.1, [`publication_roadmap.md`](publication_roadmap.md), `results/README.md`, and the persisted diagnostic JSON/summary tables (§8) — consistently identifies **η′=0.001 (E′=1), unprojected**, as the intervention that recovers 75–100% rare-accuracy *while collapsing overall accuracy to 0.8%* (§5.6.1), and **η′=0.01, projected, combined with simplex projection** as the *validated combined fix* that recovers 72–94% mean rare-accuracy *without* the overall-accuracy collapse (§5.7 Step 3). This master report uses the 0.01/72–94% figure throughout (§5, §6, §8), since it is directly backed by the persisted per-seed JSON and is the number every other current document converges on. The STATUS_REPORT's "η′=0.001 / 75-100%" line appears to conflate the single-lever η′=0.001 experiment (§5.6.1, real but a different, less desirable failure mode) with the combined-fix result (§5.7, the actually-recommended finding) — worth a one-line correction in that file.
+`FedGRAA_STATUS_REPORT.md`'s update section states the real-data hyperparameter intervention is *"η'=0.001... eliminates the blowup entirely and recovers 75-100% rare-class accuracy."* Every other current source — [`fedgraa_divergence_diagnosis.md`](fedgraa_divergence_diagnosis.md) §5.6.1, [`publication_roadmap.md`](publication_roadmap.md), `results/README.md`, and the persisted diagnostic JSON/summary tables (§8) — consistently identifies **η′=0.001 (E′=1), unprojected**, as the intervention that recovers 75–100% rare-accuracy *while collapsing overall accuracy to 0.8%* (§5.6.1), and **η′=0.01, projected, combined with simplex projection** as the *validated combined fix* that recovers 72–94% mean rare-accuracy *without* the overall-accuracy collapse (§5.7 Step 3). This master report uses the 0.01/72–94% figure throughout (§5, §6, §8), since it is directly backed by the persisted per-seed JSON and is the number every other current document converges on. The STATUS_REPORT's "η′=0.001 / 75-100%" line appears to conflate the single-lever η′=0.001 experiment (§5.6.1, real but a different, less desirable failure mode) with the combined-fix result (§5.7, the actually-recommended finding) — worth a one-line correction in that file.
 
 ### 11.2 "Monotone (Lemma 1) = False" alongside "blowup ratio = 1.0×"
 
@@ -941,7 +941,7 @@ Bring the completed Stage A (this document) + Stage B critique package to the me
 | Strict reproduction report | `docs/archive/strict_reproduction_report.md` ⚠️ archived, content current per §4.1 |
 | Line-by-line gap analysis (2026-07-09) | `docs/archive/paper_vs_code_line_by_line_gap_analysis.md` ⚠️ archived, superseded |
 | Full reproduction gap analysis (2026-06-30) | `docs/archive/full_reproduction_gap_analysis.md` ⚠️ archived, superseded |
-| Project status report | `PAKDD_STATUS_REPORT.md` |
+| Project status report | `FedGRAA_STATUS_REPORT.md` |
 | Historical NaN-regression snapshot | `latest_baseline.md` ⚠️ superseded, retained as historical record |
 | Top-level project README | `README.md` |
 | Results manifest | `results/README.md` |

@@ -535,7 +535,7 @@ Bonawitz et al.'s protocol (arXiv:1611.04482) is built on a `(t, K)`-Shamir secr
 
 ## 11. Testing and validation plan for FedGRAA-v2
 
-This section specifies the **test suite** FedGRAA-v2's implementation must pass before its results can be trusted — written as a testable specification (assertions, tolerances, and inputs), not as code, so it can be handed directly to whoever implements §4's `trainer.py`/`aggregation.py` changes. Every test below follows the project's existing convention in `PAKDD/tests/` (one file per module, `pytest`-style, fixtures from `conftest.py`) and should be added as `test_aggregation_v2.py`, `test_privacy.py`, and `test_trainer_v2.py` alongside the existing `test_aggregation.py`, `test_trainer.py`, etc.
+This section specifies the **test suite** FedGRAA-v2's implementation must pass before its results can be trusted — written as a testable specification (assertions, tolerances, and inputs), not as code, so it can be handed directly to whoever implements §4's `trainer.py`/`aggregation.py` changes. Every test below follows the project's existing convention in `FedGRAA/tests/` (one file per module, `pytest`-style, fixtures from `conftest.py`) and should be added as `test_aggregation_v2.py`, `test_privacy.py`, and `test_trainer_v2.py` alongside the existing `test_aggregation.py`, `test_trainer.py`, etc.
 
 ### 11.1 Unit tests — confusion-matrix additivity (Approach A, §3.2)
 

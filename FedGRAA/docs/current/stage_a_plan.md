@@ -69,7 +69,7 @@ Legend: ✅ done & committed · ❌ missing · ⚠️ done but defective.
 
 ## 3. Global run conventions (apply to every task)
 
-- **Working dir:** `c:\Dev\Research\PAKDD`. **Interpreter:** `.venv313\Scripts\python.exe` (shown as `python` below).
+- **Working dir:** `c:\Dev\FedGRAA\FedGRAA`. **Interpreter:** `.venv313\Scripts\python.exe` (shown as `python` below).
 - **Data/cache:** always pass `--data-dir data --cache-dir .cache`. First UNSW seed-1/2 runs pay a one-time ~30 s preprocessing cost, then cache.
 - **Rounds/eval:** base sweeps use `--rounds 200 --eval-every 20` (paper horizon). Diagnostic runs use `--rounds 60 --eval-every 1` (per-round instrumentation, matching the existing CIC diagnostics).
 - **Round-0 — an unresolved fidelity decision, to be surfaced, not chosen silently:** the paper's Figure-1 table prints `0.00` for *every* method at round 0, and the strict-"ditto" analysis (`../archive/paper_vs_code_line_by_line_gap_analysis.md` item #2; gap **C-4** in `../archive/full_reproduction_gap_analysis.md`) says a faithful reproduction must force this via `round_zero_zero=True` — which is in fact the **fidelity default** in [`../../fedgraa/config.py`](../../fedgraa/config.py) L67. But `run_experiments.py` makes `--round-zero-zero` opt-in (L108 defaults the field to **False**), so the already-committed CIC γ-sweep records *real* ~9% round-0 accuracy and does **not** match the paper's table. Stage A must pick one convention and apply it to all four base-sweep artifacts:
@@ -100,7 +100,7 @@ for ax, n in zip(axes, ns):
 
 ## 5. Task-by-task plan
 
-Each task lists the exact command, the artifacts it must produce, an effort estimate (derived from the measured timings in [`../../PAKDD_STATUS_REPORT.md`](../../PAKDD_STATUS_REPORT.md) and [`../../latest_baseline.md`](../../latest_baseline.md); calibrate with a `--rounds 1` probe first), and its acceptance criteria.
+Each task lists the exact command, the artifacts it must produce, an effort estimate (derived from the measured timings in [`../../FedGRAA_STATUS_REPORT.md`](../../FedGRAA_STATUS_REPORT.md) and [`../../latest_baseline.md`](../../latest_baseline.md); calibrate with a `--rounds 1` probe first), and its acceptance criteria.
 
 ### Task A1 — CIC-IDS-2017 n-sweep (paper Figures 2–3)
 
@@ -271,7 +271,7 @@ Keep this as a standalone script (not part of `pytest tests`) so the unit suite 
 ## 8. One-shot runbook (ordered; copy-paste)
 
 ```bash
-cd /c/Dev/Research/PAKDD
+cd /c/Dev/FedGRAA/FedGRAA
 
 # --- Phase 0: calibrate machine (optional, ~2 min) ---
 python run_experiments.py --data-dir data --cache-dir .cache \

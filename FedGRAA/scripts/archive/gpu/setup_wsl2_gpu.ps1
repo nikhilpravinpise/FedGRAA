@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    One-time WSL2 + GPU setup for PAKDD reproduction.
+    One-time WSL2 + GPU setup for the FedGRAA reproduction.
 .DESCRIPTION
     Installs WSL2, updates kernel, installs Ubuntu, and guides you through
     setting up TensorFlow with GPU support using uv for storage isolation.
@@ -25,7 +25,7 @@
 $ErrorActionPreference = "Stop"
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  PAKDD WSL2 + GPU Setup (uv)" -ForegroundColor Cyan
+Write-Host "  FedGRAA WSL2 + GPU Setup (uv)" -ForegroundColor Cyan
 Write-Host "  Verified against official docs" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
@@ -77,8 +77,8 @@ Write-Host "   source ~/.bashrc"
 Write-Host "   uv python install 3.13"
 Write-Host ""
 Write-Host "   # Copy project (CRITICAL: NOT /mnt/c — that's slow!)" -ForegroundColor White
-Write-Host '   cp -r /mnt/c/Dev/Research/PAKDD ~/PAKDD'
-Write-Host "   cd ~/PAKDD"
+Write-Host '   cp -r /mnt/c/Dev/FedGRAA/FedGRAA ~/FedGRAA'
+Write-Host "   cd ~/FedGRAA"
 Write-Host ""
 Write-Host "   # Create isolated venv (named .venv313)" -ForegroundColor White
 Write-Host "   uv venv .venv313 --python 3.13"

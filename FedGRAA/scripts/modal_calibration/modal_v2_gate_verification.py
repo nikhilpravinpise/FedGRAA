@@ -45,7 +45,7 @@ image = (
         "pytest>=7.0",
         "matplotlib>=3.7",
     )
-    .add_local_dir("C:/Dev/Research/PAKDD", remote_path="/repo", copy=True, ignore=_ignore)
+    .add_local_dir("C:/Dev/FedGRAA/FedGRAA", remote_path="/repo", copy=True, ignore=_ignore)
 )
 
 
