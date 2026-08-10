@@ -69,7 +69,16 @@ def test_fedgraa_weight_gradient_matches_finite_difference(rng):
         lm = fg.composite_loss(aggregate(client_params, wm), val)
         num[k] = (lp - lm) / (2 * eps)
 
-    np.testing.assert_allclose(grad_w, num, atol=5e-3)
+    # atol has margin for CPU-generation floating-point noise, not just
+    # local round-off: docs/research_c/COMPUTE_INFRASTRUCTURE_2026-07-27.md
+    # §4.4 and docs/audit/PRE_COMPUTE_AUDIT_2026-07-28.md M7 measured this
+    # exact check missing atol=5e-3 by 0.00537 on a non-AVX512 CPU (CI's
+    # ubuntu-latest runner fleet is not pinned to a CPU generation, so this
+    # was a live, non-deterministic CI flake) -- confirmed to be TensorFlow/
+    # NumPy kernel rounding, not a gradient logic defect. 1e-2 keeps ~2x
+    # margin over the measured noise floor while still catching a real bug,
+    # which would produce a far larger mismatch than 0.5%.
+    np.testing.assert_allclose(grad_w, num, atol=1e-2)
 
 
 def test_fedgraa_gamma_extremes_select_objective(rng):
