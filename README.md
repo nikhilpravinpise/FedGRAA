@@ -1,12 +1,12 @@
-# Research
+# FedGRAA
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Docs check](https://github.com/N1KH1LT0X1N/Research/actions/workflows/docs-check.yml/badge.svg)](https://github.com/N1KH1LT0X1N/Research/actions/workflows/docs-check.yml)
-[![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](PAKDD/requirements.txt)
-[![Tests](https://img.shields.io/badge/tests-565%20passing-brightgreen)](PAKDD/tests)
-[![PAKDD Stage A](https://img.shields.io/badge/PAKDD%20Stage%20A-complete-brightgreen)](PAKDD/docs/current/STAGE_A_MASTER_REPORT.md)
-[![PAKDD Stage B](https://img.shields.io/badge/PAKDD%20Stage%20B-complete-brightgreen)](PAKDD/docs/current/STAGE_B_MASTER_REPORT.md)
-[![PAKDD Stage C](https://img.shields.io/badge/PAKDD%20Stage%20C-B%2BD%2BT7%2BT7G%20complete-brightgreen)](PAKDD/docs/current/STAGE_C_MASTER_REPORT.md)
+[![Docs check](https://github.com/N1KH1LT0X1N/FedGRAA/actions/workflows/docs-check.yml/badge.svg)](https://github.com/N1KH1LT0X1N/FedGRAA/actions/workflows/docs-check.yml)
+[![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](FedGRAA/requirements.txt)
+[![Tests](https://img.shields.io/badge/tests-565%20passing-brightgreen)](FedGRAA/tests)
+[![FedGRAA Stage A](https://img.shields.io/badge/FedGRAA%20Stage%20A-complete-brightgreen)](FedGRAA/docs/current/STAGE_A_MASTER_REPORT.md)
+[![FedGRAA Stage B](https://img.shields.io/badge/FedGRAA%20Stage%20B-complete-brightgreen)](FedGRAA/docs/current/STAGE_B_MASTER_REPORT.md)
+[![FedGRAA Stage C](https://img.shields.io/badge/FedGRAA%20Stage%20C-B%2BD%2BT7%2BT7G%20complete-brightgreen)](FedGRAA/docs/current/STAGE_C_MASTER_REPORT.md)
 
 Independent, statistically-tested reproductions of published ML papers —
 built to find out whether the numbers actually hold up, and to show the
@@ -27,16 +27,16 @@ independently re-derived from raw persisted JSON in CI, on every push.
 | | |
 |---|---|
 | **3/3** project stages complete | Stage A (reproduction) → Stage B (diagnosis + fix + theory) → Stage C (novel extension) |
-| **565** tests passing | gradient correctness, statistics, adversarial robustness, doc-link integrity — [`pytest tests`](PAKDD/tests) |
+| **565** tests passing | gradient correctness, statistics, adversarial robustness, doc-link integrity — [`pytest tests`](FedGRAA/tests) |
 | **960** Stage C compute cells | 830 main frontier + 90 adversarial-robustness (T7) + 40 γ-sweep addendum (T7G), all seed-level, all on real cloud compute (Modal), all independently re-verified against their own raw JSON |
 | **19** baselines FedGRAA-v2 is measured against | 14 domain-specific FL/NIDS methods + 5 classic FL optimizers (FedAvg, FedProx, FedOpt, SCAFFOLD, FedNova) |
 | **111 / 112** Holm-corrected significance tests | FedGRAA-v2 vs. every one of the 14 domain baselines, paired Wilcoxon, both datasets — the one exception is reported, not hidden |
 | **2** real intrusion-detection datasets | CIC-IDS-2017 (~2.8M rows) and UNSW-NB15, both forensically SHA-256-verified against canonical distributions |
-| **~90** markdown documents | every relative link checked in CI — [`scripts/check_doc_links.py`](PAKDD/scripts/check_doc_links.py) |
+| **~90** markdown documents | every relative link checked in CI — [`scripts/check_doc_links.py`](FedGRAA/scripts/check_doc_links.py) |
 
 ## Table of contents
 
-- [Flagship project: PAKDD — FedGRAA reproduction](#flagship-project-pakdd--fedgraa-reproduction)
+- [Flagship project: FedGRAA — reproduction, diagnosis, and extension](#flagship-project-fedgraa--reproduction-diagnosis-and-extension)
   - [Stage A — faithful reproduction](#stage-a--faithful-reproduction)
   - [Stage B — root-cause diagnosis, the fix, and corrected theory](#stage-b--root-cause-diagnosis-the-fix-and-corrected-theory)
   - [Stage C — FedGRAA-v2, the novel extension](#stage-c--fedgraa-v2-the-novel-extension)
@@ -51,9 +51,9 @@ independently re-derived from raw persisted JSON in CI, on every push.
 
 ---
 
-## Flagship project: PAKDD — FedGRAA reproduction
+## Flagship project: FedGRAA — reproduction, diagnosis, and extension
 
-**[`PAKDD/`](PAKDD/)** — a from-scratch Keras/TensorFlow reproduction of
+**[`FedGRAA/`](FedGRAA/)** — a from-scratch Keras/TensorFlow reproduction of
 *"Federated Gradient-Refined Adaptive Averaging for Intrusion Detection
 Systems" (FedGRAA)*: a measured, statistically-tested account of why the
 published algorithm does not converge on real intrusion-detection data, a
@@ -92,13 +92,13 @@ flowchart LR
 > communication cost and its own exploitable attack surface.
 
 **Start here:**
-- [PAKDD/README.md](PAKDD/README.md) — setup, experiments, full project layout
-- [PAKDD/understanding/00_START_HERE.md](PAKDD/understanding/00_START_HERE.md) — a gentle introduction to federated learning and this paper, for readers new to either
-- [PAKDD/docs/current/STAGE_A_MASTER_REPORT.md](PAKDD/docs/current/STAGE_A_MASTER_REPORT.md) — the reproduction, exhaustively
-- [PAKDD/docs/current/STAGE_B_MASTER_REPORT.md](PAKDD/docs/current/STAGE_B_MASTER_REPORT.md) — the theory + ablation campaign, exhaustively
-- [PAKDD/docs/current/STAGE_C_MASTER_REPORT.md](PAKDD/docs/current/STAGE_C_MASTER_REPORT.md) — the FedGRAA-v2 novel extension, exhaustively
-- [PAKDD/results/README.md](PAKDD/results/README.md) — every committed result artifact, mapped to the paper table/figure it reproduces
-- [PAKDD/docs/README.md](PAKDD/docs/README.md) — full map of the ~90-file `docs/` tree (audits, literature, paper drafts, archive)
+- [FedGRAA/README.md](FedGRAA/README.md) — setup, experiments, full project layout
+- [FedGRAA/understanding/00_START_HERE.md](FedGRAA/understanding/00_START_HERE.md) — a gentle introduction to federated learning and this paper, for readers new to either
+- [FedGRAA/docs/current/STAGE_A_MASTER_REPORT.md](FedGRAA/docs/current/STAGE_A_MASTER_REPORT.md) — the reproduction, exhaustively
+- [FedGRAA/docs/current/STAGE_B_MASTER_REPORT.md](FedGRAA/docs/current/STAGE_B_MASTER_REPORT.md) — the theory + ablation campaign, exhaustively
+- [FedGRAA/docs/current/STAGE_C_MASTER_REPORT.md](FedGRAA/docs/current/STAGE_C_MASTER_REPORT.md) — the FedGRAA-v2 novel extension, exhaustively
+- [FedGRAA/results/README.md](FedGRAA/results/README.md) — every committed result artifact, mapped to the paper table/figure it reproduces
+- [FedGRAA/docs/README.md](FedGRAA/docs/README.md) — full map of the ~90-file `docs/` tree (audits, literature, paper drafts, archive)
 
 ---
 
@@ -124,8 +124,8 @@ minority classes, beating both baselines) — every FedGRAA curve collapses
 instead.
 
 <p align="center">
-  <img src="PAKDD/results/figures/CIC-IDS-2017_figure1.png" alt="CIC-IDS-2017 Figure 1 reproduction: literal FedGRAA collapses to ~0% rare-class accuracy at every gamma, vs. the paper's claimed ~89%" width="46%">
-  <img src="PAKDD/results/figures/UNSW-NB15_figure1.png" alt="UNSW-NB15 Figure 1 reproduction: same gamma-sweep, milder but still non-reproducing collapse" width="46%">
+  <img src="FedGRAA/results/figures/CIC-IDS-2017_figure1.png" alt="CIC-IDS-2017 Figure 1 reproduction: literal FedGRAA collapses to ~0% rare-class accuracy at every gamma, vs. the paper's claimed ~89%" width="46%">
+  <img src="FedGRAA/results/figures/UNSW-NB15_figure1.png" alt="UNSW-NB15 Figure 1 reproduction: same gamma-sweep, milder but still non-reproducing collapse" width="46%">
 </p>
 
 *Figure 1 γ-sweep reproduction, CIC-IDS-2017 (left) and UNSW-NB15
@@ -133,15 +133,15 @@ instead.
 above.*
 
 <p align="center">
-  <img src="PAKDD/results/figures/CIC-IDS-2017_figure2_3.png" alt="CIC-IDS-2017 Figures 2-3: n-sweep across n=3,5,7 clients" width="46%">
-  <img src="PAKDD/results/figures/UNSW-NB15_figure2_3.png" alt="UNSW-NB15 Figures 2-3: n-sweep across n=3,5,7 clients" width="46%">
+  <img src="FedGRAA/results/figures/CIC-IDS-2017_figure2_3.png" alt="CIC-IDS-2017 Figures 2-3: n-sweep across n=3,5,7 clients" width="46%">
+  <img src="FedGRAA/results/figures/UNSW-NB15_figure2_3.png" alt="UNSW-NB15 Figures 2-3: n-sweep across n=3,5,7 clients" width="46%">
 </p>
 
 *Figures 2–3 (client-count sweep, `n ∈ {3, 5, 7}`) — the same
 literal-collapse story holds at every client count; Static Reparam. is
 the only baseline that retains rare-class accuracy at this horizon. Full
 manifest, per-cell numbers, and honest-divergence notes:
-[PAKDD/results/README.md](PAKDD/results/README.md).*
+[FedGRAA/results/README.md](FedGRAA/results/README.md).*
 
 ---
 
@@ -176,8 +176,8 @@ Composite-loss blowup worst case: literal reaches **1.86×10⁶×** on CIC
 and **46.85×** on UNSW; the fix never exceeds 1.02× / 1.87×.
 
 <p align="center">
-  <img src="PAKDD/results/ablation/CIC_IDS_2017_ablation.png" alt="CIC-IDS-2017 2x2 ablation: rare-class accuracy by projection x eta-prime arm, 95% CI, 10 seeds" width="46%">
-  <img src="PAKDD/results/ablation/UNSW_NB15_ablation.png" alt="UNSW-NB15 2x2 ablation: rare-class accuracy by projection x eta-prime arm, 95% CI, 10 seeds" width="46%">
+  <img src="FedGRAA/results/ablation/CIC_IDS_2017_ablation.png" alt="CIC-IDS-2017 2x2 ablation: rare-class accuracy by projection x eta-prime arm, 95% CI, 10 seeds" width="46%">
+  <img src="FedGRAA/results/ablation/UNSW_NB15_ablation.png" alt="UNSW-NB15 2x2 ablation: rare-class accuracy by projection x eta-prime arm, 95% CI, 10 seeds" width="46%">
 </p>
 
 *The full 2×2 factorial (projection on/off × η′ high/low), 10-seed mean
@@ -186,7 +186,7 @@ drives the accuracy recovery reverses between datasets — the η′ cut
 dominates on CIC-IDS-2017, projection dominates on UNSW-NB15 — but only
 the **combination** performs well on both, at every γ. Full factorial
 with paired *t* / Wilcoxon / Cohen's *d* / Holm–Bonferroni:
-[PAKDD/docs/current/STAGE_B_MASTER_REPORT.md](PAKDD/docs/current/STAGE_B_MASTER_REPORT.md) §8–12.*
+[FedGRAA/docs/current/STAGE_B_MASTER_REPORT.md](FedGRAA/docs/current/STAGE_B_MASTER_REPORT.md) §8–12.*
 
 **The corrected convergence theory.** Replacing Algorithm 2 line 6 with
 `w^t = Π_Δ(w^{t−1} − η′ ∂L'(w^{t−1}))` turns the weight learner into
@@ -196,7 +196,7 @@ feasibility is *structural* (the round-1 blowup becomes provably
 impossible), and the iterates reach a *stationary/KKT point* at rate
 `O(1/T)` — not the global minimum, because the loss is non-convex. Full
 statement and proof sketch:
-[PAKDD/docs/current/fedgraa_convergence_defect.md](PAKDD/docs/current/fedgraa_convergence_defect.md).
+[FedGRAA/docs/current/fedgraa_convergence_defect.md](FedGRAA/docs/current/fedgraa_convergence_defect.md).
 
 ---
 
@@ -223,7 +223,7 @@ domain-specific baselines and 5 classic FL optimizers, both datasets, 10
 seeds each, all run on real Modal cloud compute and independently
 re-verified against every cell's own raw JSON.
 
-![FedGRAA-v2 frontier: communication cost vs. rare-class recall, both datasets, all 5 FedGRAA points + 14 baselines, 95% bootstrap CI](PAKDD/results/v2_frontier/frontier_figure.png)
+![FedGRAA-v2 frontier: communication cost vs. rare-class recall, both datasets, all 5 FedGRAA points + 14 baselines, 95% bootstrap CI](FedGRAA/results/v2_frontier/frontier_figure.png)
 
 *FedGRAA-v2 (filled blue circles) sits at 88–93% rare-class recall on
 CIC-IDS-2017 and 65–70% on UNSW-NB15 across every refresh interval.
@@ -260,8 +260,8 @@ refresh interval — achieves FedGRAA-v2's own **best** rare-class recall
 on both datasets, not merely a decent one.
 
 <p align="center">
-  <img src="PAKDD/results/v2_frontier/overhead_ratio.png" alt="Communication overhead vs. rare-class recall, by refresh interval m, both datasets" width="46%">
-  <img src="PAKDD/results/v2_frontier/classic_fl_comparison.png" alt="FedGRAA-v2 vs. classic FL optimizers, both datasets, 95% CI" width="46%">
+  <img src="FedGRAA/results/v2_frontier/overhead_ratio.png" alt="Communication overhead vs. rare-class recall, by refresh interval m, both datasets" width="46%">
+  <img src="FedGRAA/results/v2_frontier/classic_fl_comparison.png" alt="FedGRAA-v2 vs. classic FL optimizers, both datasets, 95% CI" width="46%">
 </p>
 
 *Left: communication-overhead trade-off by refresh interval. Right:
@@ -277,14 +277,14 @@ uniform per-client share, confirmed on real 200-round campaigns across
 both datasets and two attacker fractions.
 
 <p align="center">
-  <img src="PAKDD/results/v2_frontier/t7_attacker_weight_trajectory.png" alt="Attacker's mean aggregation weight vs. communication round, undefended FedGRAA-v2, both datasets, both attacker fractions" width="70%">
+  <img src="FedGRAA/results/v2_frontier/t7_attacker_weight_trajectory.png" alt="Attacker's mean aggregation weight vs. communication round, undefended FedGRAA-v2, both datasets, both attacker fractions" width="70%">
 </p>
 
 Two external defenses (SecFedNIDS, WeiDetect, both built from scratch)
 were evaluated against a 3-attack grid:
 
 <p align="center">
-  <img src="PAKDD/results/v2_frontier/t7_defense_asr.png" alt="Attack success rate by (defense, attack) pair, both datasets, 30% attacker fraction" width="46%">
+  <img src="FedGRAA/results/v2_frontier/t7_defense_asr.png" alt="Attack success rate by (defense, attack) pair, both datasets, 30% attacker fraction" width="46%">
 </p>
 
 | Defense | Attack | CIC-IDS-2017 ASR | UNSW-NB15 ASR |
@@ -325,12 +325,12 @@ rejected on ten named grounds (missing simplex projection, no raw
 seed-level logs, a convexity assumption for a non-convex model, no
 adaptive-baseline comparison, no significance testing, and more). The
 corrected resubmission,
-[FedGRAA_v2_PAKDD_Submission.md](PAKDD/docs/paper/FedGRAA_v2_PAKDD_Submission.md),
+[FedGRAA_v2_PAKDD_Submission.md](FedGRAA/docs/paper/FedGRAA_v2_PAKDD_Submission.md),
 resolves every one of those ten items using this stage's real campaign
 data, plus two things neither the original draft nor its review addressed
 at all: the privacy-compliant redesign and the adversarial-robustness
 evaluation. Full detail, including the reviewer-by-reviewer resolution
-table: [PAKDD/docs/current/STAGE_C_MASTER_REPORT.md](PAKDD/docs/current/STAGE_C_MASTER_REPORT.md) §11.
+table: [FedGRAA/docs/current/STAGE_C_MASTER_REPORT.md](FedGRAA/docs/current/STAGE_C_MASTER_REPORT.md) §11.
 
 ---
 
@@ -348,9 +348,9 @@ called "done":
 This came out of catching real mistakes: a past doc reorganization
 silently broke 34 relative links, and a "byte-identical" claim in one
 report turned out to be an overclaim. Both are now caught automatically —
-see [PAKDD/scripts/check_doc_links.py](PAKDD/scripts/check_doc_links.py)
+see [FedGRAA/scripts/check_doc_links.py](FedGRAA/scripts/check_doc_links.py)
 and the `audit_stage_*.py` / `check_stage_*_complete.py` scripts in
-[PAKDD/scripts/](PAKDD/scripts/). **All nine core verification commands
+[FedGRAA/scripts/](FedGRAA/scripts/). **All nine core verification commands
 run on every push/PR to `main`** in
 [`.github/workflows/docs-check.yml`](.github/workflows/docs-check.yml) —
 they are no longer only-a-human-remembers-to-run-them scripts.
@@ -366,8 +366,8 @@ caught) before being trusted.
 ## Repository structure
 
 ```
-Research/
-├── PAKDD/            # FedGRAA reproduction — see PAKDD/README.md
+FedGRAA/
+├── FedGRAA/            # FedGRAA reproduction — see FedGRAA/README.md
 │   ├── fedgraa/       # the reimplementation: model, aggregation, privacy, attacks, baselines
 │   ├── scripts/       # campaign drivers, completeness gates, correctness audits
 │   ├── results/       # every persisted artifact — figures, JSON, ablation/frontier tables
@@ -382,13 +382,13 @@ Research/
 
 As more projects are added, they'll get their own top-level folder and an
 entry in this README, following the same reproduce-honestly-then-audit
-pattern as PAKDD.
+pattern as FedGRAA.
 
 ## Getting started
 
 ```powershell
-git clone https://github.com/N1KH1LT0X1N/Research.git
-cd Research/PAKDD
+git clone https://github.com/N1KH1LT0X1N/FedGRAA.git
+cd FedGRAA/FedGRAA
 
 python -m venv .venv313
 .venv313\Scripts\Activate.ps1
@@ -407,25 +407,25 @@ python scripts\audit_stage_c.py                             # exit 0
 Python 3.13 is recommended — TensorFlow 2.21 has no Python 3.14 wheels
 yet. No GPU required (a GPU attempt measured 25% *slower* at this model
 size). Datasets are not tracked in git (see [`.gitignore`](.gitignore));
-see [PAKDD/README.md § Datasets](PAKDD/README.md#datasets) for where to
+see [FedGRAA/README.md § Datasets](FedGRAA/README.md#datasets) for where to
 get them — the copies used to produce every result in this repo were
 forensically verified against raw CSV SHA-256s
-([PAKDD/docs/audit/data_provenance_audit.md](PAKDD/docs/audit/data_provenance_audit.md)).
+([FedGRAA/docs/audit/data_provenance_audit.md](FedGRAA/docs/audit/data_provenance_audit.md)).
 
 ## Full documentation map
 
 | If you want… | Read |
 |---|---|
-| A gentle introduction to federated learning and this paper, from zero | [PAKDD/understanding/00_START_HERE.md](PAKDD/understanding/00_START_HERE.md) *(11-file series; carries its own correction banner pointing at Stage B/C's later, corrected findings)* |
-| The whole project in one pass | [STAGE_A](PAKDD/docs/current/STAGE_A_MASTER_REPORT.md) → [STAGE_B](PAKDD/docs/current/STAGE_B_MASTER_REPORT.md) → [STAGE_C](PAKDD/docs/current/STAGE_C_MASTER_REPORT.md) master reports |
-| Proof the numbers are actually right, not just asserted | [PAKDD/docs/audit/README.md](PAKDD/docs/audit/README.md) — 16 independent, adversarial verification passes |
-| Why FedGRAA doesn't converge as published | [fedgraa_divergence_diagnosis.md](PAKDD/docs/current/fedgraa_divergence_diagnosis.md) and [fedgraa_convergence_defect.md](PAKDD/docs/current/fedgraa_convergence_defect.md) |
-| What's wrong with the paper's text itself | [PAPER_AMBIGUITY_REPORT.md](PAKDD/docs/current/PAPER_AMBIGUITY_REPORT.md) and [FedGRAA_Simulated_Peer_Review.md](PAKDD/docs/paper/FedGRAA_Simulated_Peer_Review.md) |
-| The current, citable manuscript | [FedGRAA_v2_PAKDD_Submission.md](PAKDD/docs/paper/FedGRAA_v2_PAKDD_Submission.md) |
-| The novel Stage C contribution and why it's novel | [Final_Stage_C.md](PAKDD/docs/research_c/Final_Stage_C.md) and [FEDGRAA_V2_MASTER_PLAN.md](PAKDD/docs/research_c/FEDGRAA_V2_MASTER_PLAN.md) |
-| Every committed result artifact, mapped to what it reproduces | [PAKDD/results/README.md](PAKDD/results/README.md) and [PAKDD/results/ablation/README.md](PAKDD/results/ablation/README.md) |
-| What's next | [publication_roadmap.md](PAKDD/docs/current/publication_roadmap.md) |
-| The full ~90-file `docs/` tree map | [PAKDD/docs/README.md](PAKDD/docs/README.md) |
+| A gentle introduction to federated learning and this paper, from zero | [FedGRAA/understanding/00_START_HERE.md](FedGRAA/understanding/00_START_HERE.md) *(11-file series; carries its own correction banner pointing at Stage B/C's later, corrected findings)* |
+| The whole project in one pass | [STAGE_A](FedGRAA/docs/current/STAGE_A_MASTER_REPORT.md) → [STAGE_B](FedGRAA/docs/current/STAGE_B_MASTER_REPORT.md) → [STAGE_C](FedGRAA/docs/current/STAGE_C_MASTER_REPORT.md) master reports |
+| Proof the numbers are actually right, not just asserted | [FedGRAA/docs/audit/README.md](FedGRAA/docs/audit/README.md) — 16 independent, adversarial verification passes |
+| Why FedGRAA doesn't converge as published | [fedgraa_divergence_diagnosis.md](FedGRAA/docs/current/fedgraa_divergence_diagnosis.md) and [fedgraa_convergence_defect.md](FedGRAA/docs/current/fedgraa_convergence_defect.md) |
+| What's wrong with the paper's text itself | [PAPER_AMBIGUITY_REPORT.md](FedGRAA/docs/current/PAPER_AMBIGUITY_REPORT.md) and [FedGRAA_Simulated_Peer_Review.md](FedGRAA/docs/paper/FedGRAA_Simulated_Peer_Review.md) |
+| The current, citable manuscript | [FedGRAA_v2_PAKDD_Submission.md](FedGRAA/docs/paper/FedGRAA_v2_PAKDD_Submission.md) |
+| The novel Stage C contribution and why it's novel | [Final_Stage_C.md](FedGRAA/docs/research_c/Final_Stage_C.md) and [FEDGRAA_V2_MASTER_PLAN.md](FedGRAA/docs/research_c/FEDGRAA_V2_MASTER_PLAN.md) |
+| Every committed result artifact, mapped to what it reproduces | [FedGRAA/results/README.md](FedGRAA/results/README.md) and [FedGRAA/results/ablation/README.md](FedGRAA/results/ablation/README.md) |
+| What's next | [publication_roadmap.md](FedGRAA/docs/current/publication_roadmap.md) |
+| The full ~90-file `docs/` tree map | [FedGRAA/docs/README.md](FedGRAA/docs/README.md) |
 
 ## Contributing
 
@@ -442,10 +442,10 @@ this repository — see [`CITATION.cff`](CITATION.cff) (GitHub's "Cite this
 repository" button on this page uses it directly):
 
 ```bibtex
-@software{pise_research_fedgraa,
+@software{pise_fedgraa,
   author  = {Pise, Nikhil Pravin},
-  title   = {{Research: Independent Reproductions of Published ML Papers (FedGRAA / FedGRAA-v2)}},
-  url     = {https://github.com/N1KH1LT0X1N/Research},
+  title   = {{FedGRAA: Independent Reproduction and Extension of a Published ML Paper}},
+  url     = {https://github.com/N1KH1LT0X1N/FedGRAA},
   license = {MIT},
   date    = {2026-08-08}
 }

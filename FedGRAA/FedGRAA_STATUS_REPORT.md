@@ -1,4 +1,4 @@
-# PAKDD / FedGRAA — Project Status Report
+# FedGRAA — Project Status Report
 
 > **⚠️ SUPERSEDED — historical snapshot, not current state (2026-07-25).** Dated
 > 2026-07-23, this document predates the Stage A and Stage B campaigns and is

@@ -42,7 +42,7 @@ modal setup      # one-time browser OAuth, links CLI to the Modal account
 
 ### 4.2 Repo transfer: local directory copy, not `git clone`
 
-The project's GitHub remote (`N1KH1LT0X1N/Research`) is **private** — an anonymous `git clone` inside a Modal container build step fails (`fatal: could not read Username for 'https://github.com'`, since there is no TTY to prompt for credentials during an image build). Rather than embed a token in the image, the working setup uploads the local `PAKDD/` directory directly into the image via `Image.add_local_dir(..., copy=True)`, explicitly excluding directories that are large and unnecessary for the code itself:
+The project's GitHub remote (`N1KH1LT0X1N/FedGRAA`) is **private** — an anonymous `git clone` inside a Modal container build step fails (`fatal: could not read Username for 'https://github.com'`, since there is no TTY to prompt for credentials during an image build). Rather than embed a token in the image, the working setup uploads the local `FedGRAA/` directory directly into the image via `Image.add_local_dir(..., copy=True)`, explicitly excluding directories that are large and unnecessary for the code itself:
 
 | Excluded | Size | Why |
 |---|---|---|
@@ -117,7 +117,7 @@ image = (
         "pytest>=7.0",
         "matplotlib>=3.7",
     )
-    .add_local_dir("C:/Dev/Research/PAKDD", remote_path="/repo", copy=True, ignore=_ignore)
+    .add_local_dir("C:/Dev/FedGRAA/FedGRAA", remote_path="/repo", copy=True, ignore=_ignore)
 )
 
 

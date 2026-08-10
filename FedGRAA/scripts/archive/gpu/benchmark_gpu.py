@@ -1,4 +1,4 @@
-"""GPU timing benchmark for PAKDD fused XLA step."""
+"""GPU timing benchmark for the FedGRAA fused XLA step."""
 import os
 import site
 import ctypes

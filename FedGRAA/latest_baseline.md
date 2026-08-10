@@ -8,7 +8,7 @@
 > [`docs/current/STAGE_A_MASTER_REPORT.md`](docs/current/STAGE_A_MASTER_REPORT.md)
 > and [`docs/current/STAGE_B_MASTER_REPORT.md`](docs/current/STAGE_B_MASTER_REPORT.md)
 > for the current **142/142** test count and current accuracy numbers.
-> (`PAKDD_STATUS_REPORT.md` was the prior redirect target; it is itself now
+> (`FedGRAA_STATUS_REPORT.md` — formerly `PAKDD_STATUS_REPORT.md` — was the prior redirect target; it is itself now
 > superseded — see [`docs/current/publication_roadmap.md`](docs/current/publication_roadmap.md)
 > as the single current entry point.) Kept for historical record of the
 > regression and its diagnosis.

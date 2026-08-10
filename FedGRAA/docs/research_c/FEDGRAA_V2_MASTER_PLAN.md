@@ -827,7 +827,7 @@ An Application Control policy has blocked this file.
 
 | Component | Version | Satisfies `requirements.txt` |
 |---|---|---|
-| Interpreter | `C:\Dev\Research\PAKDD\.venv313` — **unchanged from Stage A/B** | — |
+| Interpreter | `C:\Dev\FedGRAA\FedGRAA\.venv313` — **unchanged from Stage A/B** | — |
 | Python | 3.13.14 | ✅ (3.9–3.13 per the TF constraint) |
 | TensorFlow | 2.21.0 | ✅ `>=2.21.0` |
 | NumPy | 2.5.1 | ✅ `>=1.24` |

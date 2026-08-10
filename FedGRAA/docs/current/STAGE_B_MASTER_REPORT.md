@@ -1,4 +1,4 @@
-# FedGRAA / PAKDD — Stage B Master Report
+# FedGRAA — Stage B Master Report
 
 ### The complete, self-contained record of the convergence-defect campaign: the formal theory, the executed 10-seed factorial, every per-seed number, every significance test, every artifact, and every honest limitation.
 
@@ -837,7 +837,7 @@ The manifest lists the ~70-file per-seed diagnostic families as **plain-text sho
 ### 18.2 The complete runbook, as executed
 
 ```bash
-cd /c/Dev/Research/PAKDD
+cd /c/Dev/FedGRAA/FedGRAA
 
 # Phase 1 — code (no compute).  fedgraa/stats.py, the driver, builder, renderer,
 # checker, and four test files.  Suite must be green before any compute.

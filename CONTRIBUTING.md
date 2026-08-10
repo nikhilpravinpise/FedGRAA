@@ -7,7 +7,7 @@ mismatch, or an unbacked claim.
 ## Before opening a PR
 
 Every project in this repo keeps its own verification suite. For
-[`PAKDD/`](PAKDD/), run all of these from `PAKDD/` and make sure they exit 0:
+[`FedGRAA/`](FedGRAA/), run all of these from `FedGRAA/` and make sure they exit 0:
 
 ```powershell
 .venv313\Scripts\python.exe -m pytest tests --tb=short

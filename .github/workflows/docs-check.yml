@@ -22,17 +22,17 @@ jobs:
           # environment's version when bumping.
           python-version: "3.13.14"
 
-      - name: Check PAKDD documentation links
-        run: python PAKDD/scripts/check_doc_links.py
+      - name: Check FedGRAA documentation links
+        run: python FedGRAA/scripts/check_doc_links.py
 
       - name: Byte-compile all Python sources (syntax check)
-        run: python -m compileall -q PAKDD/fedgraa PAKDD/scripts PAKDD/tests
+        run: python -m compileall -q FedGRAA/fedgraa FedGRAA/scripts FedGRAA/tests
 
   stage-gates:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: PAKDD
+        working-directory: FedGRAA
     steps:
       - uses: actions/checkout@v4
 

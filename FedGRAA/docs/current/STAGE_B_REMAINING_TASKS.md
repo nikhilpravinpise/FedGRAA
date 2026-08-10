@@ -38,7 +38,7 @@ This is the only substantive work remaining. Everything below is copy-paste read
 ### 2.1 Run the four factorial arms, both datasets, seeds 0–9
 
 ```bash
-cd /c/Dev/Research/PAKDD
+cd /c/Dev/FedGRAA/FedGRAA
 
 # CIC-IDS-2017: worker-capped at 3 (stage_b_plan.md §3 — each CIC run loads a
 # 1.46 GB array; 3 concurrent keeps peak RAM under ~11 GB with headroom).

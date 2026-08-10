@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo '========================================'
-echo '  PAKDD GPU Setup — run inside WSL'
+echo '  FedGRAA GPU Setup — run inside WSL'
 echo '========================================'
 
 echo '[1/8] Updating packages...'
@@ -19,8 +19,8 @@ echo '[3/8] Installing Python 3.13 via uv...'
 uv python install 3.13
 
 echo '[4/8] Copying project to WSL2...'
-cp -r /mnt/c/Dev/Research/PAKDD ~/PAKDD
-cd ~/PAKDD
+cp -r /mnt/c/Dev/FedGRAA/FedGRAA ~/FedGRAA
+cd ~/FedGRAA
 
 echo '[5/8] Creating .venv313...'
 uv venv .venv313 --python 3.13
@@ -52,6 +52,6 @@ echo '========================================'
 echo '  Setup complete! Verify with:'
 echo '========================================'
 echo ''
-echo '  cd ~/PAKDD'
+echo '  cd ~/FedGRAA'
 echo '  source .venv313/bin/activate'
 echo '  python3 -c "exec(open(\"fix_gpu_import.py\").read()); import tensorflow as tf; print(tf.config.list_physical_devices(\"GPU\"))"'

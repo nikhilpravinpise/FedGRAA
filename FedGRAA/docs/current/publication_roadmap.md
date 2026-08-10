@@ -23,7 +23,7 @@ Stages A, B, and C (B+D+T7) all complete and all nine CI gates green.
 
 ## 1. Where things stand
 
-**Stages A and B are both complete, gated, and independently audited.** A faithful, Keras-based reimplementation of FedGRAA lives in `PAKDD/fedgraa/`, with **142/142 tests passing** and both datasets (CIC-IDS-2017, UNSW-NB15) independently verified as genuine, canonical data — see `../audit/data_provenance_audit.md`. Every deliberate deviation from the paper is logged in `../archive/strict_reproduction_report.md`. Stage A's capstone is [`STAGE_A_MASTER_REPORT.md`](STAGE_A_MASTER_REPORT.md); Stage B's is [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md). Four gates guard them — two completeness (`check_stage_a_complete.py`, `check_stage_b_complete.py`) and two correctness (`audit_stage_a.py`, `audit_stage_b.py`).
+**Stages A and B are both complete, gated, and independently audited.** A faithful, Keras-based reimplementation of FedGRAA lives in `FedGRAA/fedgraa/`, with **142/142 tests passing** and both datasets (CIC-IDS-2017, UNSW-NB15) independently verified as genuine, canonical data — see `../audit/data_provenance_audit.md`. Every deliberate deviation from the paper is logged in `../archive/strict_reproduction_report.md`. Stage A's capstone is [`STAGE_A_MASTER_REPORT.md`](STAGE_A_MASTER_REPORT.md); Stage B's is [`STAGE_B_MASTER_REPORT.md`](STAGE_B_MASTER_REPORT.md). Four gates guard them — two completeness (`check_stage_a_complete.py`, `check_stage_b_complete.py`) and two correctness (`audit_stage_a.py`, `audit_stage_b.py`).
 
 **The central finding is a real, defensible result.** The paper's Algorithm 2 has no simplex projection on the aggregation weight vector `w`. On real data, `w` leaves the probability simplex in round 1, at every γ, on both datasets — causing the composite loss to blow up and rare-class accuracy to collapse to 0% (vs. the paper's claimed ~88%). This is fully diagnosed, not just observed, in `fedgraa_divergence_diagnosis.md`, and formalized with a corrected convergence proposition in [`fedgraa_convergence_defect.md`](fedgraa_convergence_defect.md) §4. The defect holds on **60/60** literal-arm cells at 10 seeds, and the corrected algorithm's feasibility prediction holds on **60/60**. A minimal fix — simplex projection + η′=0.01 instead of 0.1 — is validated across a 10-seed, 2×2 factorial, dual-metric ablation on both datasets, and is deliberately kept diagnostic-only rather than silently merged into the strict-reproduction baseline.
 
@@ -85,7 +85,7 @@ is the current gap list, not the 2026-07-25 one.)*
   gap from the original list still stands: FedProx/FedOpt/the static
   distribution-aware baseline (`../../fedgraa/baselines.py`) remain
   implemented but **never run head-to-head** against FedGRAA (confirmed
-  still true — `PAKDD/README.md`'s own `--baselines` flag description says
+  still true — `FedGRAA/README.md`'s own `--baselines` flag description says
   so explicitly), and AFL/q-FedAvg/FedAdp specifically (flagged
   "must-have" by `../../understanding/10_SOTA_adaptive_aggregation.md`)
   were not part of the competitor set actually run.

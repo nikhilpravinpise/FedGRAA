@@ -9,7 +9,7 @@ without either gate noticing (F6 in the verification audit).
 Also checks raw HTML ``<img src="...">`` tags, not just markdown
 ``![]()``/``[]()`` syntax: READMEs that center or size-constrain an image
 via ``<p align="center"><img src="..." width="...%"></p>`` (used for the
-Stage A/B result figures embedded in the root and ``PAKDD/README.md``) would
+Stage A/B result figures embedded in the root and ``FedGRAA/README.md``) would
 otherwise have their image paths silently unchecked by this script -- the
 same class of blind spot R6/R10 exists to close, just for HTML instead of
 markdown syntax.

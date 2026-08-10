@@ -5,14 +5,13 @@ message: >-
   this repository.
 type: software
 title: >-
-  Research: Independent Reproductions of Published ML Papers (FedGRAA /
-  FedGRAA-v2)
+  FedGRAA: Independent Reproduction and Extension of a Published ML Paper
 authors:
   - family-names: Pise
     given-names: Nikhil Pravin
     alias: N1KH1LT0X1N
-repository-code: https://github.com/N1KH1LT0X1N/Research
-url: https://github.com/N1KH1LT0X1N/Research
+repository-code: https://github.com/N1KH1LT0X1N/FedGRAA
+url: https://github.com/N1KH1LT0X1N/FedGRAA
 license: MIT
 date-released: "2026-08-08"
 keywords:
