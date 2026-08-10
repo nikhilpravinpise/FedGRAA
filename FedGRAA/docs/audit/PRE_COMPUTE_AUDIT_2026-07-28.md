@@ -997,7 +997,14 @@ can be finished, not merely started.
    "campaign path verified" distinction (§6.2).
 9. ✅ **DONE — Landed T-14/15/16/17 (M1)**, not withdrawn — and doing so found the `paired_ttest` bug; either is fine, the current
    state is not.
-10. ✅ **DONE (M2, M8, M9)** · ⏳ **M7 open** — Fix M2, M7, M8, M9 — small, and M7 is a live CI flake.
+10. ✅ **DONE (M2, M7, M8, M9)** — Fix M2, M7, M8, M9 — small, and M7 was a live CI flake.
+    M7 closed 2026-08-10: `tests/test_aggregation.py`'s
+    `test_fedgraa_weight_gradient_matches_finite_difference` widened from
+    `atol=5e-3` to `atol=1e-2`, with margin over the `0.00537` non-AVX512
+    noise floor this audit measured. `ubuntu-latest`'s CPU generation is
+    still unpinned, so this remains a measured hardware property to
+    disclose in Limitations (§6.5's cross-cell-noise point), not something
+    CI pinning can eliminate outright -- but it no longer flakes CI.
 
 ### Phase 3 — T4 (needs decisions, not just code)
 
