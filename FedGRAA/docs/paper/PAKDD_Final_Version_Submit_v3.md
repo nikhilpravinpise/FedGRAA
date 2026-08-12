@@ -19,6 +19,16 @@
 > corrected resubmission's bibliography
 > ([`FedGRAA_v2_PAKDD_Submission.md`](FedGRAA_v2_PAKDD_Submission.md)) does
 > not carry this entry forward.
+>
+> **Transcription-fidelity note added 2026-08-13, without altering the
+> frozen text below:** this file is itself an LLM-based PDF→MD conversion
+> of the submitted paper, and that conversion tool fabricated ~900 numeric
+> table cells that do not exist in the source PDF (full account:
+> [`../audit/PDF_MD_FIDELITY_AND_CONTAMINATION_AUDIT_2026-08-13.md`](../audit/PDF_MD_FIDELITY_AND_CONTAMINATION_AUDIT_2026-08-13.md)).
+> A transcription-fidelity-corrected copy of this draft's *content* —
+> figures restored, fabricated tables removed — is available at
+> [`../paper-files/PAKDD_Final_Version_Submit_v3_CORRECTED.md`](../paper-files/PAKDD_Final_Version_Submit_v3_CORRECTED.md);
+> it does not resolve the peer-review concerns above.
 
 # Federated Gradient-Refined Adaptive Averaging for Intrusion Detection Systems
 

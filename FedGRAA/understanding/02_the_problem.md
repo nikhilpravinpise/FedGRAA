@@ -49,7 +49,7 @@ So when the server builds the global model, the Heartbleed client's contribution
 
 Formally (the paper's wording): the global model $\theta_g^{t+1}$ tends to approximate the model of whichever client $j$ has the largest $|D_j|$. The big clients win; the rare-attack clients are drowned out.
 
-**Consequence:** FedAvg gets near **0% accuracy on the rare attack classes** — you can see this in the result tables, where the "FedAvg (Last n classes)" column is `0.00` everywhere.
+**Consequence:** FedAvg gets near **0% accuracy on the rare attack classes** — you can see this in the paper's real chart images (Figure 1): the FedAvg series sits at or near zero on the rare-class panels throughout training.
 
 ## 2.4 The second symptom: slow / unstable convergence
 
