@@ -1,9 +1,9 @@
 > ⚠️ **SUPERSEDED, 2026-08-02.** This draft was reviewed by a simulated peer
-> panel and rejected — see [`FedGRAA_Simulated_Peer_Review.md`](FedGRAA_Simulated_Peer_Review.md).
+> panel and rejected — see [`FedGRAA_Simulated_Peer_Review.md`](../paper/FedGRAA_Simulated_Peer_Review.md).
 > Every required revision that review names (missing simplex projection,
 > the convexity-vs-non-convex-architecture contradiction, single-run/
 > unseeded results, missing adaptive-aggregation baselines) is resolved in
-> the corrected resubmission: [`FedGRAA_v2_PAKDD_Submission.md`](FedGRAA_v2_PAKDD_Submission.md).
+> the corrected resubmission: [`FedGRAA_v2_PAKDD_Submission.md`](../paper/FedGRAA_v2_PAKDD_Submission.md).
 > Kept here, unedited, as the original draft the review and the correction
 > both respond to — do not cite numbers from this version.
 >
@@ -17,7 +17,7 @@
 > citation ("FedSND") elsewhere in this same draft's lineage. This entry
 > was never independently re-verified as real; do not cite it. The
 > corrected resubmission's bibliography
-> ([`FedGRAA_v2_PAKDD_Submission.md`](FedGRAA_v2_PAKDD_Submission.md)) does
+> ([`FedGRAA_v2_PAKDD_Submission.md`](../paper/FedGRAA_v2_PAKDD_Submission.md)) does
 > not carry this entry forward.
 
 > **Conversion-fidelity note (this file only).** This is a corrected re-conversion of
