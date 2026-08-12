@@ -220,21 +220,20 @@ of how faithful any reproduction's code is to the paper's methodology — a
 distinct concern from every other item in this report, which are all about
 method ambiguity rather than data authenticity.
 
-## 9. Figures 2–3's per-round tables show implausibly static values over long stretches — SUSPICIOUS DATA (weaker)
+## 9. [RETRACTED 2026-08-13] Per-round tables show implausibly static values — was based on a PDF→MD conversion hallucination
 
-In Figure 1's full per-round table (γ=0/0.5/1, n=3), several columns are
-**exactly** flat for 60–100+ consecutive rounds (e.g., CIC "Static (All
-classes)" stays at exactly `0.44` from round 60 through round 200 in the γ=0
-panel; "Static (Last n classes)" stays at exactly `0.88` for rounds 20–100).
-Neural network accuracy on held-out validation data during continued training
-essentially never freezes to the same 2-decimal value across dozens of
-evaluation checkpoints with zero fluctuation, even after convergence,
-because mini-batch stochasticity and the specific validation sample
-composition should produce at least small round-to-round noise. This is a
-milder version of finding 8 above (round two-decimal values, suspiciously
-static plateaus) and reinforces the same underlying concern: **at least some
-of the paper's reported numbers do not have the statistical texture of raw
-measured training curves.**
+*Original finding, dated 2026-07-10, retracted 2026-08-13. The "per-round
+table" this finding analyzed does not exist in the source PDF. It was
+fabricated by the llamaparse PDF→MD conversion tool: ~870–936 invented
+numeric cells across three HTML tables purporting to give exact per-round
+accuracy values for Figures 1–3. The PDF's actual Figures 1–3 are plotted
+raster line charts with only axis tick labels — no per-round numeric
+values, real or otherwise, exist to freeze or not freeze. Full account:
+`docs/audit/PDF_MD_FIDELITY_AND_CONTAMINATION_AUDIT_2026-08-13.md`.*
+
+*Finding #8 above — the real, small 5-row comparison table's suspiciously
+round repeating-decimal values (66.66/88.88/77.77/33.33) — is separate,
+unaffected, confirmed present in the actual PDF, and stands unchanged.*
 
 ## 10. UNSW-NB15 genuinely does not support an "n=7 minority clients" experiment — CONTRADICTION with the paper's own data
 
