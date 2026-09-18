@@ -41,7 +41,7 @@ Overleaf fallback (zero local install): zip `report.tex`, `references.bib`, and
 the `figures/` folder, upload to a new Overleaf project, compile with pdfLaTeX
 (two passes for cross-references and the bibliography).
 
-Expected result: **36 PDF pages total** - title page, roman folios i-vii,
+Expected result: **36 PDF pages total** - title page, roman folios i-viii,
 arabic folios 1-25 (Chapter 1 through Bibliography), arabic 26-27 (Appendix A).
 The Chapter-1-to-Bibliography span is 25 arabic folios, inside the plan's
 20-25 target.
