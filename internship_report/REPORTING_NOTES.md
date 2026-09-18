@@ -48,16 +48,16 @@ The Chapter-1-to-Bibliography span is 25 arabic folios, inside the plan's
 
 ## 3. Layout decisions worth knowing
 
-- **Single spacing** (`\setstretch{1.0}`), `\footnotesize` tables, subfigure
-  merging, and a compressed bibliography keep the report inside the page
-  budget without dropping content. Loosening any of these pushes past 25
-  arabic folios.
+- **Near-single spacing** (`\setstretch{0.95}`), `\footnotesize` tables,
+  subfigure merging, and a compressed bibliography keep the report inside
+  the page budget without dropping content. Loosening any of these pushes
+  past 25 arabic folios.
 - The List of Figures and List of Tables share one page (the `\clearpage`
   between them is locally disabled).
 - Two side-by-side diagnosis plots live in one float (`fig:diagnosis`); the
   Stage B ablation is one stacked table for both datasets.
 - The bibliography uses `plain` style at `\footnotesize` with tightened item
-  spacing; all 41 entries are cited in the text.
+  spacing; all 43 entries are cited in the text.
 
 ## 4. Honest-reporting caveats (deliberate, do not "fix")
 
@@ -77,7 +77,8 @@ The Chapter-1-to-Bibliography span is 25 arabic folios, inside the plan's
 
 ## 5. Known non-defects
 
-- One residual `Overfull \hbox` of 0.21pt (~0.07 mm) - invisible.
+- The compile is clean: zero `Overfull`/`Underfull` boxes that affect the
+  text (one benign `badness 1348` underfull inside `report.bbl`, cosmetic).
 - `scripts/archive/gpu/test_gpu.py` fails collection on this CPU-only machine
   (it expects a CUDA build); it is an archived probe outside the `tests/`
   suite, not a regression.
