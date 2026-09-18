@@ -29,11 +29,13 @@ is final and traceable to a repository artifact (see Appendix A of the report).
 Local (used throughout this project):
 
 ```bash
-tectonic --outdir build report.tex
+mkdir -p build && tectonic --outdir build report.tex
 ```
 
-Tectonic resolves `references.bib`, runs BibTeX internally, and downloads any
-missing packages on first build. Output lands in `build/report.pdf`.
+`build/` is gitignored, so a fresh clone must create it first - tectonic does
+not create the output directory itself. Tectonic resolves `references.bib`,
+runs BibTeX internally, and downloads any missing packages on first build.
+Output lands in `build/report.pdf`.
 
 Overleaf fallback (zero local install): zip `report.tex`, `references.bib`, and
 the `figures/` folder, upload to a new Overleaf project, compile with pdfLaTeX
