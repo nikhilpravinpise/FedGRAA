@@ -103,7 +103,7 @@ This is to certify that the work contained in this internship report entitled
 Detection: Faithful Reproduction, Convergence Defect Diagnosis, and a
 Privacy-Compliant Extension (FedGRAA-v2)''}, submitted by \textbf{Nikhil
 Pravin Pise} (Roll No.: \ph{Roll No.}), \ph{Department}, \ph{Home
-Institution}, is a bonafide record of the research internship carried out by
+Institution}, is a bona fide record of the research internship carried out by
 him under the supervision of \ph{Professor Name}, \ph{Department}, Indian
 Institute of Technology Guwahati, and the day-to-day mentorship of
 \ph{Mentor Name}, during the period \ph{Start Date} to \ph{End Date}.
@@ -149,26 +149,24 @@ in the accompanying repository.
 % PLACEHOLDER-ABSTRACT (numbers verified against results/ artifacts)
 \noindent
 This report documents a research internship on federated-learning intrusion
-detection: faithfully reproduce the FedGRAA adaptive-aggregation method,
-explain any divergence from its reported results, correct its convergence
-theory, and design a privacy-compliant extension. Reproducing the printed
-algorithm exactly, I measured 0.00\% rare-class accuracy on CIC-IDS-2017
-against the manuscript's claimed 88.88\% (33.33\% reproduced on UNSW-NB15
-against 21.09\% claimed). A mechanistic diagnosis traced the divergence to a
-missing simplex-projection step: the learned aggregation weight leaves the
-probability simplex in round 1 in all 120 unprojected cells, turning the
-aggregation into unbounded affine extrapolation and violating the paper's own
-convergence lemma. A minimal two-part correction recovers 89.3\%/69.2\%
-rare-class accuracy, and the guarantee was restated as gradient-mapping
-stationarity $O(1/T)+O(\zeta^2)$ under a Polyak-{\L}ojasiewicz condition. The
-extension, FedGRAA-v2, removes the design's two privacy violations through a
-secure-aggregation protocol reconstructing the exact composite-loss gradient,
-reaching 93.47\%/69.66\% rare-class accuracy across 960 cells at
-6.00$\times$-to-3.00$\times$ communication cost, with 111/112 paired
-significance tests rejecting the null. An adversarial evaluation shows the
-same up-weighting mechanism is exploitable and that successfully defended
-cells collapse rare-class recall to near 0\% - a trade-off none of the
-evaluated defenses avoids.
+detection: reproduce the FedGRAA adaptive-aggregation method, explain its
+divergence from reported results, correct its convergence theory, and design
+a privacy-compliant extension. Reproducing the printed algorithm exactly
+measured 0.00\% rare-class accuracy on CIC-IDS-2017 against the claimed
+88.88\% (33.33\% versus 21.09\% on UNSW-NB15). Diagnosis traced the
+divergence to a missing simplex projection: the learned weight leaves the
+probability simplex at round 1 in all 120 unprojected cells, turning
+aggregation into unbounded affine extrapolation and voiding the paper's own
+lemma. A two-part correction recovers 89.3\%/69.2\%, and the guarantee was
+restated as gradient-mapping stationarity $O(1/T)+O(\zeta^2)$ under a
+Polyak-{\L}ojasiewicz condition. The privacy-compliant extension,
+FedGRAA-v2, reconstructs the exact composite gradient via secure
+aggregation, reaching 93.47\%/69.66\% rare-class recall across 960 cells at
+6.00$\times$-to-3.00$\times$ communication cost, 111/112 paired tests
+significant. Adversarial evaluation shows the same up-weighting is
+exploitable (attackers reach 3.3$\times$ uniform weight) and that
+successfully defended cells collapse rare-class recall to 0\% (30/30 CIC,
+19/30 UNSW) - a trade-off no evaluated defense avoids.
 
 % ---------------- TOC / LoF / LoT ----------------
 {\hypersetup{linkcolor=black}
@@ -186,19 +184,21 @@ evaluated defenses avoids.
 \chapter*{Nomenclature}
 \phantomsection\addcontentsline{toc}{chapter}{Nomenclature}
 \thispagestyle{plain}
+\begingroup\footnotesize
 
 \noindent\textbf{Roman capitals}
 \begin{center}
 \begin{tabular}{@{}p{0.18\textwidth}p{0.76\textwidth}@{}}
 $B$ & client mini-batch size (64)\\
-$D_k$, $|D_k|$ & client $k$'s local dataset and its size\\
+$C$ & number of classes (15 CIC-IDS-2017; 10 UNSW-NB15)\\
+$D_k$, $|D_k|$, $|D|$ & client $k$'s local dataset, its size, and the pooled size\\
 $D_V$; $D_V^{h,m,n}$ & held-out validation data; pooled set and head/median/rare-class strata\\
 $E$, $E'$ & local training epochs (2); weight-refinement inner epochs (5)\\
 $G_{\eta'}(w)$ & projected gradient mapping at step size $\eta'$\\
 $K$ & number of participating clients (14 CIC-IDS-2017; 9 UNSW-NB15)\\
-$L_k$ & client $k$'s local loss\\
-$L_h$, $L_m$, $L_u$ & validation losses on the head, median, and rare-class strata\\
 $L_a$ & common-class loss, the lower of the two common strata, $\min(L_h,L_m)$\\
+$L_h$, $L_m$, $L_u$ & validation losses on the head, median, and rare-class strata\\
+$L_k$ & client $k$'s local loss\\
 $\Lprime$ & composite objective $(1-\gamma)L_a+\gamma L_u$\\
 $P$, $P_k$ & flattened model parameters; client $k$'s contribution\\
 $S_t$ & client set selected at round $t$\\
@@ -216,7 +216,8 @@ $m$ & gradient-refresh interval for the federated backward pass\\
 $n$ & number of protected rare classes (3)\\
 $n_{\mathrm{arm}}$, $n_n$ & SecAgg-pooled counts of the common and rare strata\\
 $n_{\mathrm{arm},k}$, $n_{n,k}$ & client $k$'s own counts in those strata\\
-$t$ & SecAgg reconstruction threshold (default $\lfloor K/2\rfloor+1$)\\
+$t$ & communication-round index; also the SecAgg reconstruction threshold
+(default $\lfloor K/2\rfloor+1$)\\
 $w$, $w_k$ & learned aggregation-weight vector; client $k$'s weight\\
 \end{tabular}
 \end{center}
@@ -224,11 +225,15 @@ $w$, $w_k$ & learned aggregation-weight vector; client $k$'s weight\\
 \noindent\textbf{Greek letters}
 \begin{center}
 \begin{tabular}{@{}p{0.18\textwidth}p{0.76\textwidth}@{}}
+$\alpha$ & significance level of the Holm-corrected tests (0.05)\\
 $\beta_{\mathrm{eff}}$ & effective smoothness constant of the composite objective\\
 $\gamma$ & personalization coefficient trading common-class vs rare-class loss\\
 $\simplex$ & probability simplex $\{w\in\mathbb{R}^K:w_k\ge0,\sum_k w_k=1\}$\\
 $\varepsilon$, $\delta$ & differential-privacy budget parameters\\
 $\zeta$, $\tilde{\zeta}$ & inexactness bound of the gradient oracle; its measured value\\
+$\zeta_{\mathrm{stale}}$, $\zeta_{\mathrm{secagg}}$, $\zeta_{\mathrm{dp}}$,
+$\zeta_{\mathrm{dropout}}$ & inexactness components: refresh staleness,
+SecAgg quantization, DP noise, client dropout\\
 $\eta$, $\eta'$ & client learning rate (0.01); weight learning rate (0.1 literal, 0.01 corrected)\\
 $\eta_{\mathrm{fake}}$ & attacker fake-update step size in the signature attack\\
 $\theta_g$, $\theta_k$ & global model parameters; client $k$'s local parameters\\
@@ -253,6 +258,7 @@ PL & Polyak-{\L}ojasiewicz (condition)\\
 SecAgg & secure aggregation\\
 \end{tabular}
 \end{center}
+\endgroup
 
 \clearpage
 \pagenumbering{arabic}
@@ -439,7 +445,8 @@ FedAvg \cite{mcmahan2017fedavg}:
 \end{algorithm}
 
 The global objective is the size-weighted average of local losses,
-$L(\theta)=\sum_k (|D_k|/|D|)L_k(\theta)$. Under Eq.~\eqref{eq:fedavg} a
+$L(\theta)=\sum_k (|D_k|/|D|)L_k(\theta)$. Algorithm~\ref{alg:fedavg}
+states the round loop FedGRAA modifies; under Eq.~\eqref{eq:fedavg} a
 client's influence on $\theta_g$ is \emph{exactly} proportional to $|D_k|$.
 Under non-IID data - in particular when the classes that matter most are held
 by the smallest-data clients - this systematically dilutes their contribution.
@@ -490,8 +497,8 @@ CELM's own abstract restates the concern. This is a known, common, fixable
 shortcut across the adaptive-aggregation literature, not a defect specific to
 FedGRAA.
 
-\section{Classic optimizers and poisoning defenses}
-\label{sec:poisoning}
+\section{Classic optimizers}
+\label{sec:classic-opts}
 
 FedAvg \cite{mcmahan2017fedavg}, FedProx \cite{fedprox}, FedOpt
 \cite{reddi2021fedopt}, SCAFFOLD \cite{scaffold} and FedNova \cite{fednova}
@@ -499,6 +506,9 @@ are the field-standard, non-personalization-aware optimizers: they correct
 systems and statistical heterogeneity in the generic sense, but none carries
 an explicit rare-class objective, and they are evaluated here as context
 rather than as the primary competitor set.
+
+\section{Poisoning attacks and defenses}
+\label{sec:poisoning}
 
 FL's openness creates a poisoning surface: malicious clients can submit
 label-flipped or directly model-poisoned updates (the ``pill'' attack of Guo
@@ -592,7 +602,11 @@ Algorithm~\ref{alg:fedgraa-printed} states the weight update \emph{as
 printed} in the reproduced manuscript, including the Adam optimizer the
 manuscript's own experimental section specifies for both the client update
 and the weight update (confirmed by its correction note and by the reference
-implementation, which labels this line ``Adam step on $w$ (eq.~10)'').
+implementation, which labels this line ``Adam step on $w$ (eq.~10)''). The
+reproduction resolves 17 documented ambiguities in the printed text -
+contradictions, undefined terms and underspecified rules - each by the
+code-level reading rather than by assumption, per the project's
+paper-ambiguity audit (\texttt{docs/current/PAPER\_AMBIGUITY\_REPORT.md}).
 
 \begin{algorithm}[htbp]
 \caption{FedGRAA weight update - as printed (defective)}
@@ -828,7 +842,7 @@ depending on $\gamma$ and dataset.
 The federated backward pass costs additional communication: at
 gradient-refresh interval $m$ the traffic multiplier is exactly
 \begin{equation}
-\bigl(1+\lceil E'/m \rceil\bigr)\times
+M(m) \;=\; 1+\lceil E'/m \rceil
 \label{eq:overhead}
 \end{equation}
 relative to a plain FedAvg-shaped baseline - $6.00\times$ at $m=1$,
@@ -916,9 +930,9 @@ and 95\% percentile bootstrap intervals over $10{,}000$ resamples.\par}
 
 Three campaigns are reported. Stage~A re-ran the published 200-round
 $\gamma$ and $n$ sweeps literally, seed~0. Stage~B ran a 60-round, 10-seed
-factorial ablation over $\{\text{projection}, \eta' \text{ cut}\} \times
-\{\text{CIC}, \text{UNSW}\} \times \gamma \in \{0, 0.5, 1\}$ - 240 diagnostic
-cells plus 40 baseline runs. Stage~C ran the FedGRAA-v2 frontier: 960
+factorial ablation over $\{\text{projection}, \eta' \text{ cut to } 0.01\}
+\times \{\text{CIC}, \text{UNSW}\} \times \gamma \in \{0, 0.5, 1\}$ - 240
+diagnostic cells plus 40 baseline runs. Stage~C ran the FedGRAA-v2 frontier: 960
 cells = an 830-cell main grid (24 arms $\times$ 2 datasets $\times$ 10
 seeds plus T2/T4/T6 extensions), a 90-cell adversarial grid (T7) and a
 40-cell attacker-side $\gamma$ sweep (T7G). The main grid and adversarial
@@ -939,7 +953,25 @@ versus a claimed 88.88\% on CIC at $\gamma = 1$, and 33.33\% versus a
 claimed 21.09\% on UNSW - while the corrected implementation (projection
 plus the reduced $\eta' = 0.01$, evaluated on three seeds in Stage~A)
 meets or exceeds the claim on both, at $94.44\% \pm 3.93\%$ and
-$74.79\% \pm 1.99\%$ respectively.
+$74.79\% \pm 1.99\%$ respectively (Table~\ref{tab:claims}).
+
+\begin{table}[htbp]
+  \centering
+  \caption{Paper's printed rare-class accuracy claim versus the literal and
+  corrected reproductions at $\gamma = 1$ (literal: Stage A seed 0;
+  corrected: Stage A, three seeds). The UNSW literal arm nominally exceeds
+  the claim while its composite loss diverges - see \S\ref{sec:diagnosis}.}
+  \label{tab:claims}
+  \footnotesize
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    Dataset & Printed claim & Literal & Corrected (proj.\ $+\ \eta'{=}0.01$)\\
+    \midrule
+    CIC-IDS-2017 & 88.88\% & 0.00\%  & $94.44\% \pm 3.93\%$\\
+    UNSW-NB15    & 21.09\% & 33.33\% & $74.79\% \pm 1.99\%$\\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 The full 200-round $\gamma$ sweep (Figure~\ref{fig:gamma-sweeps}) shows
 that the literal failure is not confined to
@@ -1073,7 +1105,30 @@ count is \textbf{0}. Terminal $\sum_k w_k$ spans $[-2.621, +2.774]$ on CIC
 and $[-1.869, +2.118]$ on UNSW, with $\min_k w_k$ reaching $-0.908$ and
 $-1.157$ respectively; under projection the maximum observed
 $|\sum_k w_k - 1|$ is $5.96 \times 10^{-8}$ (CIC) and $1.19 \times 10^{-7}$
-(UNSW), i.e.\ float32 rounding noise.
+(UNSW), i.e.\ float32 rounding noise (Table~\ref{tab:simplex-violation}).
+
+\begin{table}[htbp]
+  \centering
+  \caption{Simplex-violation summary over the Stage B factorial cells (per
+  dataset: 60 unprojected, 60 projected). $\min_k w_k < 0$ means the iterate
+  left the simplex entirely, not merely the unit-sum plane.}
+  \label{tab:simplex-violation}
+  \footnotesize
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+     & \multicolumn{2}{c}{Unprojected} & \multicolumn{2}{c}{Projected}\\
+    \cmidrule(lr){2-3}\cmidrule(l){4-5}
+    Metric & CIC & UNSW & CIC & UNSW\\
+    \midrule
+    Round-1 violating cells & 60/60 & 60/60 & 0/60 & 0/60\\
+    Terminal $\sum_k w_k$ range & $[-2.621,2.774]$ & $[-1.869,2.118]$
+      & \multicolumn{2}{c}{$\approx 1$}\\
+    $\min_k w_k$ & $-0.908$ & $-1.157$ & \multicolumn{2}{c}{$\ge 0$}\\
+    $\max |\sum_k w_k - 1|$ & \multicolumn{2}{c}{unbounded}
+      & $5.96\!\times\!10^{-8}$ & $1.19\!\times\!10^{-7}$\\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 Figure~\ref{fig:diag-loss} shows the mechanism in action on the CIC
 $\gamma = 1$ seed-0 literal run: the composite loss trace $2.98 \to 2.77 \to
@@ -1120,7 +1175,7 @@ a trajectory that essentially never occurs, in either direction.
 \label{sec:stageb}
 
 The Stage B ablation (Table~\ref{tab:ablation},
-Figures~\ref{fig:ablation-cic} and \ref{fig:ablation-unsw}) separates the
+Figure~\ref{fig:ablation}) separates the
 two candidate levers: projection onto $\Delta$, and the learning-rate cut
 $\eta': 0.1 \to 0.01$. Three findings survive every comparison.
 
@@ -1263,20 +1318,20 @@ RAGA, FedTruth), eight NIDS-specific or adaptive methods (FedMADE,
 SBFedNIDS, FedAPA, FedAWA, DA-PFL, FedAWARE, AdaAggRL, FedPGO) and five
 classic optimizers (FedAvg, FedProx, FedOpt, SCAFFOLD, FedNova - the last
 two built from scratch). Table~\ref{tab:frontier} and
-Figure~\ref{fig:frontier} summarize the frontier;
-Figure~\ref{fig:classic-fl} isolates the classic-optimizer comparison.
+Figure~\ref{fig:stagec-frontier} summarize the frontier and isolate the
+classic-optimizer comparison.
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{\textwidth}
+  \begin{subfigure}[b]{0.49\textwidth}
     \centering
-    \includegraphics[width=0.74\textwidth]{figures/frontier_figure.png}
+    \includegraphics[width=0.98\textwidth]{figures/frontier_figure.png}
     \caption{Frontier: rare-class recall versus total training traffic.}
     \label{fig:frontier}
-  \end{subfigure}
-  \begin{subfigure}[b]{\textwidth}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.49\textwidth}
     \centering
-    \includegraphics[width=0.74\textwidth]{figures/classic_fl_comparison.png}
+    \includegraphics[width=0.98\textwidth]{figures/classic_fl_comparison.png}
     \caption{Against the five classic federated optimizers.}
     \label{fig:classic-fl}
   \end{subfigure}
@@ -1307,7 +1362,10 @@ Figure~\ref{fig:classic-fl} isolates the classic-optimizer comparison.
     SCAFFOLD & 0.934 & 31.67\% [17.50, 46.39] & 30.04\% & -- \\
     FLTrust & 0.934 & 17.22\% [8.89, 26.67] & 70.50\% & -- \\
     FedPGO & 0.934 & 6.76\% [6.22, 7.14] & 51.45\% & -- \\
-    FedAvg / FedProx / FedOpt / FedNova & 0.934 & 0.00\% each & 54.9--81.3\% & -- \\
+    FedAvg & 0.934 & 0.00\% & 59.54\% & -- \\
+    FedProx & 0.934 & 0.00\% & 79.50\% & -- \\
+    FedOpt & 0.934 & 0.00\% & 81.30\% & -- \\
+    FedNova & 0.934 & 0.00\% & 54.96\% & -- \\
     10 further baselines & 0.934 & $\le$ 6.58\% each (FedAPA) & -- & -- \\
     \midrule
     \multicolumn{5}{@{}l}{\emph{UNSW-NB15}}\\
@@ -1321,7 +1379,9 @@ Figure~\ref{fig:classic-fl} isolates the classic-optimizer comparison.
     DA-PFL & 0.485 & 13.25\% [12.81, 13.69] & 54.59\% & -- \\
     CoAst & 0.485 & 6.97\% [1.57, 13.25] & 53.83\% & -- \\
     FedNova & 0.485 & 4.62\% [0.00, 11.43] & 57.90\% & -- \\
-    FedAvg / FedProx / FedOpt & 0.485 & $\le$ 1.33\% each & -- & -- \\
+    FedProx & 0.485 & 1.33\% & 64.91\% & -- \\
+    FedOpt & 0.485 & 0.44\% & 66.38\% & -- \\
+    FedAvg & 0.485 & 0.00\% & 56.54\% & -- \\
     11 further baselines & 0.485 & $\le$ 10.9\% each (FedPGO) & -- & -- \\
     \bottomrule
   \end{tabular}
@@ -1581,8 +1641,10 @@ projected gradient mapping, a strictly weaker and honest statement.
 Three consequences emerge only when the Stage C results are read together
 rather than as independent tables.
 
-\paragraph{The $\gamma$ trade-off and the attack surface are the same
-mechanism.} FedGRAA deliberately up-weights the clients whose updates most
+\subsection{The $\gamma$ trade-off and the attack surface are the same
+mechanism}
+
+FedGRAA deliberately up-weights the clients whose updates most
 reduce the rare-class-sensitive composite loss; Section~\ref{sec:adversarial}
 shows an adversary exploits exactly that scoring rule, because a fabricated
 rare-class signature is, to the weight learner, indistinguishable from a
@@ -1596,7 +1658,9 @@ reading - the rare-class signal the attack rides on is reliably present only
 above some $\gamma$ - but the 3-point, 2-fraction, 2-dataset grid is not
 powered to confirm it, so it is stated as a hypothesis, not a result.
 
-\paragraph{No evaluated defense is free.} The two external defenses stop the
+\subsection{No evaluated defense is free}
+
+The two external defenses stop the
 attack only by discarding the signal FedGRAA-v2 exists to amplify: once
 SecFedNIDS or WeiDetect filters a client set it falls back to
 \emph{unweighted} averaging of the survivors, abandoning rare-class-sensitive
@@ -1607,7 +1671,9 @@ win; neither paper reports the trade-off because neither targets a
 rare-class-sensitive aggregator. A filter that preserves the up-weighting
 is, to our knowledge, open.
 
-\paragraph{Exactness has a non-obvious price point.} The interesting answer
+\subsection{Exactness has a non-obvious price point}
+
+The interesting answer
 to ``is exactness worth it'' is not the $6.00\times$ headline at $m = 1$ but
 $m = 3$: the cost halves to $3.00\times$ while rare-class recall
 \emph{improves} (93.47\% vs.\ 88.06\% CIC; 69.66\% vs.\ 65.48\% UNSW), the
@@ -1654,6 +1720,14 @@ finding, and the test-count snapshots that differ across stage boundaries.
 Where the counts differ, each number is attributed to its snapshot rather
 than silently reconciled.
 
+\paragraph{Tooling is disclosed; decisions are attributed.} AI-assisted
+tooling was used under the intern's direction, with the standing rule that
+no number is taken from any document - including AI-generated audit prose -
+without re-derivation from artifacts. Decision classes are also separated
+explicitly: engineering calls defended in code (projection, $\eta'$, test
+bounds) versus research-direction calls deferred to the mentor (authorship,
+venue, scope).
+
 \section{Limitations and honest caveats}
 \label{sec:limitations}
 
@@ -1698,8 +1772,19 @@ than silently reconciled.
   not affect the algorithmic findings but blocks treating it as a peer
   artifact.
   \item \textbf{Known deviation.} Client-side Adam momentum persists across
-  all 200 rounds while client parameters reset each round - documented as
-  a deviation, orthogonal to the projection fix, and not corrected by it.
+  all 200 rounds while client parameters reset each round - flagged by the
+  project's independent code-versus-paper audit
+  (\texttt{docs/audit/INDEPENDENT\_FULL\_AUDIT\_2026-07-26.md}) as a
+  deviation, orthogonal to the projection fix, and not corrected by it.
+  \item \textbf{Reachable NaN edge path.} \texttt{composite\_loss()} and
+  \texttt{\_composite\_grad\_P()} handle NaN asymmetrically (confirmed by
+  direct interpreter test), and the ``both strata empty'' warning mislabels
+  a numerical blow-up as a partitioning edge case. No NaN appears in any
+  persisted trace, so no reported number is corrupted - but the path is
+  live, not hypothetical.
+  \item \textbf{UNSW $n = 7$ infeasibility.} Only five non-capped rare
+  classes exist, so the paper's printed $n = 7$ arm degenerates to the
+  $n = 5$ client set - reported as a divergence, not patched.
   \item \textbf{$\gamma$ is manual, not learned.} The common-versus-rare
   trade-off is set by a hand-chosen $\gamma$; Section~\ref{sec:adversarial}
   shows the attack surface itself is $\gamma$-sensitive (peaking near
@@ -1711,6 +1796,8 @@ than silently reconciled.
   a real cross-silo deployment (50-200 silos, genuinely heterogeneous
   organizations, on a corpus such as NF-UQ-NIDS-v2) is untested and the
   per-client-one-attack partition is an extreme, not representative, case.
+  The NF-UQ-NIDS-v2 migration exists only as the 50-cell T6 pre-Stage-C
+  benchmark, not inside the headline frontier grid.
   \item \textbf{Classic-optimizer theory gap.} The SCAFFOLD and FedNova
   baselines are run with the same Adam local solver as everything else for
   comparability, while their published convergence guarantees assume an SGD
@@ -1721,92 +1808,87 @@ than silently reconciled.
   the cryptographic protocol itself.
 \end{itemize}
 
-\section{Future work}
-\label{sec:future}
-
-The natural continuations, in roughly increasing order of scope: (i)
-referee-grade hardening of the corrected proposition - estimating
-$\beta_{\mathrm{eff}}$, a formal Clarke-subdifferential treatment of the
-$\min(\cdot,\cdot)$ arm selection, and an explicit $O(1/T)$ constant; (ii)
-a defense that stops poisoning \emph{without} discarding the rare-class
-signal - the filtering layer of Jiang et al.\ \cite{jiang2024} is the
-closest precedent, and
-the defended-cell collapse of Section~\ref{sec:adversarial} is precisely
-the gap it would need to close; (iii) real cross-silo evaluation on
-NF-UQ-NIDS-v2, for which the four-silo partitioner and the bounded-memory
-loader already exist (T6 runs the T1 grid at 4 clients); (iv) verifiable
-SecAgg to remove the honest-execution assumption; and (v) the project's
-documented Option A - a few-shot/prototype-guided hybrid combining
-FedGRAA's gradient refinement with prototype exchange - which the
-remaining-compute plan identifies as a second, independent novelty
-contribution but which is deliberately not started pending a design/theory
-document.
-
 % =====================================================================
 %  CHAPTER 6 -- CONCLUSION
 % =====================================================================
 \chapter{Conclusion}
 \label{ch:conclusion}
+\enlargethispage{2\baselineskip}
 
 {\sloppy
 This internship set out to reproduce, diagnose, correct, and extend a
 federated-learning intrusion-detection paper, and to evaluate the result
-under the statistical and adversarial scrutiny the original publication
-did not receive. Each of the five objectives closed with a measured
-answer.\par}
+under statistical and adversarial scrutiny the original did not receive.
+Each of the five objectives closed with a measured answer.\par}
 
 \textbf{O1 - Faithful reproduction.} The printed FedGRAA algorithm was
-implemented literally, with every documented ambiguity resolved by the
-code-level reading rather than patched over. The literal implementation
-reproduces none of the paper's headline numbers: 0.00\% versus a claimed
-88.88\% rare-class accuracy on CIC-IDS-2017 at $\gamma = 1$, and 33.33\%
-versus a claimed 21.09\% on UNSW-NB15 - the latter an inversion in which
-the reproduction beats the claim while its loss diverges.
+implemented literally, all 17 documented ambiguities resolved by the
+code-level reading. The literal implementation reproduces none of the
+paper's headline numbers: 0.00\% versus a claimed 88.88\% rare-class
+accuracy on CIC-IDS-2017 at $\gamma = 1$, and 33.33\% versus a claimed
+21.09\% on UNSW-NB15 - an inversion where the reproduction beats the
+claim while its loss diverges.
 
 \textbf{O2 - Diagnosis.} The failure is a missing Euclidean projection
-onto the probability simplex. The printed update is an unconstrained
-descent over $\mathbb{R}^K$ while the paper's own lemma assumes
-$w \in \Delta$; the iterate leaves the simplex at round~1 in 120 of 120
-unprojected cells, and the composite loss diverges by up to six orders of
-magnitude. The printed proof fails on three compounding grounds: convexity
-assumed for a non-convex tanh-MLP, no finite smoothness constant at the
-$\min(\cdot,\cdot)$ kink, and a tacit feasibility assumption nothing
-enforces.
+onto the simplex: the printed update descends over $\mathbb{R}^K$ while
+the paper's own lemma assumes $w \in \Delta$; the iterate leaves the
+simplex at round~1 in 120 of 120 unprojected cells, and the loss diverges
+by up to six orders of magnitude. The printed proof also fails on
+convexity assumed for a non-convex tanh-MLP, no finite smoothness at the
+$\min(\cdot,\cdot)$ kink, and the tacit feasibility assumption.
 
 \textbf{O3 - Corrected theory.} Projected subgradient descent
 $w^t = \Pi_\Delta(w^{t-1} - \eta' \partial L'(w^{t-1}))$ with
-$\eta' = 0.01$ restores feasibility structurally - 0 of 120 projected cells
-violate - and the corrected guarantee is gradient-mapping stationarity,
-$\min_{t \leq T} \|G_{\eta'}(w^t)\|^2 = O(1/T)$, stated honestly as weaker
-than the paper's global-optimality claim. The Stage B factorial showed the
-fix is the only arm never catastrophically wrong on either metric, on
-either dataset, at any $\gamma$.
+$\eta' = 0.01$ restores feasibility - 0 of 120 projected cells violate -
+and the corrected guarantee is gradient-mapping stationarity
+$\min_{t \leq T} \|G_{\eta'}(w^t)\|^2 = O(1/T)$, honestly weaker than the
+paper's global-optimality claim. The Stage B factorial showed the fix is
+the only arm never catastrophically wrong on either metric, on either
+dataset, at any $\gamma$.
 
 \textbf{O4 - Privacy-compliant extension.} FedGRAA-v2 removes the
 manuscript's two privacy assumptions - oracle rare-class knowledge and a
 server-held labelled validation set - via SecAgg-summed label histograms
-and a two-phase federated backward pass that is algebraically identical
-to the pooled computation ($\tilde{\zeta} \lesssim 4\times10^{-7}$). The
-$\zeta$-inexact proposition generalizes the convergence result to
-$O(1/T) + O(\zeta^2)$.
+and a two-phase federated backward pass algebraically identical to the
+pooled computation ($\tilde{\zeta} \lesssim 4\times10^{-7}$), generalizing
+the convergence result to $O(1/T) + O(\zeta^2)$.
 
 \textbf{O5 - Statistically tested evaluation.} Across the 960-cell Stage C
 campaign, the best v2 arm ($m = 3$) reaches 93.47\% rare-class recall on
-CIC-IDS-2017 and 69.66\% on UNSW-NB15 - exceeding the privacy-violating
-oracle on both - at 3.00$\times$ FedAvg's communication cost, with 111 of
-112 Holm-corrected comparisons significant. The adversarial campaigns
-quantify the mechanism's own attack surface (up to $3.3\times$ uniform
-attacker weight) and document, at full precision, the finding that in every
-cell where an evaluated poisoning defense succeeds in stopping the attack,
-it does so only by destroying the rare-class signal the system exists to
-protect - 30/30 CIC defended cells and 19/30 UNSW defended cells collapse
-to exactly 0.0\% rare recall.
+CIC-IDS-2017 and 69.66\% on UNSW-NB15 - exceeding the oracle on both - at
+3.00$\times$ FedAvg's communication cost, with 111 of 112 Holm-corrected
+comparisons significant. The adversarial campaigns quantify the mechanism's
+own attack surface (up to $3.3\times$ uniform attacker weight) and show
+every successfully defended cell pays by destroying the rare-class signal
+the system exists to protect - 30/30 CIC and 19/30 UNSW defended cells
+collapse to exactly 0.0\% rare recall.
 
-The arc is therefore complete: the original mechanism works, once it is
-made to do what its own proof assumed it did. The honest version of the
-claim - a different, defensible point in an occupied design space, with an
-evaluation axis no adjacent work reports - is the one this report stands
-behind.
+\section{Future work}
+\label{sec:future}
+
+The natural continuations, in roughly increasing order of scope: (i)
+referee-grade hardening of the corrected proposition - estimating
+$\beta_{\mathrm{eff}}$, a Clarke-subdifferential treatment of the
+$\min(\cdot,\cdot)$ arm rule, and an explicit $O(1/T)$ constant; (ii)
+automating the still-manual $\gamma$ - XAI-SOH-FL \cite{xaisohfl}, the
+closest same-domain work on the same base dataset, makes its coefficient
+dynamic via similarity thresholding and Bayesian optimization, the
+direct precedent here; (iii) a defense that stops poisoning
+\emph{without} discarding the rare-class signal - Jiang et al.'s
+filtering layer \cite{jiang2024} is the closest precedent, and the
+defended-cell collapse is precisely the gap it must close; (iv) real
+cross-silo NF-UQ-NIDS-v2 evaluation (T6 already runs the T1 grid at 4
+clients on the existing partitioner); (v) verifiable SecAgg; and (vi)
+the deferred Option A few-shot/prototype hybrid. On the publication
+track, these results are assembled in a resubmission-ready PAKDD
+manuscript \cite{fedgraa2026submission} (a CORE~B venue) resolving the
+earlier draft's simulated peer-review findings; whether it proceeds, and
+the attached authorship and provenance questions
+(\S\ref{sec:limitations}), remain mentor-side decisions.
+
+The arc is therefore complete: the original mechanism works once made to
+do what its own proof assumed, and the honest claim - a defensible point
+in an occupied design space - is the one this report stands behind.
 
 % =====================================================================
 %  BIBLIOGRAPHY
@@ -1814,10 +1896,10 @@ behind.
 \clearpage
 \phantomsection\addcontentsline{toc}{chapter}{Bibliography}
 \bibliographystyle{plain}
-{\footnotesize
+{\scriptsize
 \setlength{\itemsep}{0pt}
 \setlength{\parsep}{0pt}
-\begin{spacing}{0.9}
+\begin{spacing}{0.85}
 \bibliography{references}
 \end{spacing}
 }
@@ -1846,14 +1928,18 @@ artifacts or raw result files in Table~\ref{tab:provenance}:
   \caption{Figure and table provenance.}
   \label{tab:provenance}
   \footnotesize
-  \begin{tabular}{@{}ll@{}}
+  \begin{tabular}{@{}p{0.46\textwidth}p{0.50\textwidth}@{}}
     \toprule
     Report item & Source artifact(s) \\
     \midrule
-    Figs.~\ref{fig:cic-gamma-sweep}, \ref{fig:unsw-gamma-sweep}, \ref{fig:cic-nsweep}, \ref{fig:unsw-nsweep}
-      & \texttt{results/\{DS\}\_gamma\_sweep.json}, \texttt{\{DS\}\_n\_sweep.json} \\
-    Fig.~\ref{fig:diagnosis}
-      & \texttt{results/diagnosis/}, \texttt{fedgraa\_convergence\_defect.md} \S2 \\
+    Figs.~\ref{fig:cic-gamma-sweep}, \ref{fig:unsw-gamma-sweep}, \ref{fig:cic-nsweep}, \ref{fig:unsw-nsweep};
+    Tabs.~\ref{tab:claims}, \ref{tab:stagea-sweep}
+      & \texttt{results/\{DS\}\_gamma\_sweep.json}, \texttt{\{DS\}\_n\_sweep.json};
+      \texttt{results/ablation/} (corrected arm) \\
+    Fig.~\ref{fig:diagnosis};
+    Tabs.~\ref{tab:literal-diagnostic}, \ref{tab:simplex-violation}
+      & \texttt{results/diagnostics/*.json};
+      \texttt{docs/current/fedgraa\_convergence\_defect.md} \S2 \\
     Figs.~\ref{fig:ablation-cic}, \ref{fig:ablation-unsw};
     Tabs.~\ref{tab:ablation}, \ref{tab:factorial}
       & \texttt{results/ablation/*\_ablation\_table.md} + raw JSON \\
@@ -1862,7 +1948,8 @@ artifacts or raw result files in Table~\ref{tab:provenance}:
     Fig.~\ref{fig:classic-fl} & \texttt{results/v2\_frontier/} (classic arms) \\
     Fig.~\ref{fig:overhead}; Tab.~\ref{tab:overhead}
       & \texttt{results/v2\_frontier/overhead\_table.md} \\
-    \S\ref{sec:significance} & \texttt{results/v2\_frontier/significance\_table.md} (112 rows) \\
+    \S\ref{sec:significance}; Tab.~\ref{tab:sig-perarm}
+      & \texttt{results/v2\_frontier/significance\_table.md} (112 rows) \\
     Fig.~\ref{fig:t7-weights}; Tab.~\ref{tab:t7g}
       & \texttt{results/v2\_frontier/*raresig*.json}, \texttt{attacker\_weight\_history} \\
     Fig.~\ref{fig:t7-asr}; Tab.~\ref{tab:asr}
