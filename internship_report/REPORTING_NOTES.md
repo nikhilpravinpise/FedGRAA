@@ -13,13 +13,13 @@ keep or drop the `\ph{}` wrapper - both compile.
 |---|---|---|
 | `\ph{Roll No.}` | 2 | title page, certificate |
 | `\ph{Department}` | 7 | title page, certificate, signatures |
-| `\ph{Home Institution}` | 3 | title page, signatures |
-| `\ph{Professor Name}` | 4 | title page, certificate, signatures |
-| `\ph{Mentor Name}` | 4 | title page, signatures |
-| `\ph{Place}` | 4 | certificate, declaration-style blocks |
+| `\ph{Home Institution}` | 4 | title page, certificate, acknowledgement, signatures |
+| `\ph{Professor Name}` | 4 | title page, certificate, acknowledgement, signatures |
+| `\ph{Mentor Name}` | 4 | title page, certificate, acknowledgement, signatures |
+| `\ph{Place}` | 4 | title page, signature blocks, closing |
 | `\ph{Date}` | 2 | signature blocks |
 | `\ph{Start Date}` / `\ph{End Date}` | 1 each | certificate |
-| `\ph{Month Year}` | 2 | title page, certificate |
+| `\ph{Month Year}` | 2 | title page, closing |
 
 Everything else in the report - every number, table cell, figure, and citation -
 is final and traceable to a repository artifact (see Appendix A of the report).
@@ -52,11 +52,13 @@ The Chapter-1-to-Bibliography span is 25 arabic folios, inside the plan's
   subfigure merging, and a compressed bibliography keep the report inside
   the page budget without dropping content. Loosening any of these pushes
   past 25 arabic folios.
-- The List of Figures and List of Tables share one page (the `\clearpage`
-  between them is locally disabled).
-- Two side-by-side diagnosis plots live in one float (`fig:diagnosis`); the
-  Stage B ablation is one stacked table for both datasets.
-- The bibliography uses `plain` style at `\footnotesize` with tightened item
+- The List of Figures and List of Tables are compact (folios vi and vii);
+  the nomenclature table is `\footnotesize`-scoped.
+- Paired plots live in shared floats: the two diagnosis plots
+  (`fig:diagnosis`) and the frontier + classic-optimizer pair
+  (`fig:stagec-frontier`) sit side by side; the Stage B ablation is one
+  stacked table for both datasets.
+- The bibliography uses `plain` style at `\scriptsize` with tightened item
   spacing; all 43 entries are cited in the text.
 
 ## 4. Honest-reporting caveats (deliberate, do not "fix")
