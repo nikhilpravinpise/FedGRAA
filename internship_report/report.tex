@@ -24,7 +24,7 @@
 \usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue,bookmarksnumbered]{hyperref}
 
 % ---------- layout ----------
-\setstretch{0.95}
+\setstretch{0.94}
 \setlength{\parskip}{1.5pt plus 0.5pt}
 \setlength{\parindent}{1.5em}
 \captionsetup{font=small,labelfont=bf,skip=4pt}
@@ -162,7 +162,7 @@ restated as gradient-mapping stationarity $O(1/T)+O(\zeta^2)$ under a
 Polyak-{\L}ojasiewicz condition. The privacy-compliant extension,
 FedGRAA-v2, reconstructs the exact composite gradient via secure
 aggregation, reaching 93.47\%/69.66\% rare-class recall across 960 cells at
-6.00$\times$-to-3.00$\times$ communication cost, 111/112 paired tests
+6.00$\times$-to-2.00$\times$ communication cost, 111/112 paired tests
 significant. Adversarial evaluation shows the same up-weighting is
 exploitable (attackers reach 3.3$\times$ uniform weight) and that
 successfully defended cells collapse rare-class recall to 0\% (30/30 CIC,
@@ -174,10 +174,9 @@ successfully defended cells collapse rare-class recall to 0\% (30/30 CIC,
 \clearpage
 \phantomsection\addcontentsline{toc}{chapter}{List of Figures}
 \listoffigures
-\vspace{1.5em}
-{\let\clearpage\relax\let\cleardoublepage\relax
+\clearpage
 \phantomsection\addcontentsline{toc}{chapter}{List of Tables}
-\listoftables}
+\listoftables
 }
 
 % ---------------- Nomenclature ----------------
@@ -200,7 +199,10 @@ $L_a$ & common-class loss, the lower of the two common strata, $\min(L_h,L_m)$\\
 $L_h$, $L_m$, $L_u$ & validation losses on the head, median, and rare-class strata\\
 $L_k$ & client $k$'s local loss\\
 $\Lprime$ & composite objective $(1-\gamma)L_a+\gamma L_u$\\
+$L_{\mathrm{arm},k}$, $L_{n,k}$ & client $k$'s losses on the selected common and rare strata (Phase 2)\\
+$M(m)$ & communication multiplier $1+\lceil E'/m\rceil$ of the federated backward pass\\
 $P$, $P_k$ & flattened model parameters; client $k$'s contribution\\
+$P_{\mathrm{fake}}$ & fabricated attacker update carrying the rare-class signature\\
 $S_t$ & client set selected at round $t$\\
 $T$ & total communication rounds (200)\\
 \end{tabular}
@@ -216,6 +218,9 @@ $m$ & gradient-refresh interval for the federated backward pass\\
 $n$ & number of protected rare classes (3)\\
 $n_{\mathrm{arm}}$, $n_n$ & SecAgg-pooled counts of the common and rare strata\\
 $n_{\mathrm{arm},k}$, $n_{n,k}$ & client $k$'s own counts in those strata\\
+$n_{h,k}$, $n_{m,k}$ & client $k$'s head- and median-stratum counts (Phase 1)\\
+$n_{\mathrm{attackers}}$ & attacker clients in a T7 cell (weight saturation cap $1/n_{\mathrm{attackers}}$)\\
+$s_{h,k}$, $s_{m,k}$, $s_{n,k}$ & client $k$'s per-stratum loss sums sent in Phase 1\\
 $t$ & communication-round index; also the SecAgg reconstruction threshold
 (default $\lfloor K/2\rfloor+1$)\\
 $w$, $w_k$ & learned aggregation-weight vector; client $k$'s weight\\
@@ -423,8 +428,8 @@ optimization for $E$ epochs on its own data $D_k$,
 \label{eq:local-sgd}
 \end{equation}
 returning $\theta_k^{t+1} = \theta_k^{(E)}$; and the server aggregates by
-dataset-size-proportional weighting,
-FedAvg \cite{mcmahan2017fedavg}:
+dataset-size-proportional weighting - the
+FedAvg rule \cite{mcmahan2017fedavg}:
 \begin{equation}
 \theta_g^{t+1} = \sum_{k \in S_t} \frac{|D_k|}{|D|}\, \theta_k^{t+1}
 \label{eq:fedavg}
@@ -492,7 +497,7 @@ assume, in one form or another, a server-held reference - a root dataset
 (FLTrust) or a trusted validation anchor - structurally identical to the
 $D_V$ dependency the original FedGRAA shares and FedGRAA-v2 removes. FedTruth
 explicitly calls this assumption impractical; CoAst independently describes a
-server reference set as ``difficult to obtain in practical FL scenarios;''
+server reference set as ``difficult to obtain in practical FL scenarios'';
 CELM's own abstract restates the concern. This is a known, common, fixable
 shortcut across the adaptive-aggregation literature, not a defect specific to
 FedGRAA.
@@ -603,10 +608,14 @@ printed} in the reproduced manuscript, including the Adam optimizer the
 manuscript's own experimental section specifies for both the client update
 and the weight update (confirmed by its correction note and by the reference
 implementation, which labels this line ``Adam step on $w$ (eq.~10)''). The
-reproduction resolves 17 documented ambiguities in the printed text -
-contradictions, undefined terms and underspecified rules - each by the
-code-level reading rather than by assumption, per the project's
-paper-ambiguity audit (\texttt{docs/current/PAPER\_AMBIGUITY\_REPORT.md}).
+reproduction works through the 17 ambiguities documented in the printed
+text - contradictions, undefined terms and underspecified rules - per
+the project's paper-ambiguity audit
+(\texttt{docs/current/PAPER\_AMBIGUITY\_REPORT.md}): one item was later
+retracted as a transcription artifact, one (the absent seed and
+variance reporting) is unresolvable without author disclosure, and each
+remaining item is fixed by an explicit, documented code-level choice
+rather than silently assumed.
 
 \begin{algorithm}[htbp]
 \caption{FedGRAA weight update - as printed (defective)}
@@ -783,7 +792,7 @@ $T=200$-round run (advanced composition \cite{dwork2010composition}:
 $\varepsilon_{\mathrm{total}}\approx8.89$ at $\varepsilon_{\mathrm{round}}=0.1$,
 $\delta=10^{-5}$; a tighter R\'enyi-DP accountant is recommended in practice).
 
-\subsection{A federated backward pass, replacing $D_V$}
+\subsection{A federated backward pass, replacing \texorpdfstring{$D_V$}{DV}}
 Rather than evaluating Eqs.~\eqref{eq:la}-\eqref{eq:lprime} on a pooled
 validation set, the server broadcasts the candidate aggregate $\theta'_g$ -
 already-public math over already-shared parameters - and reconstructs its
@@ -1117,7 +1126,7 @@ $|\sum_k w_k - 1|$ is $5.96 \times 10^{-8}$ (CIC) and $1.19 \times 10^{-7}$
   \begin{tabular}{@{}lcccc@{}}
     \toprule
      & \multicolumn{2}{c}{Unprojected} & \multicolumn{2}{c}{Projected}\\
-    \cmidrule(lr){2-3}\cmidrule(l){4-5}
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
     Metric & CIC & UNSW & CIC & UNSW\\
     \midrule
     Round-1 violating cells & 60/60 & 60/60 & 0/60 & 0/60\\
@@ -1148,11 +1157,13 @@ plots the weight trajectory on the same run.
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[b]{0.49\textwidth}
+    \centering
     \includegraphics[width=0.74\textwidth]{figures/diagnosis_literal_composite_loss.png}
     \caption{Composite-loss traces diverge.}
     \label{fig:diag-loss}
   \end{subfigure}\hfill
   \begin{subfigure}[b]{0.49\textwidth}
+    \centering
     \includegraphics[width=0.74\textwidth]{figures/diagnosis_literal_weights_g1p0.png}
     \caption{Weights leave the simplex at round 1.}
     \label{fig:diag-weights}
@@ -1228,7 +1239,7 @@ $\eta': 0.1 \to 0.01$. Three findings survive every comparison.
     \includegraphics[width=0.74\textwidth]{figures/CIC_IDS_2017_ablation.png}
     \caption{CIC-IDS-2017.}
     \label{fig:ablation-cic}
-  \end{subfigure}
+  \end{subfigure}\\[4pt]
   \begin{subfigure}[b]{\textwidth}
     \centering
     \includegraphics[width=0.74\textwidth]{figures/UNSW_NB15_ablation.png}
@@ -1379,8 +1390,8 @@ classic-optimizer comparison.
     DA-PFL & 0.485 & 13.25\% [12.81, 13.69] & 54.59\% & -- \\
     CoAst & 0.485 & 6.97\% [1.57, 13.25] & 53.83\% & -- \\
     FedNova & 0.485 & 4.62\% [0.00, 11.43] & 57.90\% & -- \\
-    FedProx & 0.485 & 1.33\% & 64.91\% & -- \\
-    FedOpt & 0.485 & 0.44\% & 66.38\% & -- \\
+    FedProx & 0.485 & 1.33\% [0.58, 2.05] & 64.91\% & -- \\
+    FedOpt & 0.485 & 0.44\% [0.01, 1.09] & 66.38\% & -- \\
     FedAvg & 0.485 & 0.00\% & 56.54\% & -- \\
     11 further baselines & 0.485 & $\le$ 10.9\% each (FedPGO) & -- & -- \\
     \bottomrule
@@ -1394,7 +1405,7 @@ privacy-violating v1-projected reference on both datasets (93.47\% versus
 privacy assumptions cost no accuracy - the federated backward pass is, at
 each refresh, algebraically identical to what a server-held $D_V$ would
 compute, and the measured per-round gradient discrepancy $\tilde{\zeta}$
-spans $9\times10^{-8}$ to $4\times10^{-7}$ across the frontier cells, below
+spans $9\times10^{-8}$ to $3.4\times10^{-7}$ across the frontier cells, below
 the $10^{-6}$ exactness tolerance the test suite enforces. Second, the margin over the strongest external
 baseline is large: FedAWARE, the best baseline on both datasets, trails the
 best v2 arm by 21.7 points on CIC and 37.0 on UNSW. Third, every external
@@ -1641,7 +1652,7 @@ projected gradient mapping, a strictly weaker and honest statement.
 Three consequences emerge only when the Stage C results are read together
 rather than as independent tables.
 
-\subsection{The $\gamma$ trade-off and the attack surface are the same
+\subsection{The \texorpdfstring{$\gamma$}{gamma} trade-off and the attack surface are the same
 mechanism}
 
 FedGRAA deliberately up-weights the clients whose updates most
@@ -1749,7 +1760,7 @@ venue, scope).
   contribution by subtraction, so the privacy guarantee is thinner at this
   scale than at Google-scale deployments.
   \item \textbf{PL is a stated condition, not a verified one.} The
-  $\zeta$-inexact theorem conditions its rate on the Polyak-Lojasiewicz
+  $\zeta$-inexact theorem conditions its rate on the Polyak-{\L}ojasiewicz
   property holding on $\Delta$ for this loss surface; the manuscript states
   this as the correct condition to check, and does not claim to have
   verified it. Three rigor flags remain for a referee-grade pass:
@@ -1822,8 +1833,9 @@ under statistical and adversarial scrutiny the original did not receive.
 Each of the five objectives closed with a measured answer.\par}
 
 \textbf{O1 - Faithful reproduction.} The printed FedGRAA algorithm was
-implemented literally, all 17 documented ambiguities resolved by the
-code-level reading. The literal implementation reproduces none of the
+implemented literally, with every resolvable item among the 17 audited
+ambiguities fixed by a documented code-level choice (one item retracted,
+the missing seed unresolvable). The literal implementation reproduces none of the
 paper's headline numbers: 0.00\% versus a claimed 88.88\% rare-class
 accuracy on CIC-IDS-2017 at $\gamma = 1$, and 33.33\% versus a claimed
 21.09\% on UNSW-NB15 - an inversion where the reproduction beats the
@@ -1956,6 +1968,41 @@ artifacts or raw result files in Table~\ref{tab:provenance}:
       & \texttt{results/v2\_frontier/\{secfednids,weidetect\}*.json} \\
     Defended-cell counts (\S\ref{sec:adversarial})
       & \texttt{final\_last\_n\_acc} of the 60 defended JSON cells \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Dataset digests}
+\label{sec:dataset-digests}
+
+SHA-256 of each raw CSV under \texttt{data/}, for byte-level verification
+of the exact corpora used:
+
+\begin{table}[htbp]
+  \centering
+  \caption{File-level SHA-256 digests of the evaluation corpora.}
+  \label{tab:dataset-hashes}
+  \tiny
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    File & SHA-256 \\
+    \midrule
+    \multicolumn{2}{@{}l}{\emph{data/CIC-IDS-2017/}}\\
+    Friday-WorkingHours-Afternoon-DDos.pcap\_ISCX.csv & \texttt{6ff1580f5f81c0ae28a26f7631721018577f5f7c5e0feac28b795fcfe7b411ee} \\
+    Friday-WorkingHours-Afternoon-PortScan.pcap\_ISCX.csv & \texttt{ca1824c51bfbb7b3c72290a11be04366ba8815878c6a1cc5c44cb1cee269e99b} \\
+    Friday-WorkingHours-Morning.pcap\_ISCX.csv & \texttt{53a41c24d570ea83b7ac55b2e94df94e7a8216aeb80a2af0246b6bc8bb543000} \\
+    Monday-WorkingHours.pcap\_ISCX.csv & \texttt{852c4beb34eda186f32561fa79df7a0747e92e1a6535b01270820dd9ffe17f34} \\
+    Thursday-WorkingHours-Afternoon-Infilteration.pcap\_ISCX.csv & \texttt{6bcda3857c2504676034e3ea57762d38393cc734cb377a726bd5cb153961b1b5} \\
+    Thursday-WorkingHours-Morning-WebAttacks.pcap\_ISCX.csv & \texttt{d67066211fb1689c78406f1506f4c44704ecb92088353d5c96d96d6474eb819d} \\
+    Tuesday-WorkingHours.pcap\_ISCX.csv & \texttt{52b8692ae8c7d2ed04671fe2b98335693c0a92c7ab157d8c8b534d6523080851} \\
+    Wednesday-workingHours.pcap\_ISCX.csv & \texttt{893c27dc968bf7a8adef1689f90be55ca4a4dc3088fb63d6ff247ac56856df2a} \\
+    \midrule
+    \multicolumn{2}{@{}l}{\emph{data/UNSW-NB15/}}\\
+    UNSW\_NB15\_testing-set.csv & \texttt{734fe6642edf758f7c94d7d9149426b49d202fe8e7bf0bef47392489c3c0a559} \\
+    UNSW\_NB15\_training-set.csv & \texttt{bec7dd5ec88dc2a0ccc7a07879d338395ed7421750f675fd0339e07dfe0648fa} \\
+    \midrule
+    \multicolumn{2}{@{}l}{\emph{data/NF-UQ-NIDS-v2/}}\\
+    NF-UQ-NIDS-v2.csv & \texttt{7e55364a20d98b9517097de77bbff168d1d0b047b8bb50bf4bb16287804920c8} \\
     \bottomrule
   \end{tabular}
 \end{table}

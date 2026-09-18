@@ -12,8 +12,8 @@ keep or drop the `\ph{}` wrapper - both compile.
 | Field | Occurrences | Where |
 |---|---|---|
 | `\ph{Roll No.}` | 2 | title page, certificate |
-| `\ph{Department}` | 7 | title page, certificate, signatures |
-| `\ph{Home Institution}` | 4 | title page, certificate, acknowledgement, signatures |
+| `\ph{Department}` | 7 | title page (x3), certificate (x2), signatures, acknowledgement |
+| `\ph{Home Institution}` | 4 | title page (x2), certificate, acknowledgement |
 | `\ph{Professor Name}` | 4 | title page, certificate, acknowledgement, signatures |
 | `\ph{Mentor Name}` | 4 | title page, certificate, acknowledgement, signatures |
 | `\ph{Place}` | 4 | title page, signature blocks, closing |
@@ -48,7 +48,7 @@ The Chapter-1-to-Bibliography span is 25 arabic folios, inside the plan's
 
 ## 3. Layout decisions worth knowing
 
-- **Near-single spacing** (`\setstretch{0.95}`), `\footnotesize` tables,
+- **Near-single spacing** (`\setstretch{0.94}`), `\footnotesize` tables,
   subfigure merging, and a compressed bibliography keep the report inside
   the page budget without dropping content. Loosening any of these pushes
   past 25 arabic folios.
