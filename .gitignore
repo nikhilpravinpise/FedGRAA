@@ -78,3 +78,5 @@ Thumbs.db
 **/MENTOR_*.md
 **/*mentor*.md
 **/*MENTOR*.md
+# Internship report LaTeX build output
+internship_report/build/
