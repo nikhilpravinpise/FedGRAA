@@ -1,25 +1,21 @@
 # Reporting Notes - FedGRAA Internship Report
 
-One-page guide to filling the placeholders, recompiling, and understanding the
-layout decisions in `report.tex`.
+One-page guide to the front-matter details, recompiling, and the layout
+decisions in `report.tex`.
 
-## 1. Placeholders to fill
+## 1. Front-matter details (all filled)
 
-All unverified personal/institutional fields render as angle-bracketed italic
-text via the `\ph{...}` macro (defined in the preamble). Replace the argument,
-keep or drop the `\ph{}` wrapper - both compile.
+All personal/institutional fields are now filled with real values - the
+`\ph{...}` placeholder macro has been removed:
 
-| Field | Occurrences | Where |
+| Field | Value | Where |
 |---|---|---|
-| `\ph{Roll No.}` | 2 | title page, certificate |
-| `\ph{Department}` | 7 | title page (x3), certificate (x2), signatures, acknowledgement |
-| `\ph{Home Institution}` | 4 | title page (x2), certificate, acknowledgement |
-| `\ph{Professor Name}` | 4 | title page, certificate, acknowledgement, signatures |
-| `\ph{Mentor Name}` | 4 | title page, certificate, acknowledgement, signatures |
-| `\ph{Place}` | 4 | title page, signature blocks, closing |
-| `\ph{Date}` | 2 | signature blocks |
-| `\ph{Start Date}` / `\ph{End Date}` | 1 each | certificate |
-| `\ph{Month Year}` | 2 | title page, closing |
+| Roll No. | D095 | title page, certificate |
+| Department | Computer Science and Data Science | title page, certificate, acknowledgement |
+| Home Institution | Dwarkadas J. Sanghvi College of Engineering | title page, certificate, acknowledgement |
+| Professor | Hanumant Singh Shekhawat (Dept. of EEE, IIT Guwahati) | title page, certificate, acknowledgement, signatures |
+| Mentor | Krishna Yadav | title page, certificate, acknowledgement, signatures |
+| Period | June 2026 - August 2026 | certificate |
 
 Everything else in the report - every number, table cell, figure, and citation -
 is final and traceable to a repository artifact (see Appendix A of the report).
@@ -79,8 +75,9 @@ The Chapter-1-to-Bibliography span is 25 arabic folios, inside the plan's
 
 ## 5. Known non-defects
 
-- The compile is clean: zero `Overfull`/`Underfull` boxes that affect the
-  text (one benign `badness 1348` underfull inside `report.bbl`, cosmetic).
+- The compile is clean: zero `Overfull` boxes; six benign `Underfull`
+  warnings (two short nomenclature rows, four fixed-width provenance-table
+  cells) - all cosmetic.
 - `scripts/archive/gpu/test_gpu.py` fails collection on this CPU-only machine
   (it expects a CUDA build); it is an archived probe outside the `tests/`
   suite, not a regression.
