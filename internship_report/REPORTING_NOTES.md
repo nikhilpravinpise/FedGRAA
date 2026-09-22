@@ -13,8 +13,7 @@ All personal/institutional fields are now filled with real values - the
 | Roll No. | D095 | title page, certificate |
 | Department | Computer Science and Data Science | title page, certificate, acknowledgement |
 | Home Institution | Dwarkadas J. Sanghvi College of Engineering | title page, certificate, acknowledgement |
-| Professor | Hanumant Singh Shekhawat (Dept. of EEE, IIT Guwahati) | title page, certificate, acknowledgement, signatures |
-| Mentor | Krishna Yadav | title page, certificate, acknowledgement, signatures |
+| Professor | Hanumant Singh Shekhawat (Dept. of EEE, IIT Guwahati) | title page, certificate, acknowledgement, signature |
 | Period | June 2026 - August 2026 | certificate |
 
 Everything else in the report - every number, table cell, figure, and citation -
