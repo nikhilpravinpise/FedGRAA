@@ -94,7 +94,7 @@ abstract-level reconstruction claim.
 The primary text specifies:
 
 1. AGO projects against the **previous round's global gradient**
-   ([`FedPGO.md`, §3.5](FedPGO/FedPGO.md#35-gradient-decomposition-adaptive-gradient-orthogonalization),
+   ([`FedPGO reference`](FedPGO/FedPGO.md),
    especially the text and Eq. 6 at source lines 415–429).
 2. Its recomposition is
    `g'_i = α_i g_parallel + (1 - α_i) g_perp`, with a client-specific
