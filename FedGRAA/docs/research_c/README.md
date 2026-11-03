@@ -16,7 +16,7 @@ robustness evaluation that Stage C actually delivered).
 | [`STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md`](STAGE_C_T7_JUDGMENT_CALLS_2026-08-02.md) | Judgment calls resolving ambiguities in the T7 primary sources (WeiDetect, FLPoison, etc.) before implementation. |
 | [`COMPUTE_INFRASTRUCTURE_2026-07-27.md`](COMPUTE_INFRASTRUCTURE_2026-07-27.md) | Cloud-platform evaluation (Azure / DigitalOcean / Camber rejected, Modal selected) for the compute campaign. |
 | [`STAGE_C_FEDPGO_FAITHFUL_PLAN_2026-07-31.md`](STAGE_C_FEDPGO_FAITHFUL_PLAN_2026-07-31.md) | Decision to reimplement the FedPGO baseline faithfully from its primary source rather than an earlier proxy. |
-| [`FedPGO/FedPGO.md`](FedPGO/FedPGO.md) | Extracted primary-source text of the FedPGO paper (Bikila & Čapek, *Computer Networks* 2026), used for the faithful reimplementation above. |
+| [FedPGO reference](FedPGO/FedPGO.md) | Citation and brief project-written summary; the publisher article text and figures are not included. |
 | [`STAGE_C_COMPUTE_SESSION_UPDATE_2026-07-30.md`](STAGE_C_COMPUTE_SESSION_UPDATE_2026-07-30.md) | Dated session record: campaign verification, FedPGO result commit, a primary-source correction. |
 | [`REMAINING_COMPUTE_WORK.md`](REMAINING_COMPUTE_WORK.md) | Earlier remaining-work map, largely superseded by `STAGE_C_REMAINING_WORK_MASTER_PLAN_2026-08-02.md` above; kept for the Option A (few-shot hybrid) deferral record in its §3a. |
 
