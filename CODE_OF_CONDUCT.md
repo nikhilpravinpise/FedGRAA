@@ -34,7 +34,7 @@ representing the project.
 
 Instances of unacceptable behavior may be reported by opening an issue or
 contacting the maintainer directly via their GitHub profile
-([@N1KH1LT0X1N](https://github.com/N1KH1LT0X1N)). All complaints will be
+([@nikhilpravinpise](https://github.com/nikhilpravinpise)). All complaints will be
 reviewed and investigated promptly and fairly.
 
 This Code of Conduct is adapted from the
