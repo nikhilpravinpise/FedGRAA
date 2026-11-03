@@ -1,7 +1,7 @@
 # Contributing
 
 This is primarily a solo research repo, but issues and pull requests are
-welcome — especially anything that catches a reproducibility bug, a doc/code
+welcome, especially anything that catches a reproducibility bug, a doc/code
 mismatch, or an unbacked claim.
 
 ## Before opening a PR
@@ -23,7 +23,7 @@ Every project in this repo keeps its own verification suite. For
 
 The `check_stage_*_complete.py` scripts ("completeness") check that expected
 artifacts exist and are shaped correctly. `audit_stage_*.py` ("correctness")
-independently re-derives every reported number from raw persisted JSON —
+independently re-derives every reported number from raw persisted JSON and
 never trust a number back from the prose that reports it.
 `check_doc_links.py` verifies every relative Markdown link resolves. All
 nine of these run in CI on every push and PR (see
@@ -37,8 +37,8 @@ nine of these run in CI on every push and PR (see
   faithful reproduction. Document *why* it diverges before changing the code
   that reproduces it.
 - **Every quantitative claim needs a source.** If a doc states a number, it
-  should be traceable to a persisted result file or a cited external source
-  — not just asserted.
+  should be traceable to a persisted result file or a cited external source,
+  not just asserted.
 - **Fix documentation drift as you find it.** If a link, a file path, or a
   claim in the docs no longer matches reality, fix it in the same PR rather
   than filing a follow-up.
