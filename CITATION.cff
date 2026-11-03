@@ -1,22 +1,23 @@
 cff-version: 1.2.0
 message: >-
-  If you use this reproduction, the FedGRAA divergence diagnosis, the
-  corrected convergence theory, or the FedGRAA-v2 extension, please cite
-  this repository.
+  If you use this research code, its reproduction findings, or the FedGRAA-v2
+  extension, please cite this repository.
 type: software
 title: >-
-  FedGRAA: Independent Reproduction and Extension of a Published ML Paper
+  FedGRAA: Reproduction, Diagnosis, and Extension for Federated Intrusion Detection
 authors:
   - family-names: Pise
     given-names: Nikhil Pravin
-    alias: N1KH1LT0X1N
-repository-code: https://github.com/N1KH1LT0X1N/FedGRAA
-url: https://github.com/N1KH1LT0X1N/FedGRAA
+    alias: nikhilpravinpise
+repository-code: https://github.com/nikhilpravinpise/FedGRAA
+url: https://github.com/nikhilpravinpise/FedGRAA
 license: MIT
-date-released: "2026-08-08"
+date-released: "2026-11-03"
 keywords:
   - federated-learning
-  - reproducibility
   - intrusion-detection
+  - network-security
+  - reproducibility
   - adaptive-aggregation
+  - secure-aggregation
   - FedGRAA

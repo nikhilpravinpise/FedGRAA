@@ -32,4 +32,4 @@ labels: bug
 
 If a measured number differs from a documented one (a table value, a test
 assertion, a figure), please include both numbers and which seed/config you
-used — this is the single most useful kind of report for this repo.
+used; this is the single most useful kind of report for this repo.
